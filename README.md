@@ -38,7 +38,7 @@ of Maven specified in `.mvn/wrapper/maven-wrapper.properties` it will be downloa
 The wrapper should work on various operating systems including
 
 * Linux (numerous versions, tested on Ubuntu and CentOS)
-* OSX
+* OSX / macOS
 * Windows (various newer versions)
 * Solaris (10 and 11)
 
@@ -99,10 +99,19 @@ which works for any version except snapshots. Once you have a wrapper you can ch
 `distributionUrl` in `.mvn/wrapper/maven-wrapper.properties`, e.g.
 
 ```
-distributionUrl=https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.2.1/apache-maven-3.2.1-bin.zip
+distributionUrl=https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.5.4/apache-maven-3.5.4-bin.zip
 ```
 
 [1]: https://github.com/takari/takari-maven-plugin
+
+## Specifying Maven Distribution Base Path
+
+This is a feature of Maven itself and the wrapper just happens to take it into
+account. Simply set `MAVEN_USER_HOME` to the desired path and the wrapper uses
+it as the base of the Maven distro installation.
+
+See https://www.lewuathe.com/maven-wrapper-home.html and
+https://github.com/takari/maven-wrapper/issues/17
 
 
 ## Developing and Releasing
@@ -122,3 +131,8 @@ For release
 - cut maven release with usual release plugin usage
 - update maven plugin to release version
 - release it as well
+
+Updating Maven version:
+
+- update URL in maven-wrapper/.mvn/wrapper/maven-wrapper.properties
+- updated maven parameter in takari-maven-plugin  WrapperMojo

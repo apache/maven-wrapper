@@ -3,9 +3,19 @@
 The [git commit history](https://github.com/takari/maven-wrapper/commits/master) is the detailed source of all changes.
 The following provides most information at an easier glance.
 
+## Version 0.4.3 - Some Time Soon
+
+- update to Maven 3.6.0 as default
+- Use TLS 1.2 on Windows
+  - see https://github.com/takari/maven-wrapper/pull/89
+  - contributed by Julian Hyde https://github.com/julianhyde
+- Fix compile path for cygwin
+  - see https://github.com/takari/maven-wrapper/pull/83
+  - contributed by Dániel Kovács https://github.com/AFulgens
+
 ## Version 0.4.2 - 2018-07-02
 
-- update to Maven 3.5.4as default
+- update to Maven 3.5.4 as default
 - dependency updates
 - end of line in properties file
 - parent pom upgrade
