@@ -16,11 +16,16 @@
 
 package org.apache.maven.wrapper;
 
+import static org.apache.maven.wrapper.MavenWrapperMain.MVNW_PASSWORD;
+import static org.apache.maven.wrapper.MavenWrapperMain.MVNW_USER;
+
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 import java.net.URI;
@@ -79,6 +84,7 @@ public class DefaultDownloader implements Downloader {
       URL url = address.toURL();
       out = new BufferedOutputStream(new FileOutputStream(destination));
       conn = url.openConnection();
+      addBasicAuthentication(address, conn);
       final String userAgentValue = calculateUserAgent();
       conn.setRequestProperty("User-Agent", userAgentValue);
       in = conn.getInputStream();
@@ -103,6 +109,54 @@ public class DefaultDownloader implements Downloader {
       }
     }
   }
+
+  private void addBasicAuthentication(URI address, URLConnection connection) throws IOException {
+    String userInfo = calculateUserInfo(address);
+    if (userInfo == null) {
+        return;
+    }
+    if (!"https".equals(address.getScheme())) {
+       Logger.warn("WARNING Using HTTP Basic Authentication over an insecure connection to download the Maven distribution. Please consider using HTTPS.");
+    }
+    connection.setRequestProperty("Authorization", "Basic " + base64Encode(userInfo));
+  }
+
+  /**
+     * Base64 encode user info for HTTP Basic Authentication.
+     *
+     * Try to use {@literal java.util.Base64} encoder which is available starting with Java 8.
+     * Fallback to {@literal javax.xml.bind.DatatypeConverter} from JAXB which is available starting with Java 6 but is not anymore in Java 9.
+     * Fortunately, both of these two Base64 encoders implement the right Base64 flavor, the one that does not split the output in multiple lines.
+     *
+     * @param userInfo user info
+     * @return Base64 encoded user info
+     * @throws RuntimeException if no public Base64 encoder is available on this JVM
+     */
+    private String base64Encode(String userInfo) {
+      ClassLoader loader = getClass().getClassLoader();
+      try {
+          Method getEncoderMethod = loader.loadClass("java.util.Base64").getMethod("getEncoder");
+          Method encodeMethod = loader.loadClass("java.util.Base64$Encoder").getMethod("encodeToString", byte[].class);
+          Object encoder = getEncoderMethod.invoke(null);
+          return (String) encodeMethod.invoke(encoder, new Object[]{userInfo.getBytes("UTF-8")});
+      } catch (Exception java7OrEarlier) {
+          try {
+              Method encodeMethod = loader.loadClass("javax.xml.bind.DatatypeConverter").getMethod("printBase64Binary", byte[].class);
+              return (String) encodeMethod.invoke(null, new Object[]{userInfo.getBytes("UTF-8")});
+          } catch (Exception java5OrEarlier) {
+              throw new RuntimeException("Downloading Maven distributions with HTTP Basic Authentication is not supported on your JVM.", java5OrEarlier);
+          }
+      }
+  }
+
+  private String calculateUserInfo(URI uri) {
+    String username = System.getenv(MVNW_USER);
+    String password = System.getenv(MVNW_PASSWORD);
+    if (username != null && password != null) {
+        return username + ':' + password;
+    }
+    return uri.getUserInfo();
+}
 
   private String calculateUserAgent() {
     String appVersion = applicationVersion;

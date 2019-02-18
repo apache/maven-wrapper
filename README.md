@@ -50,7 +50,7 @@ For all those *nix operating systems, various shells should work including
 * zsh
 
 In terms of Apache Maven versions itself, the wrapper should work with any Maven 3.x version and it defaults to the
-latest release - currently 3.5.0. We do NOT plan to support the deprecated, EOL'ed Maven 2.x.
+latest release - currently 3.6.0. We do NOT plan to support the deprecated, EOL'ed Maven 2.x.
 
 The maven-wrapper itself is compiled to work with Java 5. The Takari Maven Plugin for installation however uses Java 7.
 Once the wrapper is installed with the plugin you should be able to use the wrapper on the project with Java 5 and up.
@@ -101,6 +101,19 @@ which works for any version except snapshots. Once you have a wrapper you can ch
 ```
 distributionUrl=https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.5.4/apache-maven-3.5.4-bin.zip
 ```
+
+## Using Basic Authentication for Distribution download
+
+To download Maven from a location that requires Basic Authentication you have 2 options:
+
+1. Set the environment variables MVNW_USER and MVNW_PASSWORD
+
+    or
+
+2. add user and password to the distributionUrl like that:
+`distributionUrl=https://username:password@<yourserver>/maven2/org/apache/maven/apache-maven/3.2.1/apache-maven-3.2.1-bin.zip`
+
+
 
 [1]: https://github.com/takari/takari-maven-plugin
 
