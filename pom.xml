@@ -36,6 +36,8 @@ under the License.
   <name>Apache Maven Wrapper</name>
 
   <properties>
+    <maven.site.path>wrapper-archives/wrapper-LATEST</maven.site.path>
+    <mavenVersion>3.1.0</mavenVersion>
     <javaVersion>8</javaVersion>
     <project.build.outputTimestamp>2021-11-26T10:03:59Z</project.build.outputTimestamp>
   </properties>
@@ -43,5 +45,6 @@ under the License.
   <modules>
     <module>maven-wrapper</module>
     <module>maven-wrapper-distribution</module>
+    <module>maven-wrapper-plugin</module>
   </modules>
 </project>
