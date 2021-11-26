@@ -23,25 +23,43 @@ under the License.
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.apache.maven</groupId>
-    <artifactId>maven-parent</artifactId>
-    <version>34</version>
+    <groupId>org.apache.maven.wrapper</groupId>
+    <artifactId>maven-wrapper-parent</artifactId>
+    <version>3.0.3-SNAPSHOT</version>
   </parent>
   
-  <groupId>org.apache.maven.wrapper</groupId>
-  <artifactId>maven-wrapper-parent</artifactId>
-  <version>3.0.3-SNAPSHOT</version>
+  <artifactId>maven-wrapper-distribution</artifactId>
   <packaging>pom</packaging>
 
-  <name>Apache Maven Wrapper</name>
+  <name>Maven Wrapper Distribution</name>
 
-  <properties>
-    <javaVersion>8</javaVersion>
-    <project.build.outputTimestamp>2021-11-26T10:03:59Z</project.build.outputTimestamp>
-  </properties>
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.maven.wrapper</groupId>
+      <artifactId>maven-wrapper</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
 
-  <modules>
-    <module>maven-wrapper</module>
-    <module>maven-wrapper-distribution</module>
-  </modules>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <descriptors>
+            <descriptor>src/assembly/distribution.xml</descriptor>
+          </descriptors>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
