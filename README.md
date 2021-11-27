@@ -14,197 +14,86 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
+Contributing to [Apache Maven Wrapper](https://maven.apache.org/wrapper/)
+======================
 
-# Maven Wrapper
+[![ASF Jira](https://img.shields.io/endpoint?url=https%3A%2F%2Fmaven.apache.org%2Fbadges%2Fasf_jira-MWRAPPER.json)][jira]
+[![Apache License, Version 2.0, January 2004](https://img.shields.io/github/license/apache/maven.svg?label=License)][license]
+[![Maven Central](https://img.shields.io/maven-central/v/org.apache.maven.plugins/maven-wrapper-plugin.svg?label=Maven%20Central)](https://search.maven.org/artifact/org.apache.maven.plugins/maven-wrapper-plugin)
+[![Jenkins Status](https://img.shields.io/jenkins/s/https/ci-maven.apache.org/job/Maven/job/maven-box/job/maven-wrapper-plugin/job/master.svg)][build]
+[![Jenkins tests](https://img.shields.io/jenkins/t/https/ci-maven.apache.org/job/Maven/job/maven-box/job/maven-wrapper-plugin/job/master.svg)][test-results]
 
-The Maven Wrapper is an easy way to ensure a user of your Maven build has
-everything necessary to run your Maven build.
 
-_Why might this be necessary?_ Maven to date has been very stable for users, is
-available on most systems or is easy to procure: but with many of the recent
-changes in Maven it will be easier for users to have a fully encapsulated build
-setup provided by the project. With the Maven Wrapper this is very easy to do
-and it's a great idea borrowed from Gradle.
+You have found a bug or you have an idea for a cool new feature? Contributing
+code is a great way to give something back to the open source community. Before
+you dig right into the code, there are a few guidelines that we need
+contributors to follow so that we can have a chance of keeping on top of
+things.
 
-The easiest way to setup the Maven Wrapper for your project is to use the
-[Takari Maven Plugin][1] with its provided `wrapper` goal. To add or update all
-the necessary Maven Wrapper files to your project execute the following command:
+Getting Started
+---------------
 
-```bash
-mvn -N io.takari:maven:0.7.7:wrapper
++ Make sure you have a [JIRA account](https://issues.apache.org/jira/).
++ Make sure you have a [GitHub account](https://github.com/signup/free).
++ If you're planning to implement a new feature, it makes sense to discuss your changes
+  on the [dev list][ml-list] first.
+  This way you can make sure you're not wasting your time on something that isn't
+  considered to be in Apache Maven's scope.
++ Submit a ticket for your issue, assuming one does not already exist.
+  + Clearly describe the issue, including steps to reproduce when it is a bug.
+  + Make sure you fill in the earliest version that you know has the issue.
++ Fork the repository on GitHub.
+
+Making and Submitting Changes
+--------------
+
+We accept Pull Requests via GitHub. The [developer mailing list][ml-list] is the
+main channel of communication for contributors.
+There are some guidelines which will make applying PRs easier for us:
++ Create a topic branch from where you want to base your work (this is usually the master branch).
+  Push your changes to a topic branch in your fork of the repository.
++ Make commits of logical units.
++ Respect the original code style: by using the same [codestyle][code-style],
+  patches should only highlight the actual difference, not being disturbed by any formatting issues:
+  + Only use spaces for indentation.
+  + Create minimal diffs - disable on save actions like reformat source code or organize imports.
+    If you feel the source code should be reformatted, create a separate PR for this change.
+  + Check for unnecessary whitespace with `git diff --check` before committing.
++ Make sure your commit messages are in the proper format. Your commit message should contain the key of the JIRA issue.
 ```
-
-> Note: The default usage should be `mvn -N io.takari:maven:wrapper` but for
-> some users this seem to result in usage of an old version of the wrapper and
-> therefore installation of older Maven defaults and so on.
-
-Normally you instruct users to install a specific version of Apache Maven, put
-it on the PATH and then run the `mvn` command like the following:
-
-```bash
-mvn clean install
+[MWRAPPER-XXX] - Subject of the JIRA Ticket
+ Optional supplemental description.
 ```
++ Make sure you have added the necessary tests (JUnit/IT) for your changes.
++ Run all the tests with `mvn -Prun-its verify` to assure nothing else was accidentally broken.
++ Submit a pull request to the repository in the Apache organization.
++ Update your JIRA ticket and include a link to the pull request in the ticket.
 
-But now, with a Maven Wrapper setup, you can instruct users to run wrapper
-scripts:
+If you plan to contribute on a regular basis, please consider filing a [contributor license agreement][cla].
 
-```bash
-./mvnw clean install
-```
+Making Trivial Changes
+----------------------
 
-or on Windows
+For changes of a trivial nature to comments and documentation, it is not always
+necessary to create a new ticket in JIRA.  In this case, it is appropriate to
+start the first line of a commit with '(doc)' instead of a ticket number.
 
-```bash
-mvnw.cmd clean install
-```
+Additional Resources
+--------------------
 
-A normal Maven build will be executed with the one important change that if the
-user doesn't have the necessary version of Maven specified in
-`.mvn/wrapper/maven-wrapper.properties` it will be downloaded for the user
-first, installed and then used.
++ [Contributing patches](https://maven.apache.org/guides/development/guide-maven-development.html#Creating_and_submitting_a_patch)
++ [Apache Maven Wrapper project page][jira]
++ [Contributor License Agreement][cla]
++ [General GitHub documentation](https://help.github.com/)
++ [GitHub pull request documentation](https://help.github.com/send-pull-requests/)
++ [Apache Maven Twitter Account](https://twitter.com/ASFMavenProject)
++ #Maven IRC channel on freenode.org
 
-Subsequent uses of `mvn`/`mvnw.cmd` use the previously downloaded, specific
-version as needed.
-
-## Supported Systems
-
-The wrapper should work on various operating systems including
-
-* Linux (numerous versions, tested on Ubuntu and CentOS)
-* OSX / macOS
-* Windows (various newer versions)
-* Solaris (10 and 11)
-
-For all those *nix operating systems, various shells should work including
-
-* sh
-* bash
-* dash
-* zsh
-
-In terms of Apache Maven versions itself, the wrapper should work with any Maven
-3.x version and it defaults to the latest release - currently 3.6.3. We do NOT
-plan to support the deprecated, EOL'ed Maven 2.x.
-
-The maven-wrapper itself is compiled to work with Java 5. The Takari Maven
-Plugin for installation however uses Java 7. Once the wrapper is installed with
-the plugin you should be able to use the wrapper on the project with Java 5 and
-up. This is however not really tested by the committers.
-
-## Changes
-
-Please check out the [changelog](./CHANGELOG.md) for more information about our
-releases.
-
-## Verbose Mode
-
-The wrapper supports a verbose mode in which it outputs further information. It
-is activated by setting the `MVNW_VERBOSE` environment variable to `true`.
-
-By default it is off.
-
-## Usage without Binary JAR
-
-By default, the Maven Wrapper JAR archive is added to the using project as small
-binary file `.mvn/wrapper/maven-wrapper.jar`. It is used to bootstrap the
-download and invocation of Maven from the wrapper shell scripts.
-
-If your project is not allowed to contain binary files like this, you can
-configure your version control system to exclude checkin/commit of the wrapper
-jar.
-
-If the JAR is not found to be available by the scripts they will attempt to
-download the file from the URL specified in
-`.mvn/wrapper/maven-wrapper.properties` under `wrapperUrl` and put it in place.
-The download is attempted via curl, wget and, as last resort, by compiling the
-`./mvn/wrapper/MavenWrapperDownloader.java` file and executing the resulting
-class.
-
-If your Maven repository is password protected you can specify your username via
-the environment variable `MVNW_USERNAME` and the password via the environment
-variable `MVNW_PASSWORD`.
-
-## Using a Different Version of Maven
-
-To switch the version of Maven used to build a project you can initialize it
-using:
-
-```bash
-mvn -N io.takari:maven:0.7.7:wrapper -Dmaven=3.5.4
-```
-
-which works for any version except snapshots. Once you have a wrapper you can
-change its version by setting the `distributionUrl` in
-`.mvn/wrapper/maven-wrapper.properties`, e.g.
-
-```bash
-distributionUrl=https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.5.4/apache-maven-3.5.4-bin.zip
-```
-
-## Using Basic Authentication for Distribution Download
-
-To download Maven from a location that requires Basic Authentication you have 2
-options:
-
-1. Set the environment variables MVNW_USERNAME and MVNW_PASSWORD
-
-    or
-
-2. add user and password to the distributionUrl like that:
-`distributionUrl=https://username:password@<yourserver>/maven2/org/apache/maven/apache-maven/3.2.1/apache-maven-3.2.1-bin.zip`
-
-[1]: https://github.com/takari/takari-maven-plugin
-
-## Specifying Maven Distribution Base Path
-
-This is a feature of Maven itself and the wrapper just happens to take it into
-account. Simply set `MAVEN_USER_HOME` to the desired path and the wrapper uses
-it as the base of the Maven distro installation.
-
-See https://www.lewuathe.com/maven-wrapper-home.html and
-https://github.com/takari/maven-wrapper/issues/17
-
-## Using a Maven Repository Manager
-
-When using an internal Maven repository manager you have two options:
-
-1. Just set the correct URL to wrapper jar and Maven distro in
-  `maven-wrapper.properties` in your project
-2. Leave the default URL in the project pointing to Maven Central and set the
-  environment variable `MVNW_REPOURL` to your repo manager URL such as
-  `https://repo.example.com/central-repo-proxy`.
-
-If `MVNW_REPOURL` is set during the wrapper installation with the
-takari-maven-plugin, the URL is used in the maven-wrapper.properties file.
-
-If not set, but your mirror URL in your settings.xml is configured, it will be
-used.
-
-## Developing and Releasing
-
-To test Maven wrapper usage:
-
-- ensure you are building on a Unix filesystem with correct mounting for
-  executable flag setting
-- build the maven-wrapper as snapshot version
-- update version in takari-maven-plugin
-- build takari-maven-plugin
-- use on test project with takari-maven-plugin version
-
-```bash
-mvn -N -X io.takari:maven:0.7.7-SNAPSHOT:wrapper
-```
-
-For release
-
-- make sure version in mvnw files, MavenWrapperDownloader.java and config files
-  and pom files is new upcoming release
-- cut maven release with usual release plugin usage
-- update maven plugin to release version
-- release it as well
-
-Updating Maven version:
-
-- update URL in maven-wrapper/.mvn/wrapper/maven-wrapper.properties
-- update URL in MavenWrapperMain
-- updated DEFAULT_MAVEN_VER parameter in takari-maven-plugin  WrapperMojo class
+[jira]: https://issues.apache.org/jira/projects/MWRAPPER/
+[license]: https://www.apache.org/licenses/LICENSE-2.0
+[ml-list]: https://maven.apache.org/mailing-lists.html
+[code-style]: https://maven.apache.org/developers/conventions/code.html
+[cla]: https://www.apache.org/licenses/#clas
+[maven-wiki]: https://cwiki.apache.org/confluence/display/MAVEN/Index
+[test-results]: https://ci-maven.apache.org/job/Maven/job/maven-box/job/maven-wrapper-plugin/job/master/lastCompletedBuild/testReport/
+[build]: https://ci-maven.apache.org/job/Maven/job/maven-box/job/maven-wrapper-plugin/job/master/

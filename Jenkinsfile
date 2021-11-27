@@ -1,6 +1,4 @@
-package org.apache.maven.wrapper;
-
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -9,7 +7,7 @@ package org.apache.maven.wrapper;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -19,16 +17,4 @@ package org.apache.maven.wrapper;
  * under the License.
  */
 
-import java.io.File;
-import java.net.URI;
-
-/**
- * Maven distribution downloader.
- *
- * @author Hans Dockter
- */
-public interface Downloader
-{
-    void download( URI address, File destination )
-        throws Exception;
-}
+asfMavenTlpPlgnBuild(jdk:['8','11','17','18'])

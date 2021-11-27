@@ -25,6 +25,8 @@ import java.net.URL;
 import java.net.URLClassLoader;
 
 /**
+ * Maven starter, from a provided Maven home directory.
+ *
  * @author Hans Dockter
  */
 public class BootstrapMainStarter

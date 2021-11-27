@@ -30,6 +30,8 @@ import org.apache.maven.wrapper.cli.CommandLineParser;
 import org.apache.maven.wrapper.cli.SystemPropertiesCommandLineConverter;
 
 /**
+ * Main entry point for the Maven Wrapper, delegating wrapper execution to {@link WrapperExecutor}.
+ *
  * @author Hans Dockter
  */
 public class MavenWrapperMain

@@ -46,6 +46,9 @@ public class PathAssembler
 
     /**
      * Determines the local locations for the distribution to use given the supplied configuration.
+     *
+     * @param configuration a wrapper configuration
+     * @return the local distribution
      */
     public LocalDistribution getDistribution( WrapperConfiguration configuration )
     {
@@ -134,6 +137,7 @@ public class PathAssembler
 
         /**
          * Returns the location to install the distribution into.
+         * @return the location to install the distribution into
          */
         public File getDistributionDir()
         {
@@ -142,6 +146,7 @@ public class PathAssembler
 
         /**
          * Returns the location to install the distribution ZIP file to.
+         * @return the location to install the distribution ZIP file to
          */
         public File getZipFile()
         {

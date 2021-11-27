@@ -34,6 +34,28 @@ under the License.
   <packaging>pom</packaging>
 
   <name>Apache Maven Wrapper</name>
+  <inceptionYear>2016</inceptionYear>
+
+  <scm>
+    <connection>scm:git:https://gitbox.apache.org/repos/asf/maven-wrapper.git</connection>
+    <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/maven-wrapper.git</developerConnection>
+    <url>https://github.com/apache/maven-wrapper/tree/${project.scm.tag}</url>
+    <tag>HEAD</tag>
+  </scm>
+  <issueManagement>
+    <system>JIRA</system>
+    <url>https://issues.apache.org/jira/browse/MWRAPPER</url>
+  </issueManagement>
+  <ciManagement>
+    <system>Jenkins</system>
+    <url>https://ci-builds.apache.org/job/Maven/job/maven-box/job/maven-wrapper/</url>
+  </ciManagement>
+  <distributionManagement>
+    <site>
+      <id>apache.website</id>
+      <url>scm:svn:https://svn.apache.org/repos/asf/maven/website/components/${maven.site.path}</url>
+    </site>
+  </distributionManagement>
 
   <properties>
     <maven.site.path>wrapper-archives/wrapper-LATEST</maven.site.path>

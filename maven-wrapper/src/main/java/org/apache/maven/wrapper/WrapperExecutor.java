@@ -28,6 +28,9 @@ import java.net.URISyntaxException;
 import java.util.Properties;
 
 /**
+ * Wrapper executor, running {@link Installer} to get a Maven distribution ready, followed by
+ * {@link BootstrapMainStarter} to launch the Maven bootstrap.
+ * 
  * @author Hans Dockter
  */
 public class WrapperExecutor
@@ -133,8 +136,9 @@ public class WrapperExecutor
     }
 
     /**
-     * Returns the distribution which this wrapper will use. Returns null if no wrapper meta-data was found in the
+     * Returns the Maven distribution which this wrapper will use. Returns null if no wrapper meta-data was found in the
      * specified project directory.
+     * @return the Maven distribution which this wrapper will use
      */
     public URI getDistribution()
     {
@@ -143,6 +147,7 @@ public class WrapperExecutor
 
     /**
      * Returns the configuration for this wrapper.
+     * @return the configuration for this wrapper
      */
     public WrapperConfiguration getConfiguration()
     {

@@ -32,6 +32,7 @@ under the License.
   <packaging>pom</packaging>
 
   <name>Maven Wrapper Distribution</name>
+  <description>Maven Wrapper Distribution provides the distribution zip files containing mvnw/mvnw.cmd scripts and everything that has to be installed into a project wanting to use Maven Wrapper.</description>
 
   <dependencies>
     <dependency>

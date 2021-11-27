@@ -27,12 +27,10 @@ The Apache Maven Wrapper Plugin makes it easier to add these wrapper scripts to 
 
 The scripts work like this:
 - download the maven-wrapper jar, if it is not available yet,
-- the wrapper-jar contains the code to download and run Apache Maven
+- the maven-wrapper.jar contains the code to download, install and run Apache Maven
 
 Apache Maven Wrapper Distribution Types
 -----
-
-Wrapper scripts are provided by Maven 4 releases as ["Apache Maven Wrapper Distribution"](/ref/4-LATEST/apache-maven-wrapper/).
 
 There are 3 types available:
 
@@ -48,7 +46,7 @@ This type comes with a `.mvn/wrapper/MavenWrapperDownloader.java` which will be 
 Maven Version
 -------------
 By default the plugin will assume the same version as the Maven runtime (calling `mvn -v`). But you can pick a different version.
-Either call `mvn wrapper:wrapper -DmavenVersion=x`, where x is any valid Apache Maven Release, see https://search.maven.org/artifact/org.apache.maven/apache-maven
+Either call `mvn wrapper:wrapper -Dmaven=x`, where x is any valid Apache Maven Release, see https://search.maven.org/artifact/org.apache.maven/apache-maven
 Another option is adjust the `distributionUrl` in `.mvn/wrapper/maven-wrapper.properties`
 
 Debugging
