@@ -1,0 +1,9 @@
+# see https://s.apache.org/asfyaml
+github:
+  description: "Apache Maven Wrapper"
+  homepage: https://maven.apache.org/wrapper
+  labels:
+    - java
+    - build-management
+    - apache-maven
+    - maven
