@@ -59,17 +59,17 @@ public class Installer
     public File createDist( WrapperConfiguration configuration )
         throws Exception
     {
-        URI distributionUrl;
+        URI distributionUrl = configuration.getDistribution();
+
         String mvnwRepoUrl = System.getenv( MavenWrapperMain.MVNW_REPOURL );
         if ( mvnwRepoUrl != null && !mvnwRepoUrl.isEmpty() )
         {
-            distributionUrl = new URI( mvnwRepoUrl + "/" + MavenWrapperMain.MVN_PATH );
             Logger.info( "Detected MVNW_REPOURL environment variable " + mvnwRepoUrl );
+            String mvnPath = distributionUrl.toURL().toString();
+            mvnPath = mvnPath.substring( mvnPath.indexOf( "org/apache/maven" ) );
+            distributionUrl = new URI( mvnwRepoUrl + "/" + mvnPath );
         }
-        else
-        {
-            distributionUrl = configuration.getDistribution();
-        }
+
         Logger.info( "Downloading Maven binary from " + distributionUrl );
         boolean alwaysDownload = configuration.isAlwaysDownload();
         boolean alwaysUnpack = configuration.isAlwaysUnpack();

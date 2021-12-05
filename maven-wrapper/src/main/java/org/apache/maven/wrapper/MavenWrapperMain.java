@@ -50,11 +50,6 @@ public class MavenWrapperMain
 
     public static final String MVNW_REPOURL = "MVNW_REPOURL";
 
-    public static final String MVN_VERSION = "3.6.3";
-
-    public static final String MVN_PATH =
-        "org/apache/maven/apache-maven/" + MVN_VERSION + "/apache-maven-" + MVN_VERSION + "-bin.zip";
-
     public static void main( String[] args )
         throws Exception
     {

@@ -166,8 +166,6 @@ When using an internal Maven repository manager, you have two options:
   environment variable `MVNW_REPOURL` to your repo manager URL such as
   `https://repo.example.com/central-repo-proxy`.
 
-<!--- TODO: check this feature -->
-
 If `MVNW_REPOURL` is set during the wrapper installation with the
 maven-wrapper-plugin, the URL is used in the maven-wrapper.properties file.
 
