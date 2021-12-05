@@ -41,12 +41,14 @@ under the License.
       <source>src/resources/mvnw.cmd</source>
       <outputDirectory>.</outputDirectory>
       <lineEnding>dos</lineEnding>
+      <filtered>true</filtered>
     </file>
     <file>
       <source>src/resources/mvnw</source>
       <outputDirectory>.</outputDirectory>
       <lineEnding>unix</lineEnding>
       <fileMode>0755</fileMode>
+      <filtered>true</filtered>
     </file>
   </files>
 </assembly>
