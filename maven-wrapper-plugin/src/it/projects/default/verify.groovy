@@ -20,8 +20,8 @@
 
 assert new File(basedir,'mvnw').exists()
 assert new File(basedir,'mvnw.cmd').exists()
-//assert new File(basedir,'mvnwDebug').exists()
-//assert new File(basedir,'mvnwDebug.cmd').exists()
+assert new File(basedir,'mvnwDebug').exists()
+assert new File(basedir,'mvnwDebug.cmd').exists()
 assert new File(basedir,'.mvn/wrapper/maven-wrapper.properties').exists()
 assert new File(basedir,'.mvn/wrapper/maven-wrapper.jar').exists()
 assert new File(basedir, 'build.log').text.contains('[INFO] Unpacked bin type wrapper distribution org.apache.maven.wrapper:maven-wrapper-distribution:zip:bin:')

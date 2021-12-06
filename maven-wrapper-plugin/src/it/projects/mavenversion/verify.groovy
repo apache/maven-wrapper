@@ -20,8 +20,8 @@
  
 assert new File(basedir,'mvnw').exists()
 assert new File(basedir,'mvnw.cmd').exists()
-//assert new File(basedir,'mvnwDebug').exists()
-//assert new File(basedir,'mvnwDebug.cmd').exists()
+assert new File(basedir,'mvnwDebug').exists()
+assert new File(basedir,'mvnwDebug.cmd').exists()
 
 def propertiesFile = new File(basedir,'.mvn/wrapper/maven-wrapper.properties')
 assert propertiesFile.exists()
