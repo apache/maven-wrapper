@@ -70,17 +70,17 @@ public class WrapperMojo extends AbstractMojo
     /**
      * Options are:
      * <dl>
-     *   <dt>script (default)</dt>
+     *   <dt>script</dt>
      *   <dd>only mvnw scripts</dd>
-     *   <dt>bin</dt>
+     *   <dt>bin (default)</dt>
      *   <dd>precompiled and packaged code</dd>
      *   <dt>source</dt>
-     *   <dd>sourcecode, will be compiled on the fly</dd>
+     *   <dd>Java source code, will be compiled on the fly</dd>
      * </dl> 
      * 
      * Value will be used as classifier of the downloaded file
      */
-    @Parameter( defaultValue = "script", property = "type" )
+    @Parameter( defaultValue = "bin", property = "type" )
     private String distributionType;
 
     @Parameter( defaultValue = "true", property = "includeDebug" )
