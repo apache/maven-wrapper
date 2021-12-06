@@ -70,11 +70,11 @@ public class Installer
             distributionUrl = new URI( mvnwRepoUrl + "/" + mvnPath );
         }
 
-        Logger.info( "Downloading Maven binary from " + distributionUrl );
         boolean alwaysDownload = configuration.isAlwaysDownload();
         boolean alwaysUnpack = configuration.isAlwaysUnpack();
 
         PathAssembler.LocalDistribution localDistribution = pathAssembler.getDistribution( configuration );
+        Logger.info( "Installing Maven distribution " + localDistribution.getDistributionDir().getAbsolutePath() );
 
         File localZipFile = localDistribution.getZipFile();
         boolean downloaded = false;
@@ -103,15 +103,15 @@ public class Installer
             dirs = listDirs( distDir );
             if ( dirs.isEmpty() )
             {
-                throw new RuntimeException( String.format( "Maven distribution '%s' does not contain any directories."
-                    + " Expected to find exactly 1 directory.", distributionUrl ) );
+                throw new RuntimeException( String.format( "Maven distribution '%s' does not contain any directory."
+                    + " Expected to find exactly 1 directory.", distDir ) );
             }
             setExecutablePermissions( dirs.get( 0 ) );
         }
         if ( dirs.size() != 1 )
         {
             throw new RuntimeException( String.format( "Maven distribution '%s' contains too many directories."
-                + " Expected to find exactly 1 directory.", distributionUrl ) );
+                + " Expected to find exactly 1 directory.", distDir ) );
         }
         return dirs.get( 0 );
     }
@@ -171,7 +171,7 @@ public class Installer
         if ( errorMessage != null )
         {
             Logger.warn( "Could not set executable permissions for: " + mavenCommand.getAbsolutePath() );
-            Logger.warn( "Please do this manually if you want to use maven." );
+            Logger.warn( "Please do this manually if you want to use Maven." );
         }
     }
 
