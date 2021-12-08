@@ -7,3 +7,5 @@ github:
     - build-management
     - apache-maven
     - maven
+notifications:
+  jira_options: link label comment
