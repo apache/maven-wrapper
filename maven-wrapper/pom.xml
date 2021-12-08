@@ -34,7 +34,7 @@ under the License.
   <description>Maven Wrapper Jar download, installs and launches installed target Maven distribution as part of Maven Wrapper scripts run.</description>
 
   <properties>
-    <javaVersion>5</javaVersion>
+    <javaVersion>7</javaVersion>
   </properties>
 
   <dependencies>
