@@ -86,7 +86,10 @@ public class WrapperMojo extends AbstractMojo
     @Parameter( defaultValue = "bin", property = "type" )
     private String distributionType;
 
-    @Parameter( defaultValue = "true", property = "includeDebug" )
+    /**
+     * Include <code>mvnwDebug*</code> scripts?
+     */
+    @Parameter( defaultValue = "false", property = "includeDebug" )
     private boolean includeDebugScript;
     
     // READONLY PARAMETERS 
