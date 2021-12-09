@@ -74,6 +74,15 @@ under the License.
       <artifactId>ant</artifactId>
       <version>1.10.11</version>
       <scope>test</scope>
+      <exclusions>
+        <!-- workaround for provided dependency to com:sun:tools on jdk8 -->
+        <!-- this brake enforceBytecodeVersion -->
+        <!-- can be removed after switch to jdk8 -->
+        <exclusion>
+          <groupId>com.sun</groupId>
+          <artifactId>tools</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
 
