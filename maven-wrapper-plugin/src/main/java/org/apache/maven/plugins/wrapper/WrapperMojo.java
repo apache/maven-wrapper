@@ -35,17 +35,16 @@ import javax.inject.Inject;
 
 import org.apache.maven.Maven;
 import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.resolver.ArtifactResolutionRequest;
+import org.apache.maven.artifact.resolver.ArtifactResolutionResult;
+import org.apache.maven.execution.MavenExecutionRequest;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.project.DefaultProjectBuildingRequest;
-import org.apache.maven.project.ProjectBuildingRequest;
-import org.apache.maven.shared.transfer.artifact.DefaultArtifactCoordinate;
-import org.apache.maven.shared.transfer.artifact.resolve.ArtifactResolver;
-import org.apache.maven.shared.transfer.artifact.resolve.ArtifactResolverException;
+import org.apache.maven.repository.RepositorySystem;
 import org.codehaus.plexus.archiver.UnArchiver;
 import org.codehaus.plexus.components.io.fileselectors.FileInfo;
 import org.codehaus.plexus.components.io.fileselectors.FileSelector;
@@ -112,8 +111,8 @@ public class WrapperMojo extends AbstractMojo
     // COMPONENTS 
     
     @Inject
-    private ArtifactResolver artifactResolver;
-    
+    private RepositorySystem repositorySystem;
+
     @Inject
     private Map<String, UnArchiver> unarchivers;
     
@@ -123,15 +122,7 @@ public class WrapperMojo extends AbstractMojo
     {
         String wrapperVersion = getVersion( null, this.getClass(), "org.apache.maven.plugins/maven-wrapper-plugin" );
 
-        Artifact artifact;
-        try
-        {
-            artifact = downloadWrapperDistribution( wrapperVersion );
-        }
-        catch ( ArtifactResolverException e )
-        {
-            throw new MojoExecutionException( e.getMessage(), e );
-        }
+        Artifact artifact = downloadWrapperDistribution( wrapperVersion );
 
         try
         {
@@ -155,20 +146,39 @@ public class WrapperMojo extends AbstractMojo
         }
     }
     
-    private Artifact downloadWrapperDistribution( String wrapperVersion )
-        throws ArtifactResolverException
+    private Artifact downloadWrapperDistribution( String wrapperVersion ) throws MojoExecutionException
     {
-        ProjectBuildingRequest buildingRequest =
-            new DefaultProjectBuildingRequest( session.getProjectBuildingRequest() );
+        Artifact artifact = repositorySystem.createArtifactWithClassifier(
+            WRAPPER_DISTRIBUTION_GROUP_ID,
+            WRAPPER_DISTRIBUTION_ARTIFACT_ID,
+            wrapperVersion,
+            WRAPPER_DISTRIBUTION_EXTENSION,
+            distributionType );
 
-        DefaultArtifactCoordinate coordinate = new DefaultArtifactCoordinate();
-        coordinate.setGroupId( WRAPPER_DISTRIBUTION_GROUP_ID );
-        coordinate.setArtifactId( WRAPPER_DISTRIBUTION_ARTIFACT_ID );
-        coordinate.setVersion( wrapperVersion ); 
-        coordinate.setClassifier( distributionType );
-        coordinate.setExtension( WRAPPER_DISTRIBUTION_EXTENSION );
+        MavenExecutionRequest executionRequest = session.getRequest();
 
-        return artifactResolver.resolveArtifact( buildingRequest, coordinate ).getArtifact();
+        ArtifactResolutionRequest resolutionRequest = new ArtifactResolutionRequest()
+            .setArtifact( artifact )
+            .setLocalRepository( session.getLocalRepository() )
+            .setRemoteRepositories( session.getCurrentProject().getPluginArtifactRepositories() )
+            .setOffline( executionRequest.isOffline() )
+            .setForceUpdate( executionRequest.isUpdateSnapshots() );
+
+        ArtifactResolutionResult resolveResult = repositorySystem.resolve( resolutionRequest );
+
+        if ( !resolveResult.isSuccess() )
+        {
+            if ( executionRequest.isShowErrors() )
+            {
+                for ( Exception e : resolveResult.getExceptions() )
+                {
+                    getLog().error( e.getMessage(), e );
+                }
+            }
+            throw new MojoExecutionException( "artifact: " + artifact + " not resolved." );
+        }
+
+        return artifact;
     }
     
     private void unpack( Artifact artifact, Path targetFolder ) throws IOException 
