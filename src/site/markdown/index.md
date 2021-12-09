@@ -181,17 +181,3 @@ Maven Wrapper is composed of 3 pieces:
 2. [maven-wrapper-distribution](./maven-wrapper-distribution/), that provides `mvnw`/`mvnw.cmd` scripts distributions,
 
 3. [maven-wrapper-plugin](./maven-wrapper-plugin/), the `wrapper` plugin to ease installing Wrapper into a project.
-
-### Development
-
-To test Maven Wrapper during SNAPSHOT development, the SNAPSHOT wrapper Jar is not available in any remote repository for `mvnw` to download from.
-Then you'll need to choose between 2 options:
-
-1. either to use the `bin` wrapper distribution, that installs `maven-wrapper.jar` directly: `mvn org.apache.maven.plugins:maven-wrapper-plugin:3.0.3-SNAPSHOT:wrapper -Dtype=bin`.
-   This is perfect if you want to test updates in `mvnw` scripts or `maven-wrapper.jar` that do not relate to downloading `maven-wrapper.jar`,
-
-2. change the `wrapperUrl` value in `./mvn/wrapper/maven-wrapper.properties` to point to an older version of `maven-wrapper.jar`.
-   This is perfect if you want to test updates related to `maven-wrapper.jar` download only, but obviously not updates to the [wrapper jar](./maven-wrapper/),
-
-3. or the `wrapperUrl` value in `./mvn/wrapper/maven-wrapper.properties` to point to a remote HTTP(S) repository containing latest SNAPSHOT.
-   This is the most accurate way of testing every updates of the Maven Wrapper, but requires more setup (requires effective deploy to remote repository).
