@@ -33,10 +33,6 @@ under the License.
   <name>Maven Wrapper Jar</name>
   <description>Maven Wrapper Jar download, installs and launches installed target Maven distribution as part of Maven Wrapper scripts run.</description>
 
-  <properties>
-    <javaVersion>7</javaVersion>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
@@ -76,7 +72,7 @@ under the License.
       <scope>test</scope>
       <exclusions>
         <!-- workaround for provided dependency to com:sun:tools on jdk8 -->
-        <!-- this brake enforceBytecodeVersion -->
+        <!-- this breaks enforceBytecodeVersion -->
         <!-- can be removed after switch to jdk8 -->
         <exclusion>
           <groupId>com.sun</groupId>

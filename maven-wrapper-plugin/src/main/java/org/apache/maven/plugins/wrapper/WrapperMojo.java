@@ -24,11 +24,13 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.annotation.Nonnull;
 import javax.inject.Inject;
 
 import org.apache.maven.Maven;
@@ -45,6 +47,7 @@ import org.apache.maven.shared.transfer.artifact.DefaultArtifactCoordinate;
 import org.apache.maven.shared.transfer.artifact.resolve.ArtifactResolver;
 import org.apache.maven.shared.transfer.artifact.resolve.ArtifactResolverException;
 import org.codehaus.plexus.archiver.UnArchiver;
+import org.codehaus.plexus.components.io.fileselectors.FileInfo;
 import org.codehaus.plexus.components.io.fileselectors.FileSelector;
 
 import static org.apache.maven.shared.utils.logging.MessageUtils.buffer;
@@ -173,10 +176,15 @@ public class WrapperMojo extends AbstractMojo
         unarchiver.setSourceFile( artifact.getFile() );
         if ( !includeDebugScript )
         {
-            unarchiver.setFileSelectors( new FileSelector[] 
-                            {
-                                f -> !f.getName().contains( "Debug" ) 
-                            } );
+            unarchiver.setFileSelectors( new FileSelector[] { new FileSelector()
+            {
+                public boolean isSelected( @Nonnull
+                FileInfo fileInfo )
+                    throws IOException
+                {
+                    return !fileInfo.getName().contains( "Debug" );
+                }
+            } } );
         }
         unarchiver.extract();
     }
@@ -219,7 +227,7 @@ public class WrapperMojo extends AbstractMojo
             + "# specific language governing permissions and limitations\n"
             + "# under the License.\n";
         
-        try ( BufferedWriter out = Files.newBufferedWriter( wrapperPropertiesFile ) )
+        try ( BufferedWriter out = Files.newBufferedWriter( wrapperPropertiesFile, StandardCharsets.UTF_8 ) )
         {
             out.append( license );
             out.append( "distributionUrl=" + distributionUrl + "\n" );

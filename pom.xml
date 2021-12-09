@@ -60,7 +60,7 @@ under the License.
   <properties>
     <maven.site.path>wrapper-archives/wrapper-LATEST</maven.site.path>
     <mavenVersion>3.1.0</mavenVersion>
-    <javaVersion>8</javaVersion>
+    <javaVersion>7</javaVersion>
     <project.build.outputTimestamp>2021-11-26T10:03:59Z</project.build.outputTimestamp>
   </properties>
 
