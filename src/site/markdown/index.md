@@ -82,9 +82,7 @@ In terms of Apache Maven versions itself, the wrapper should work with any Maven
 3.x version and it defaults to the release used when setting up the wrapper. We do NOT
 plan to support the deprecated, EOL'ed Maven 2.x.
 
-The `maven-wrapper.jar` is compiled to work with Java 5. The Maven Wrapper Plugin for installation however uses Java 8.
-Once the wrapper is installed with the plugin, you should be able to use the wrapper on the project with Java 5 and up.
-This is however not really tested by the committers.
+The `maven-wrapper.jar` (to download and install target Maven version required by `mvnw`) and the Maven Wrapper Plugin (to inject Wrapper into a project) use Java 7.
 
 ## Verbose Mode
 
