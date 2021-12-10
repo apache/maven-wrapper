@@ -253,8 +253,8 @@ public class WrapperMojo extends AbstractMojo
         try ( BufferedWriter out = Files.newBufferedWriter( wrapperPropertiesFile, StandardCharsets.UTF_8 ) )
         {
             out.append( license );
-            out.append( "distributionUrl=" + distributionUrl + "\n" );
-            out.append( "wrapperUrl=" + wrapperUrl + "\n" );
+            out.append( "distributionUrl=" + distributionUrl + System.lineSeparator() );
+            out.append( "wrapperUrl=" + wrapperUrl + System.lineSeparator() );
         }
     }
     
