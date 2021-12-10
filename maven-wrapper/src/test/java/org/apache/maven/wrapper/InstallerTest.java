@@ -24,178 +24,191 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Zip;
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /**
  * @author Hans Dockter
  */
-public class InstallerTest {
-  private File testDir = new File("target/test-files/SystemPropertiesHandlerTest-" + System.currentTimeMillis());
+public class InstallerTest
+{
+    @TempDir
+    public Path temporaryFolder;
 
-  private Installer install;
+    private Installer install;
 
-  private Downloader downloadMock;
+    private Path distributionDir;
 
-  private PathAssembler pathAssemblerMock;
+    private Path zipStore;
 
-  private boolean downloadCalled;
+    private Path mavenHomeDir;
 
-  private File zip;
+    private Path zipDestination;
 
-  private File distributionDir;
+    private WrapperConfiguration configuration = new WrapperConfiguration();
 
-  private File zipStore;
+    private Downloader download;
 
-  private File mavenHomeDir;
+    private PathAssembler pathAssembler;
 
-  private File zipDestination;
+    private PathAssembler.LocalDistribution localDistribution;
 
-  private WrapperConfiguration configuration = new WrapperConfiguration();
+    @BeforeEach
+    public void setup()
+        throws Exception
+    {
+        configuration.setZipBase( PathAssembler.PROJECT_STRING );
+        configuration.setZipPath( "someZipPath" );
+        configuration.setDistributionBase( PathAssembler.MAVEN_USER_HOME_STRING );
+        configuration.setDistributionPath( "someDistPath" );
+        configuration.setDistribution( new URI( "http://server/maven-0.9.zip" ) );
+        configuration.setAlwaysDownload( false );
+        configuration.setAlwaysUnpack( false );
+        distributionDir = temporaryFolder.resolve( "someDistPath" );
+        Files.createDirectories( distributionDir );
+        mavenHomeDir = distributionDir.resolve( "maven-0.9" );
+        zipStore = temporaryFolder.resolve( "zips" );
+        Files.createDirectories( zipStore );
+        zipDestination = zipStore.resolve( "maven-0.9.zip" );
 
-  private Downloader download;
+        download = mock( Downloader.class );
+        pathAssembler = mock( PathAssembler.class );
+        localDistribution = mock( PathAssembler.LocalDistribution.class );
 
-  private PathAssembler pathAssembler;
+        when( localDistribution.getZipFile() ).thenReturn( zipDestination );
+        when( localDistribution.getDistributionDir() ).thenReturn( distributionDir );
+        when( pathAssembler.getDistribution( configuration ) ).thenReturn( localDistribution );
 
-  private PathAssembler.LocalDistribution localDistribution;
+        install = new Installer( download, pathAssembler );
+    }
 
-  @Before
-  public void setup() throws Exception {
+    private void createTestZip( Path zipDestination )
+        throws Exception
+    {
+        Files.createDirectories( zipDestination.getParent() );
 
-    testDir.mkdirs();
+        Path explodedZipDir = temporaryFolder.resolve( "explodedZip" );
 
-    downloadCalled = false;
-    configuration.setZipBase(PathAssembler.PROJECT_STRING);
-    configuration.setZipPath("someZipPath");
-    configuration.setDistributionBase(PathAssembler.MAVEN_USER_HOME_STRING);
-    configuration.setDistributionPath("someDistPath");
-    configuration.setDistribution(new URI("http://server/maven-0.9.zip"));
-    configuration.setAlwaysDownload(false);
-    configuration.setAlwaysUnpack(false);
-    distributionDir = new File(testDir, "someDistPath");
-    mavenHomeDir = new File(distributionDir, "maven-0.9");
-    zipStore = new File(testDir, "zips");
-    zipDestination = new File(zipStore, "maven-0.9.zip");
+        Path mavenScript = explodedZipDir.resolve( "maven-0.9/bin/mvn" );
+        Files.createDirectories( mavenScript.getParent() );
+        Files.write( mavenScript, Arrays.asList( "something" ) );
 
-    download = mock(Downloader.class);
-    pathAssembler = mock(PathAssembler.class);
-    localDistribution = mock(PathAssembler.LocalDistribution.class);
+        zipTo( explodedZipDir, zipDestination );
+    }
 
-    when(localDistribution.getZipFile()).thenReturn(zipDestination);
-    when(localDistribution.getDistributionDir()).thenReturn(distributionDir);
-    when(pathAssembler.getDistribution(configuration)).thenReturn(localDistribution);
+    @Test
+    @Disabled("not working")
+    public void testCreateDist()
+        throws Exception
+    {
+        Path homeDir = install.createDist( configuration );
 
-    install = new Installer(download, pathAssembler);
+        Assert.assertEquals( mavenHomeDir, homeDir );
+        Assert.assertTrue( Files.isDirectory( homeDir ) );
+        Assert.assertTrue( Files.exists( homeDir.resolve( "bin/mvn" ) ) );
+        Assert.assertTrue( Files.exists( zipDestination ) );
 
-  }
+        Assert.assertEquals( localDistribution, pathAssembler.getDistribution( configuration ) );
+        Assert.assertEquals( distributionDir, localDistribution.getDistributionDir() );
+        Assert.assertEquals( zipDestination, localDistribution.getZipFile() );
 
-  private void createTestZip(File zipDestination) throws Exception {
-    File explodedZipDir = new File(testDir, "explodedZip");
-    explodedZipDir.mkdirs();
-    zipDestination.getParentFile().mkdirs();
-    File mavenScript = new File(explodedZipDir, "maven-0.9/bin/mvn");
-    mavenScript.getParentFile().mkdirs();
-    FileUtils.write(mavenScript, "something");
+        // download.download(new URI("http://some/test"), distributionDir);
+        // verify(download).download(new URI("http://some/test"), distributionDir);
+    }
 
-    zipTo(explodedZipDir, zipDestination);
-  }
+    @Test
+    public void testCreateDistWithExistingDistribution()
+        throws Exception
+    {
+        Files.createFile( zipDestination );
 
-  public void testCreateDist() throws Exception {
-    File homeDir = install.createDist(configuration);
+        Files.createDirectories( mavenHomeDir );
+        Path someFile = mavenHomeDir.resolve( "some-file" );
+        Files.createFile( someFile );
 
-    Assert.assertEquals(mavenHomeDir, homeDir);
-    Assert.assertTrue(homeDir.isDirectory());
-    Assert.assertTrue(new File(homeDir, "bin/mvn").exists());
-    Assert.assertTrue(zipDestination.exists());
+        Path homeDir = install.createDist( configuration );
 
-    Assert.assertEquals(localDistribution, pathAssembler.getDistribution(configuration));
-    Assert.assertEquals(distributionDir, localDistribution.getDistributionDir());
-    Assert.assertEquals(zipDestination, localDistribution.getZipFile());
+        Assert.assertEquals( mavenHomeDir, homeDir );
+        Assert.assertTrue( Files.isDirectory( mavenHomeDir ) );
+        Assert.assertTrue( Files.exists( homeDir.resolve( "some-file" ) ) );
+        Assert.assertTrue( Files.exists( zipDestination ) );
 
-    // download.download(new URI("http://some/test"), distributionDir);
-    // verify(download).download(new URI("http://some/test"), distributionDir);
-  }
+        Assert.assertEquals( localDistribution, pathAssembler.getDistribution( configuration ) );
+        Assert.assertEquals( distributionDir, localDistribution.getDistributionDir() );
+        Assert.assertEquals( zipDestination, localDistribution.getZipFile() );
+    }
 
-  @Test
-  public void testCreateDistWithExistingDistribution() throws Exception {
+    @Test
+    public void testCreateDistWithExistingDistAndZipAndAlwaysUnpackTrue()
+        throws Exception
+    {
 
-    FileUtils.touch(zipDestination);
-    mavenHomeDir.mkdirs();
-    File someFile = new File(mavenHomeDir, "some-file");
-    FileUtils.touch(someFile);
+        createTestZip( zipDestination );
+        Files.createDirectories( mavenHomeDir );
+        File garbage = mavenHomeDir.resolve( "garbage" ).toFile();
+        Files.createFile( garbage.toPath() );
 
-    File homeDir = install.createDist(configuration);
+        configuration.setAlwaysUnpack( true );
 
-    Assert.assertEquals(mavenHomeDir, homeDir);
-    Assert.assertTrue(mavenHomeDir.isDirectory());
-    Assert.assertTrue(new File(homeDir, "some-file").exists());
-    Assert.assertTrue(zipDestination.exists());
+        Path homeDir = install.createDist( configuration );
 
-    Assert.assertEquals(localDistribution, pathAssembler.getDistribution(configuration));
-    Assert.assertEquals(distributionDir, localDistribution.getDistributionDir());
-    Assert.assertEquals(zipDestination, localDistribution.getZipFile());
-  }
+        Assert.assertEquals( mavenHomeDir, homeDir );
+        Assert.assertTrue( Files.isDirectory( mavenHomeDir ) );
+        Assert.assertFalse( Files.exists( homeDir.resolve( "garbage" ) ) );
+        Assert.assertTrue( Files.exists( zipDestination ) );
 
-  @Test
-  public void testCreateDistWithExistingDistAndZipAndAlwaysUnpackTrue() throws Exception {
+        Assert.assertEquals( localDistribution, pathAssembler.getDistribution( configuration ) );
+        Assert.assertEquals( distributionDir, localDistribution.getDistributionDir() );
+        Assert.assertEquals( zipDestination, localDistribution.getZipFile() );
+    }
 
-    createTestZip(zipDestination);
-    mavenHomeDir.mkdirs();
-    File garbage = new File(mavenHomeDir, "garbage");
-    FileUtils.touch(garbage);
-    configuration.setAlwaysUnpack(true);
+    @Test
+    public void testCreateDistWithExistingZipAndDistAndAlwaysDownloadTrue()
+        throws Exception
+    {
 
-    File homeDir = install.createDist(configuration);
+        createTestZip( zipDestination );
+        Files.createDirectories( mavenHomeDir );
+        File garbage = mavenHomeDir.resolve( "garbage" ).toFile();
+        Files.createFile( garbage.toPath() );
 
-    Assert.assertEquals(mavenHomeDir, homeDir);
-    Assert.assertTrue(mavenHomeDir.isDirectory());
-    Assert.assertFalse(new File(homeDir, "garbage").exists());
-    Assert.assertTrue(zipDestination.exists());
+        configuration.setAlwaysUnpack( true );
 
-    Assert.assertEquals(localDistribution, pathAssembler.getDistribution(configuration));
-    Assert.assertEquals(distributionDir, localDistribution.getDistributionDir());
-    Assert.assertEquals(zipDestination, localDistribution.getZipFile());
-  }
+        Path homeDir = install.createDist( configuration );
 
-  @Test
-  public void testCreateDistWithExistingZipAndDistAndAlwaysDownloadTrue() throws Exception {
+        Assert.assertEquals( mavenHomeDir, homeDir );
+        Assert.assertTrue( Files.isDirectory( mavenHomeDir ) );
+        Assert.assertTrue( Files.exists( homeDir.resolve( "bin/mvn" ) ) );
+        Assert.assertFalse( Files.exists( homeDir.resolve( "garbage" ) ) );
+        Assert.assertTrue( Files.exists( zipDestination ) );
 
-    createTestZip(zipDestination);
-    File garbage = new File(mavenHomeDir, "garbage");
-    FileUtils.touch(garbage);
-    configuration.setAlwaysUnpack(true);
+        Assert.assertEquals( localDistribution, pathAssembler.getDistribution( configuration ) );
+        Assert.assertEquals( distributionDir, localDistribution.getDistributionDir() );
+        Assert.assertEquals( zipDestination, localDistribution.getZipFile() );
 
-    File homeDir = install.createDist(configuration);
+        // download.download(new URI("http://some/test"), distributionDir);
+        // verify(download).download(new URI("http://some/test"), distributionDir);
+    }
 
-    Assert.assertEquals(mavenHomeDir, homeDir);
-    Assert.assertTrue(mavenHomeDir.isDirectory());
-    Assert.assertTrue(new File(homeDir, "bin/mvn").exists());
-    Assert.assertFalse(new File(homeDir, "garbage").exists());
-    Assert.assertTrue(zipDestination.exists());
+    public void zipTo( Path directoryToZip, Path zipFile )
+    {
+        Zip zip = new Zip();
+        zip.setBasedir( directoryToZip.toFile() );
+        zip.setDestFile( zipFile.toFile() );
+        zip.setProject( new Project() );
 
-    Assert.assertEquals(localDistribution, pathAssembler.getDistribution(configuration));
-    Assert.assertEquals(distributionDir, localDistribution.getDistributionDir());
-    Assert.assertEquals(zipDestination, localDistribution.getZipFile());
-
-    // download.download(new URI("http://some/test"), distributionDir);
-    // verify(download).download(new URI("http://some/test"), distributionDir);
-  }
-
-  public void zipTo(File directoryToZip, File zipFile) {
-    Zip zip = new Zip();
-    zip.setBasedir(directoryToZip);
-    zip.setDestFile(zipFile);
-    zip.setProject(new Project());
-
-    Zip.WhenEmpty whenEmpty = new Zip.WhenEmpty();
-    whenEmpty.setValue("create");
-    zip.setWhenempty(whenEmpty);
-    zip.execute();
-  }
-
+        Zip.WhenEmpty whenEmpty = new Zip.WhenEmpty();
+        whenEmpty.setValue( "create" );
+        zip.setWhenempty( whenEmpty );
+        zip.execute();
+    }
 }

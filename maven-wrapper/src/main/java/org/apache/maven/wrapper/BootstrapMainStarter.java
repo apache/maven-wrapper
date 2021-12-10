@@ -23,6 +23,7 @@ import java.io.File;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Path;
 
 /**
  * Maven starter, from a provided Maven home directory.
@@ -31,17 +32,17 @@ import java.net.URLClassLoader;
  */
 public class BootstrapMainStarter
 {
-    public void start( String[] args, File mavenHome )
+    public void start( String[] args, Path mavenHome )
         throws Exception
     {
-        File mavenJar = findLauncherJar( mavenHome );
-        URLClassLoader contextClassLoader = new URLClassLoader( new URL[] { mavenJar.toURI().toURL() },
+        Path mavenJar = findLauncherJar( mavenHome.toFile() ).toPath();
+        URLClassLoader contextClassLoader = new URLClassLoader( new URL[] { mavenJar.toUri().toURL() },
                                                                 ClassLoader.getSystemClassLoader().getParent() );
         Thread.currentThread().setContextClassLoader( contextClassLoader );
         Class<?> mainClass = contextClassLoader.loadClass( "org.codehaus.plexus.classworlds.launcher.Launcher" );
 
-        System.setProperty( "maven.home", mavenHome.getAbsolutePath() );
-        System.setProperty( "classworlds.conf", new File( mavenHome, "/bin/m2.conf" ).getAbsolutePath() );
+        System.setProperty( "maven.home", mavenHome.toAbsolutePath().toString() );
+        System.setProperty( "classworlds.conf", mavenHome.resolve( "bin/m2.conf" ).toAbsolutePath().toString() );
 
         Method mainMethod = mainClass.getMethod( "main", String[].class );
         mainMethod.invoke( null, new Object[] { args } );

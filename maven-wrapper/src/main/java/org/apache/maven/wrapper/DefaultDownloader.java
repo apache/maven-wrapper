@@ -23,17 +23,18 @@ import static org.apache.maven.wrapper.MavenWrapperMain.MVNW_PASSWORD;
 import static org.apache.maven.wrapper.MavenWrapperMain.MVNW_USERNAME;
 
 import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Method;
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Base64;
 
 /**
  * @author Hans Dockter
@@ -67,47 +68,44 @@ public class DefaultDownloader
 
     private void configureAuthentication()
     {
-        if ( System.getenv( "MVNW_USERNAME" ) != null && System.getenv( "MVNW_PASSWORD" ) != null
+        if ( System.getenv( MVNW_USERNAME ) != null && System.getenv( MVNW_PASSWORD ) != null
             && System.getProperty( "http.proxyUser" ) == null )
         {
             Authenticator.setDefault( new Authenticator()
             {
+                @Override
                 protected PasswordAuthentication getPasswordAuthentication()
                 {
-                    return new PasswordAuthentication( System.getenv( "MVNW_USERNAME" ),
-                                                       System.getenv( "MVNW_PASSWORD" ).toCharArray() );
+                    return new PasswordAuthentication( System.getenv( MVNW_USERNAME ),
+                                                       System.getenv( MVNW_PASSWORD ).toCharArray() );
                 }
             } );
         }
     }
 
-    public void download( URI address, File destination )
-        throws Exception
+    @Override
+    public void download( URI address, Path destination ) throws IOException
     {
-        if ( destination.exists() )
+        if ( Files.exists( destination ) )
         {
             return;
         }
-        destination.getParentFile().mkdirs();
+        Files.createDirectories( destination.getParent() );
 
         downloadInternal( address, destination );
     }
 
-    private void downloadInternal( URI address, File destination )
-        throws Exception
+    private void downloadInternal( URI address, Path destination ) throws IOException
     {
-        OutputStream out = null;
-        URLConnection conn;
-        InputStream in = null;
-        try
+        URL url = address.toURL();
+        URLConnection conn = url.openConnection();
+        addBasicAuthentication( address, conn );
+        final String userAgentValue = calculateUserAgent();
+        conn.setRequestProperty( "User-Agent", userAgentValue );
+
+        try ( OutputStream out = new BufferedOutputStream( Files.newOutputStream( destination ) );
+              InputStream in = conn.getInputStream() )
         {
-            URL url = address.toURL();
-            out = new BufferedOutputStream( new FileOutputStream( destination ) );
-            conn = url.openConnection();
-            addBasicAuthentication( address, conn );
-            final String userAgentValue = calculateUserAgent();
-            conn.setRequestProperty( "User-Agent", userAgentValue );
-            in = conn.getInputStream();
             byte[] buffer = new byte[BUFFER_SIZE];
             int numRead;
             long progressCounter = 0;
@@ -125,14 +123,6 @@ public class DefaultDownloader
         finally
         {
             Logger.info( "" );
-            if ( in != null )
-            {
-                in.close();
-            }
-            if ( out != null )
-            {
-                out.close();
-            }
         }
     }
 
@@ -153,10 +143,7 @@ public class DefaultDownloader
     }
 
     /**
-     * Base64 encode user info for HTTP Basic Authentication. Try to use {@literal java.util.Base64} encoder which is
-     * available starting with Java 8. Fallback to {@literal javax.xml.bind.DatatypeConverter} from JAXB which is
-     * available starting with Java 6 but is not anymore in Java 9. Fortunately, both of these two Base64 encoders
-     * implement the right Base64 flavor, the one that does not split the output in multiple lines.
+     * Base64 encode user info for HTTP Basic Authentication.
      *
      * @param userInfo user info
      * @return Base64 encoded user info
@@ -164,30 +151,7 @@ public class DefaultDownloader
      */
     private String base64Encode( String userInfo )
     {
-        ClassLoader loader = getClass().getClassLoader();
-        try
-        {
-            Method getEncoderMethod = loader.loadClass( "java.util.Base64" ).getMethod( "getEncoder" );
-            Method encodeMethod =
-                loader.loadClass( "java.util.Base64$Encoder" ).getMethod( "encodeToString", byte[].class );
-            Object encoder = getEncoderMethod.invoke( null );
-            return (String) encodeMethod.invoke( encoder, new Object[] { userInfo.getBytes( "UTF-8" ) } );
-        }
-        catch ( Exception java7OrEarlier )
-        {
-            try
-            {
-                Method encodeMethod =
-                    loader.loadClass( "javax.xml.bind.DatatypeConverter" ).getMethod( "printBase64Binary",
-                                                                                      byte[].class );
-                return (String) encodeMethod.invoke( null, new Object[] { userInfo.getBytes( "UTF-8" ) } );
-            }
-            catch ( Exception java5OrEarlier )
-            {
-                throw new RuntimeException( "Downloading Maven distributions with HTTP Basic Authentication"
-                    + " is not supported on your JVM.", java5OrEarlier );
-            }
-        }
+        return Base64.getEncoder().encodeToString( userInfo.getBytes( StandardCharsets.UTF_8 ) );
     }
 
     private String calculateUserInfo( URI uri )
@@ -203,16 +167,14 @@ public class DefaultDownloader
 
     private String calculateUserAgent()
     {
-        String appVersion = applicationVersion;
-
         String javaVendor = System.getProperty( "java.vendor" );
         String javaVersion = System.getProperty( "java.version" );
         String javaVendorVersion = System.getProperty( "java.vm.version" );
         String osName = System.getProperty( "os.name" );
         String osVersion = System.getProperty( "os.version" );
         String osArch = System.getProperty( "os.arch" );
-        return String.format( "%s/%s (%s;%s;%s) (%s;%s;%s)", applicationName, appVersion, osName, osVersion, osArch,
-                              javaVendor, javaVersion, javaVendorVersion );
+        return String.format( "%s/%s (%s;%s;%s) (%s;%s;%s)", applicationName, applicationVersion, osName, osVersion,
+                osArch, javaVendor, javaVersion, javaVendorVersion );
     }
 
     private static class SystemPropertiesProxyAuthenticator

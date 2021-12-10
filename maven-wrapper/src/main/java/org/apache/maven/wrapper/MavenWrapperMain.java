@@ -19,15 +19,13 @@ package org.apache.maven.wrapper;
  * under the License.
  */
 
-import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Map;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Properties;
-
-import org.apache.maven.wrapper.cli.CommandLineParser;
-import org.apache.maven.wrapper.cli.SystemPropertiesCommandLineConverter;
 
 /**
  * Main entry point for the Maven Wrapper, delegating wrapper execution to {@link WrapperExecutor}.
@@ -36,11 +34,9 @@ import org.apache.maven.wrapper.cli.SystemPropertiesCommandLineConverter;
  */
 public class MavenWrapperMain
 {
+    private static final String POM_PROPERTIES = "/META-INF/maven/org.apache.maven/maven-wrapper/pom.properties";
+
     public static final String DEFAULT_MAVEN_USER_HOME = System.getProperty( "user.home" ) + "/.m2";
-
-    public static final String MAVEN_USER_HOME_PROPERTY_KEY = "maven.user.home";
-
-    public static final String MAVEN_USER_HOME_ENV_KEY = "MAVEN_USER_HOME";
 
     public static final String MVNW_VERBOSE = "MVNW_VERBOSE";
 
@@ -50,116 +46,62 @@ public class MavenWrapperMain
 
     public static final String MVNW_REPOURL = "MVNW_REPOURL";
 
+    public static final String MVN_PATH =
+        "org/apache/maven/apache-maven/" + wrapperVersion() + "/apache-maven-" + wrapperVersion() + "-bin.zip";
+
     public static void main( String[] args )
         throws Exception
     {
-        File wrapperJar = wrapperJar();
-        File propertiesFile = wrapperProperties( wrapperJar );
-        File rootDir = rootDir( wrapperJar );
+        Path wrapperJar = wrapperJar();
+        Path propertiesFile = wrapperProperties( wrapperJar );
 
         String wrapperVersion = wrapperVersion();
         Logger.info( "Apache Maven Wrapper " + wrapperVersion );
 
-        Properties systemProperties = System.getProperties();
-        systemProperties.putAll( parseSystemPropertiesFromArgs( args ) );
-
-        addSystemProperties( rootDir );
-
-        WrapperExecutor wrapperExecutor = WrapperExecutor.forWrapperPropertiesFile( propertiesFile, System.out );
+        WrapperExecutor wrapperExecutor = WrapperExecutor.forWrapperPropertiesFile( propertiesFile );
         wrapperExecutor.execute( args, new Installer( new DefaultDownloader( "mvnw", wrapperVersion ),
                                                       new PathAssembler( mavenUserHome() ) ),
                                  new BootstrapMainStarter() );
     }
 
-    private static Map<String, String> parseSystemPropertiesFromArgs( String[] args )
+    private static Path wrapperProperties( Path wrapperJar ) throws URISyntaxException
     {
-        SystemPropertiesCommandLineConverter converter = new SystemPropertiesCommandLineConverter();
-        CommandLineParser commandLineParser = new CommandLineParser();
-        converter.configure( commandLineParser );
-        commandLineParser.allowUnknownOptions();
-        return converter.convert( commandLineParser.parse( args ) );
+        return wrapperJar().resolveSibling( wrapperJar.getFileName().toString().replaceFirst( "\\.jar$",
+                                                                                              ".properties" ) );
     }
 
-    private static void addSystemProperties( File rootDir )
+    private static Path wrapperJar() throws URISyntaxException
     {
-        System.getProperties().putAll( SystemPropertiesHandler.getSystemProperties( new File( mavenUserHome(),
-                                                                                              "maven.properties" ) ) );
-        System.getProperties().putAll( SystemPropertiesHandler.getSystemProperties( new File( rootDir,
-                                                                                              "maven.properties" ) ) );
-    }
+        URI location = MavenWrapperMain.class.getProtectionDomain().getCodeSource().getLocation().toURI();
 
-    private static File rootDir( File wrapperJar )
-    {
-        return wrapperJar.getParentFile().getParentFile().getParentFile();
-    }
-
-    private static File wrapperProperties( File wrapperJar )
-    {
-        return new File( wrapperJar.getParent(), wrapperJar.getName().replaceFirst( "\\.jar$", ".properties" ) );
-    }
-
-    private static File wrapperJar()
-    {
-        URI location;
-        try
-        {
-            location = MavenWrapperMain.class.getProtectionDomain().getCodeSource().getLocation().toURI();
-        }
-        catch ( URISyntaxException e )
-        {
-            throw new RuntimeException( e );
-        }
-        if ( !location.getScheme().equals( "file" ) )
-        {
-            throw new RuntimeException( String.format( "Cannot determine classpath for wrapper Jar from codebase '%s'.",
-                                                       location ) );
-        }
-        return new File( location.getPath() );
+        return Paths.get( location );
     }
 
     static String wrapperVersion()
     {
-        try
+        try ( InputStream resourceAsStream = MavenWrapperMain.class.getResourceAsStream( POM_PROPERTIES ) )
         {
-            InputStream resourceAsStream =
-                MavenWrapperMain.class.getResourceAsStream( "/META-INF/maven/org.apache.maven.wrapper/"
-                    + "maven-wrapper/pom.properties" );
             if ( resourceAsStream == null )
             {
-                throw new RuntimeException( "No maven properties found." );
+                throw new IllegalStateException( POM_PROPERTIES + " not found." );
             }
             Properties mavenProperties = new Properties();
-            try
+            mavenProperties.load( resourceAsStream );
+            String version = mavenProperties.getProperty( "version" );
+            if ( version == null )
             {
-                mavenProperties.load( resourceAsStream );
-                String version = mavenProperties.getProperty( "version" );
-                if ( version == null )
-                {
-                    throw new RuntimeException( "No version number specified in build receipt resource." );
-                }
-                return version;
+                throw new NullPointerException( "No version specified in " + POM_PROPERTIES );
             }
-            finally
-            {
-                resourceAsStream.close();
-            }
+            return version;
         }
-        catch ( Exception e )
+        catch ( IOException e )
         {
             throw new RuntimeException( "Could not determine wrapper version.", e );
         }
     }
 
-    private static File mavenUserHome()
+    private static Path mavenUserHome()
     {
-        String mavenUserHome = System.getProperty( MAVEN_USER_HOME_PROPERTY_KEY );
-        if ( mavenUserHome != null )
-        {
-            return new File( mavenUserHome );
-        }
-
-        mavenUserHome = System.getenv( MAVEN_USER_HOME_ENV_KEY );
-
-        return new File( mavenUserHome == null ? DEFAULT_MAVEN_USER_HOME : mavenUserHome );
+        return Paths.get( DEFAULT_MAVEN_USER_HOME );
     }
 }

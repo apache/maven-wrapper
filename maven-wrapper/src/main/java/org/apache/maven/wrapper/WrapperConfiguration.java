@@ -22,7 +22,7 @@ package org.apache.maven.wrapper;
 import java.net.URI;
 
 /**
- * Wrapper configuration.
+ * The Wrapper Configuration
  */
 public class WrapperConfiguration
 {
