@@ -17,4 +17,4 @@
  * under the License.
  */
 
-asfMavenTlpPlgnBuild(jdk:['8','11','17','18'])
+asfMavenTlpPlgnBuild()
