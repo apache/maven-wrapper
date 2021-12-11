@@ -23,11 +23,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Map;
 import java.util.Properties;
-
-import org.apache.maven.wrapper.cli.CommandLineParser;
-import org.apache.maven.wrapper.cli.SystemPropertiesCommandLineConverter;
 
 /**
  * Main entry point for the Maven Wrapper, delegating wrapper execution to {@link WrapperExecutor}.
@@ -58,42 +54,14 @@ public class MavenWrapperMain
     {
         File wrapperJar = wrapperJar();
         File propertiesFile = wrapperProperties( wrapperJar );
-        File rootDir = rootDir( wrapperJar );
 
         String wrapperVersion = wrapperVersion();
         Logger.info( "Apache Maven Wrapper " + wrapperVersion );
-
-        Properties systemProperties = System.getProperties();
-        systemProperties.putAll( parseSystemPropertiesFromArgs( args ) );
-
-        addSystemProperties( rootDir );
 
         WrapperExecutor wrapperExecutor = WrapperExecutor.forWrapperPropertiesFile( propertiesFile, System.out );
         wrapperExecutor.execute( args, new Installer( new DefaultDownloader( "mvnw", wrapperVersion ),
                                                       new PathAssembler( mavenUserHome() ) ),
                                  new BootstrapMainStarter() );
-    }
-
-    private static Map<String, String> parseSystemPropertiesFromArgs( String[] args )
-    {
-        SystemPropertiesCommandLineConverter converter = new SystemPropertiesCommandLineConverter();
-        CommandLineParser commandLineParser = new CommandLineParser();
-        converter.configure( commandLineParser );
-        commandLineParser.allowUnknownOptions();
-        return converter.convert( commandLineParser.parse( args ) );
-    }
-
-    private static void addSystemProperties( File rootDir )
-    {
-        System.getProperties().putAll( SystemPropertiesHandler.getSystemProperties( new File( mavenUserHome(),
-                                                                                              "maven.properties" ) ) );
-        System.getProperties().putAll( SystemPropertiesHandler.getSystemProperties( new File( rootDir,
-                                                                                              "maven.properties" ) ) );
-    }
-
-    private static File rootDir( File wrapperJar )
-    {
-        return wrapperJar.getParentFile().getParentFile().getParentFile();
     }
 
     private static File wrapperProperties( File wrapperJar )
