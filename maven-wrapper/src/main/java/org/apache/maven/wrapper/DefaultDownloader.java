@@ -96,18 +96,15 @@ public class DefaultDownloader
     private void downloadInternal( URI address, File destination )
         throws Exception
     {
-        OutputStream out = null;
-        URLConnection conn;
-        InputStream in = null;
-        try
+        URL url = address.toURL();
+        URLConnection conn = url.openConnection();
+        addBasicAuthentication( address, conn );
+        final String userAgentValue = calculateUserAgent();
+        conn.setRequestProperty( "User-Agent", userAgentValue );
+
+        try ( OutputStream out = new BufferedOutputStream( new FileOutputStream( destination ) );
+                        InputStream in = conn.getInputStream() )
         {
-            URL url = address.toURL();
-            out = new BufferedOutputStream( new FileOutputStream( destination ) );
-            conn = url.openConnection();
-            addBasicAuthentication( address, conn );
-            final String userAgentValue = calculateUserAgent();
-            conn.setRequestProperty( "User-Agent", userAgentValue );
-            in = conn.getInputStream();
             byte[] buffer = new byte[BUFFER_SIZE];
             int numRead;
             long progressCounter = 0;
@@ -122,18 +119,8 @@ public class DefaultDownloader
                 out.write( buffer, 0, numRead );
             }
         }
-        finally
-        {
-            Logger.info( "" );
-            if ( in != null )
-            {
-                in.close();
-            }
-            if ( out != null )
-            {
-                out.close();
-            }
-        }
+
+        Logger.info( "" );
     }
 
     private void addBasicAuthentication( URI address, URLConnection connection )

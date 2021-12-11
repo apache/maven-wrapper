@@ -36,6 +36,9 @@ import org.apache.maven.wrapper.cli.SystemPropertiesCommandLineConverter;
  */
 public class MavenWrapperMain
 {
+    private static final String POM_PROPERTIES = "/META-INF/maven/org.apache.maven.wrapper/"
+        + "maven-wrapper/pom.properties";
+
     public static final String DEFAULT_MAVEN_USER_HOME = System.getProperty( "user.home" ) + "/.m2";
 
     public static final String MAVEN_USER_HOME_PROPERTY_KEY = "maven.user.home";
@@ -119,30 +122,20 @@ public class MavenWrapperMain
 
     static String wrapperVersion()
     {
-        try
+        try ( InputStream resourceAsStream = MavenWrapperMain.class.getResourceAsStream( POM_PROPERTIES ) )
         {
-            InputStream resourceAsStream =
-                MavenWrapperMain.class.getResourceAsStream( "/META-INF/maven/org.apache.maven.wrapper/"
-                    + "maven-wrapper/pom.properties" );
             if ( resourceAsStream == null )
             {
-                throw new RuntimeException( "No maven properties found." );
+                throw new IllegalStateException( POM_PROPERTIES + " not found." );
             }
             Properties mavenProperties = new Properties();
-            try
+            mavenProperties.load( resourceAsStream );
+            String version = mavenProperties.getProperty( "version" );
+            if ( version == null )
             {
-                mavenProperties.load( resourceAsStream );
-                String version = mavenProperties.getProperty( "version" );
-                if ( version == null )
-                {
-                    throw new RuntimeException( "No version number specified in build receipt resource." );
-                }
-                return version;
+                throw new NullPointerException( "No version specified in " + POM_PROPERTIES );
             }
-            finally
-            {
-                resourceAsStream.close();
-            }
+            return version;
         }
         catch ( Exception e )
         {

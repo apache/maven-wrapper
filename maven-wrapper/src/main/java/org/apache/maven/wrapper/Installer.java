@@ -150,21 +150,19 @@ public class Installer
             }
             else
             {
-                BufferedReader is = new BufferedReader( new InputStreamReader( p.getInputStream() ) );
-                Formatter stdout = new Formatter();
-                String line;
-                while ( ( line = is.readLine() ) != null )
+                try ( BufferedReader is = new BufferedReader( new InputStreamReader( p.getInputStream() ) );
+                                Formatter stdout = new Formatter() )
                 {
-                    stdout.format( "%s%n", line );
+                    String line;
+                    while ( ( line = is.readLine() ) != null )
+                    {
+                        stdout.format( "%s%n", line );
+                    }
+                    errorMessage = stdout.toString();
                 }
-                errorMessage = stdout.toString();
             }
         }
-        catch ( IOException e )
-        {
-            errorMessage = e.getMessage();
-        }
-        catch ( InterruptedException e )
+        catch ( IOException | InterruptedException e )
         {
             errorMessage = e.getMessage();
         }
@@ -208,9 +206,7 @@ public class Installer
         throws IOException
     {
         Enumeration entries;
-        ZipFile zipFile;
-
-        zipFile = new ZipFile( zip );
+        ZipFile zipFile = new ZipFile( zip );
 
         entries = zipFile.entries();
 
@@ -225,25 +221,20 @@ public class Installer
             }
 
             new File( dest, entry.getName() ).getParentFile().mkdirs();
-            copyInputStream( zipFile.getInputStream( entry ),
-                             new BufferedOutputStream( new FileOutputStream( new File( dest, entry.getName() ) ) ) );
+
+            try ( InputStream in = zipFile.getInputStream( entry );
+                            OutputStream out =
+                                new BufferedOutputStream( new FileOutputStream( new File( dest, entry.getName() ) ) ) )
+            {
+                byte[] buffer = new byte[1024];
+                int len;
+
+                while ( ( len = in.read( buffer ) ) >= 0 )
+                {
+                    out.write( buffer, 0, len );
+                }
+            }
         }
         zipFile.close();
     }
-
-    public void copyInputStream( InputStream in, OutputStream out )
-        throws IOException
-    {
-        byte[] buffer = new byte[1024];
-        int len;
-
-        while ( ( len = in.read( buffer ) ) >= 0 )
-        {
-            out.write( buffer, 0, len );
-        }
-
-        in.close();
-        out.close();
-    }
-
 }
