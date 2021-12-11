@@ -67,15 +67,15 @@ public class DefaultDownloader
 
     private void configureAuthentication()
     {
-        if ( System.getenv( "MVNW_USERNAME" ) != null && System.getenv( "MVNW_PASSWORD" ) != null
+        if ( System.getenv( MVNW_USERNAME ) != null && System.getenv( MVNW_PASSWORD ) != null
             && System.getProperty( "http.proxyUser" ) == null )
         {
             Authenticator.setDefault( new Authenticator()
             {
                 protected PasswordAuthentication getPasswordAuthentication()
                 {
-                    return new PasswordAuthentication( System.getenv( "MVNW_USERNAME" ),
-                                                       System.getenv( "MVNW_PASSWORD" ).toCharArray() );
+                    return new PasswordAuthentication( System.getenv( MVNW_USERNAME ),
+                                                       System.getenv( MVNW_PASSWORD ).toCharArray() );
                 }
             } );
         }
