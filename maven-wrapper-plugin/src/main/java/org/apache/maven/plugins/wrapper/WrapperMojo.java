@@ -45,6 +45,8 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.repository.RepositorySystem;
+import org.apache.maven.settings.Mirror;
+import org.apache.maven.settings.Settings;
 import org.codehaus.plexus.archiver.UnArchiver;
 import org.codehaus.plexus.components.io.fileselectors.FileInfo;
 import org.codehaus.plexus.components.io.fileselectors.FileSelector;
@@ -60,6 +62,10 @@ import static org.apache.maven.shared.utils.logging.MessageUtils.buffer;
 @Mojo( name = "wrapper", aggregator = true, requiresDirectInvocation = true )
 public class WrapperMojo extends AbstractMojo
 {
+    private static final String MVNW_REPOURL = "MVNW_REPOURL";
+
+    private static final String DEFAULT_REPOURL = "https://repo.maven.apache.org/maven2";
+
     // CONFIGURATION PARAMETERS
     
     /**
@@ -96,6 +102,9 @@ public class WrapperMojo extends AbstractMojo
     @Parameter( defaultValue = "${session}", readonly = true, required = true )
     private MavenSession session;
     
+    @Parameter( defaultValue = "${settings}", readonly = true, required = true )
+    private Settings settings;
+
     // Waiting for org.codehaus.plexus.component.configurator.converters.basic.PathConverter
     @Parameter( defaultValue = "${project.basedir}", readonly = true, required = true )
     private File basedir;
@@ -212,7 +221,8 @@ public class WrapperMojo extends AbstractMojo
      */
     private void replaceProperties( String wrapperVersion, Path targetFolder ) throws IOException
     {
-        String repoUrl = "https://repo.maven.apache.org/maven2";
+        String repoUrl = getRepoUrl();
+
         String distributionUrl =
             repoUrl + "/org/apache/maven/apache-maven/" + mavenVersion + "/apache-maven-" + mavenVersion + "-bin.zip";
         String wrapperUrl = repoUrl + "/org/apache/maven/wrapper/maven-wrapper/" + wrapperVersion
@@ -266,5 +276,39 @@ public class WrapperMojo extends AbstractMojo
             }
         }
         return version;
+    }
+
+    /**
+     * Determine the repository URL to download Wrapper and Maven from.
+     */
+    private String getRepoUrl()
+    {
+        // default
+        String repoUrl = DEFAULT_REPOURL;
+
+        // adapt to also support MVNW_REPOURL as supported by mvnw scripts from maven-wrapper
+        String mvnwRepoUrl = System.getenv( MVNW_REPOURL );
+        if ( mvnwRepoUrl != null && !mvnwRepoUrl.isEmpty() )
+        {
+            repoUrl = mvnwRepoUrl;
+            getLog().debug( "Using repo URL from " + MVNW_REPOURL + " environment variable." );
+        }
+        // otherwise mirror from settings
+        else if ( settings.getMirrors() != null && settings.getMirrors().size() > 0 )
+        {
+            for ( Mirror current : settings.getMirrors() )
+            {
+                if ( "*".equals( current.getMirrorOf() ) )
+                {
+                    repoUrl = current.getUrl();
+                    break;
+                }
+            }
+            getLog().debug( "Using repo URL from * mirror in settings file." );
+        }
+
+        getLog().debug( "Determined repo URL to use as " + repoUrl );
+
+        return repoUrl;
     }
 }
