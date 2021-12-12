@@ -24,4 +24,9 @@ assert !(new File(basedir,'mvnwDebug').exists())
 assert !(new File(basedir,'mvnwDebug.cmd').exists())
 assert new File(basedir,'.mvn/wrapper/maven-wrapper.properties').exists()
 assert !new File(basedir,'.mvn/wrapper/maven-wrapper.jar').exists()
-assert new File(basedir, 'build.log').text.contains('[INFO] Unpacked script type wrapper distribution org.apache.maven.wrapper:maven-wrapper-distribution:zip:script:')
+
+log = new File(basedir, 'build.log').text
+assert log.contains('[INFO] Unpacked script type wrapper distribution org.apache.maven.wrapper:maven-wrapper-distribution:zip:script:')
+
+assert log.contains('[DEBUG] Using repo URL from MVNW_REPOURL environment variable.')
+assert log.contains('[DEBUG] Determined repo URL to use as @localRepositoryUrl@')
