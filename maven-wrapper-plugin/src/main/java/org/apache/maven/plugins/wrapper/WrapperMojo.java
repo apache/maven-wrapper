@@ -226,7 +226,7 @@ public class WrapperMojo extends AbstractMojo
         String distributionUrl =
             repoUrl + "/org/apache/maven/apache-maven/" + mavenVersion + "/apache-maven-" + mavenVersion + "-bin.zip";
         String wrapperUrl = repoUrl + "/org/apache/maven/wrapper/maven-wrapper/" + wrapperVersion
-            + "/maven-wrapper-" + wrapperVersion + ".zip";
+            + "/maven-wrapper-" + wrapperVersion + ".jar";
 
         Path wrapperPropertiesFile = targetFolder.resolve( "maven-wrapper.properties" );
 
