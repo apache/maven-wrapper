@@ -29,5 +29,6 @@ log = new File(basedir, 'build.log').text
 assert log.contains('[INFO] Unpacked script type wrapper distribution org.apache.maven.wrapper:maven-wrapper-distribution:zip:script:')
 
 // check "mvnw -v" output
-assert log.contains("Couldn't find .mvn/wrapper/maven-wrapper.jar, downloading it ...")
+assert log.contains("Couldn't find ")
+assert log.contains(", downloading it ...")
 assert new File(basedir,'.mvn/wrapper/maven-wrapper.jar').exists()
