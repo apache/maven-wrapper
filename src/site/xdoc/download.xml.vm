@@ -107,9 +107,9 @@ under the License.
         <tbody>
           <tr>
             <td>${project.name} ${project.version} (Source zip)</td>
-            <td><a href="[preferred]maven/wrapper/maven-wrapper-${project.version}-source-release.zip">maven/wrapper/maven-wrapper-${project.version}-source-release.zip</a></td>
-            <td><a href="https://www.apache.org/dist/maven/wrapper/maven-wrapper-${project.version}-source-release.zip.sha512">maven/wrapper/maven-wrapper-${project.version}-source-release.zip.sha512</a></td>
-            <td><a href="https://www.apache.org/dist/maven/wrapper/maven-wrapper-${project.version}-source-release.zip.asc">maven/wrapper/maven-wrapper-${project.version}-source-release.zip.asc</a></td>
+            <td><a href="[preferred]maven/wrapper/${project.artifactId}-${project.version}-source-release.zip">maven/wrapper/${project.artifactId}-${project.version}-source-release.zip</a></td>
+            <td><a href="https://www.apache.org/dist/maven/wrapper/${project.artifactId}-${project.version}-source-release.zip.sha512">maven/wrapper/${project.artifactId}-${project.version}-source-release.zip.sha512</a></td>
+            <td><a href="https://www.apache.org/dist/maven/wrapper/${project.artifactId}-${project.version}-source-release.zip.asc">maven/wrapper/${project.artifactId}-${project.version}-source-release.zip.asc</a></td>
           </tr>
         </tbody>
       </table>
