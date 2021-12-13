@@ -30,7 +30,7 @@ under the License.
   
   <groupId>org.apache.maven.wrapper</groupId>
   <artifactId>maven-wrapper-parent</artifactId>
-  <version>3.1.0-SNAPSHOT</version>
+  <version>3.1.0</version>
   <packaging>pom</packaging>
 
   <name>Apache Maven Wrapper</name>
@@ -40,7 +40,7 @@ under the License.
     <connection>scm:git:https://gitbox.apache.org/repos/asf/maven-wrapper.git</connection>
     <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/maven-wrapper.git</developerConnection>
     <url>https://github.com/apache/maven-wrapper/tree/${project.scm.tag}</url>
-    <tag>HEAD</tag>
+    <tag>maven-wrapper-parent-3.1.0</tag>
   </scm>
   <issueManagement>
     <system>JIRA</system>
@@ -61,7 +61,7 @@ under the License.
     <maven.site.path>wrapper-archives/wrapper-LATEST</maven.site.path>
     <mavenVersion>3.1.0</mavenVersion>
     <javaVersion>7</javaVersion>
-    <project.build.outputTimestamp>2021-11-26T10:03:59Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2021-12-13T20:56:26Z</project.build.outputTimestamp>
   </properties>
 
   <modules>
