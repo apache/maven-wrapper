@@ -45,7 +45,7 @@ mvnw.cmd
 .mvn/wrapper/maven-wrapper.jar
 ----
 
- - <<<source>>>: on *nix, if <<<wget>>> and <<<curl>>> are not availabe, <<<mvnw>>> script will compile <<<MavenWrapperDownloader.java>>> source then run the class to download {{{../maven-wrapper/}<<<maven-wrapper.jar>>>}}:
+ - <<<source>>>: on *nix, if <<<wget>>> and <<<curl>>> are not available, <<<mvnw>>> script will compile <<<MavenWrapperDownloader.java>>> source then run the class to download {{{../maven-wrapper/}<<<maven-wrapper.jar>>>}}:
 
 ----
 .mvn/wrapper/MavenWrapperDownloader.java
