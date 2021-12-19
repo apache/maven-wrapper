@@ -24,8 +24,8 @@ Goals Overview
 --------------
 
 
- * [wrapper:wrapper](./wrapper-mojo.html) is the default goal invoked during the 
-   `wrapper` phase. It downloads and unpacks the maven-wrapper distribution,
+ * [wrapper:wrapper](./wrapper-mojo.html) is the default goal, invoked during the 
+   `wrapper` phase in Maven 4. It downloads and unpacks the maven-wrapper distribution,
 
 Usage
 -----

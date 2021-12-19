@@ -37,15 +37,15 @@ mvnw.cmd
 
  but every distribution has specific content to manage different strategies to get {{{../maven-wrapper/}<<<maven-wrapper.jar>>>}}:
  
- - <<<script>>> (default): <<<mvnw>>>/<<<mvnw.cmd>>> scripts will download {{{../maven-wrapper/}<<<maven-wrapper.jar>>>}} with <<<wget>>> or <<<curl>>> on Unix or PowerShell on Windows
+ - <<<script>>>: <<<mvnw>>>/<<<mvnw.cmd>>> scripts will download {{{../maven-wrapper/}<<<maven-wrapper.jar>>>}} with <<<wget>>> or <<<curl>>> on *nix, or PowerShell on Windows
  
- - <<<bin>>>: no need to download <<<maven-wrapper.jar>>> binary, it is directly provided and used from project source tree:
+ - <<<bin>>> (default): no need to download <<<maven-wrapper.jar>>> binary, it is directly provided and used from project source tree (if stored in source control):
 
 ----
 .mvn/wrapper/maven-wrapper.jar
 ----
 
- - <<<source>>>: <<<mvnw>>>/<<<mvnw.cmd>>> scripts will compile <<<MavenWrapperDownloader.java>>> source then run the class to download {{{../maven-wrapper/}<<<maven-wrapper.jar>>>}}:
+ - <<<source>>>: on *nix, if <<<wget>>> and <<<curl>>> are not availabe, <<<mvnw>>> script will compile <<<MavenWrapperDownloader.java>>> source then run the class to download {{{../maven-wrapper/}<<<maven-wrapper.jar>>>}}:
 
 ----
 .mvn/wrapper/MavenWrapperDownloader.java
