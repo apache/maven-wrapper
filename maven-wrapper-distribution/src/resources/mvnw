@@ -216,16 +216,16 @@ else
       echo "Couldn't find .mvn/wrapper/maven-wrapper.jar, downloading it ..."
     fi
     if [ -n "$MVNW_REPOURL" ]; then
-      jarUrl="$MVNW_REPOURL/org/apache/maven/wrapper/maven-wrapper/@project.version@/maven-wrapper-@project.version@.jar"
+      wrapperUrl="$MVNW_REPOURL/org/apache/maven/wrapper/maven-wrapper/@project.version@/maven-wrapper-@project.version@.jar"
     else
-      jarUrl="https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper/@project.version@/maven-wrapper-@project.version@.jar"
+      wrapperUrl="https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper/@project.version@/maven-wrapper-@project.version@.jar"
     fi
     while IFS="=" read key value; do
-      case "$key" in (wrapperUrl) jarUrl="$value"; break ;;
+      case "$key" in (wrapperUrl) wrapperUrl="$value"; break ;;
       esac
     done < "$BASE_DIR/.mvn/wrapper/maven-wrapper.properties"
     if [ "$MVNW_VERBOSE" = true ]; then
-      echo "Downloading from: $jarUrl"
+      echo "Downloading from: $wrapperUrl"
     fi
     wrapperJarPath="$BASE_DIR/.mvn/wrapper/maven-wrapper.jar"
     if $cygwin; then
@@ -239,9 +239,9 @@ else
           QUIET=""
         fi
         if [ -z "$MVNW_USERNAME" ] || [ -z "$MVNW_PASSWORD" ]; then
-            wget $QUIET "$jarUrl" -O "$wrapperJarPath" || rm -f "$wrapperJarPath"
+            wget $QUIET "$wrapperUrl" -O "$wrapperJarPath" || rm -f "$wrapperJarPath"
         else
-            wget $QUIET --http-user=$MVNW_USERNAME --http-password=$MVNW_PASSWORD "$jarUrl" -O "$wrapperJarPath" || rm -f "$wrapperJarPath"
+            wget $QUIET --http-user=$MVNW_USERNAME --http-password=$MVNW_PASSWORD "$wrapperUrl" -O "$wrapperJarPath" || rm -f "$wrapperJarPath"
         fi
     elif command -v curl > /dev/null; then
         QUIET="--silent"
@@ -250,9 +250,9 @@ else
           QUIET=""
         fi
         if [ -z "$MVNW_USERNAME" ] || [ -z "$MVNW_PASSWORD" ]; then
-            curl $QUIET -o "$wrapperJarPath" "$jarUrl" -f
+            curl $QUIET -o "$wrapperJarPath" "$wrapperUrl" -f
         else
-            curl $QUIET --user $MVNW_USERNAME:$MVNW_PASSWORD -o "$wrapperJarPath" "$jarUrl" -f
+            curl $QUIET --user $MVNW_USERNAME:$MVNW_PASSWORD -o "$wrapperJarPath" "$wrapperUrl" -f
         fi
 
     else
