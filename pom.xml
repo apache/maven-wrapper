@@ -25,7 +25,7 @@ under the License.
   <parent>
     <groupId>org.apache.maven</groupId>
     <artifactId>maven-parent</artifactId>
-    <version>34</version>
+    <version>35-SNAPSHOT</version>
   </parent>
   
   <groupId>org.apache.maven.wrapper</groupId>
@@ -59,8 +59,8 @@ under the License.
 
   <properties>
     <maven.site.path>wrapper-archives/wrapper-LATEST</maven.site.path>
-    <mavenVersion>3.1.0</mavenVersion>
-    <javaVersion>7</javaVersion>
+    <mavenVersion>4.0.0-alpha-1-SNAPSHOT</mavenVersion>
+    <javaVersion>8</javaVersion>
     <project.build.outputTimestamp>2021-12-13T20:56:44Z</project.build.outputTimestamp>
   </properties>
 
