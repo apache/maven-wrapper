@@ -19,11 +19,13 @@ package org.apache.maven.wrapper;
  * under the License.
  */
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -34,41 +36,34 @@ import java.util.regex.Pattern;
 public class SystemPropertiesHandler
 {
 
-    public static Map<String, String> getSystemProperties( File propertiesFile )
+    private static final Pattern SYSPROP_PATTERN = Pattern.compile( "systemProp\\.(.*)" );
+
+    public static Map<String, String> getSystemProperties( Path propertiesFile )
     {
-        Map<String, String> propertyMap = new HashMap<String, String>();
-        if ( !propertiesFile.isFile() )
+        Map<String, String> propertyMap = new HashMap<>();
+        if ( !Files.isRegularFile( propertiesFile ) )
         {
             return propertyMap;
         }
         Properties properties = new Properties();
-        try
+        try ( InputStream inStream = Files.newInputStream( propertiesFile ) )
         {
-            FileInputStream inStream = new FileInputStream( propertiesFile );
-            try
-            {
-                properties.load( inStream );
-            }
-            finally
-            {
-                inStream.close();
-            }
+            properties.load( inStream );
         }
         catch ( IOException e )
         {
             throw new RuntimeException( "Error when loading properties file=" + propertiesFile, e );
         }
 
-        Pattern pattern = Pattern.compile( "systemProp\\.(.*)" );
-        for ( Object argument : properties.keySet() )
+        for ( Entry<Object, Object> entrySet : properties.entrySet() )
         {
-            Matcher matcher = pattern.matcher( argument.toString() );
+            Matcher matcher = SYSPROP_PATTERN.matcher( entrySet.getKey().toString() );
             if ( matcher.find() )
             {
                 String key = matcher.group( 1 );
                 if ( key.length() > 0 )
                 {
-                    propertyMap.put( key, properties.get( argument ).toString() );
+                    propertyMap.put( key, entrySet.getValue().toString() );
                 }
             }
         }

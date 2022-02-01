@@ -19,20 +19,22 @@ package org.apache.maven.plugins.wrapper;
  * under the License.
  */
 
-import java.io.BufferedWriter;
+import static org.apache.maven.shared.utils.logging.MessageUtils.buffer;
 
+import javax.annotation.Nonnull;
+import javax.inject.Inject;
+
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
-
-import javax.annotation.Nonnull;
-import javax.inject.Inject;
 
 import org.apache.maven.Maven;
 import org.apache.maven.artifact.Artifact;
@@ -52,25 +54,24 @@ import org.codehaus.plexus.archiver.UnArchiver;
 import org.codehaus.plexus.components.io.fileselectors.FileInfo;
 import org.codehaus.plexus.components.io.fileselectors.FileSelector;
 
-import static org.apache.maven.shared.utils.logging.MessageUtils.buffer;
-
 /**
- * Unpacks the maven-wrapper distribution files to the current project source tree. 
- * 
+ * Unpacks the maven-wrapper distribution files to the current project source tree.
+ *
  * @author Robert Scholte
  * @since 3.0.0
  */
 @Mojo( name = "wrapper", aggregator = true, requiresDirectInvocation = true )
-public class WrapperMojo extends AbstractMojo
+public class WrapperMojo
+    extends AbstractMojo
 {
     private static final String MVNW_REPOURL = "MVNW_REPOURL";
 
     private static final String DEFAULT_REPOURL = "https://repo.maven.apache.org/maven2";
 
     // CONFIGURATION PARAMETERS
-    
+
     /**
-     * The version of Maven to require, default value is the Runtime version of Maven. 
+     * The version of Maven to require, default value is the Runtime version of Maven.
      * Can be any valid release above 2.0.9
      */
     @Parameter( property = "maven" )
@@ -85,8 +86,8 @@ public class WrapperMojo extends AbstractMojo
      *   <dd>precompiled and packaged code</dd>
      *   <dt>source</dt>
      *   <dd>Java source code, will be compiled on the fly</dd>
-     * </dl> 
-     * 
+     * </dl>
+     *
      * Value will be used as classifier of the downloaded file
      */
     @Parameter( defaultValue = "bin", property = "type" )
@@ -97,16 +98,16 @@ public class WrapperMojo extends AbstractMojo
      */
     @Parameter( defaultValue = "false", property = "includeDebug" )
     private boolean includeDebugScript;
-    
-    // READONLY PARAMETERS 
-    
+
+    // READONLY PARAMETERS
+
     @Parameter( defaultValue = "${session}", readonly = true, required = true )
     private MavenSession session;
-    
+
     @Parameter( defaultValue = "${settings}", readonly = true, required = true )
     private Settings settings;
 
-    // Waiting for org.codehaus.plexus.component.configurator.converters.basic.PathConverter
+    // Waiting for https://github.com/eclipse/sisu.inject/pull/39 PathTypeConverter
     @Parameter( defaultValue = "${project.basedir}", readonly = true, required = true )
     private File basedir;
 
@@ -117,53 +118,69 @@ public class WrapperMojo extends AbstractMojo
     private static final String WRAPPER_DISTRIBUTION_ARTIFACT_ID = "maven-wrapper-distribution";
 
     private static final String WRAPPER_DISTRIBUTION_EXTENSION = "zip";
-    
-    // COMPONENTS 
-    
+
+    // COMPONENTS
+
     @Inject
     private RepositorySystem repositorySystem;
 
     @Inject
     private Map<String, UnArchiver> unarchivers;
-    
+
     @Override
     public void execute()
         throws MojoExecutionException, MojoFailureException
     {
+        mavenVersion = getVersion( mavenVersion, Maven.class, "org.apache.maven/maven-core" );
         String wrapperVersion = getVersion( null, this.getClass(), "org.apache.maven.plugins/maven-wrapper-plugin" );
 
-        Artifact artifact = downloadWrapperDistribution( wrapperVersion );
+        final Artifact artifact = downloadWrapperDistribution( wrapperVersion );
+        final Path wrapperDir = createDirectories( basedir.toPath().resolve( ".mvn/wrapper" ) );
 
+        cleanup( wrapperDir );
+        unpack( artifact, basedir.toPath() );
+        replaceProperties( wrapperVersion, wrapperDir );
+    }
+
+    private Path createDirectories( Path dir )
+        throws MojoExecutionException
+    {
         try
         {
-            unpack( artifact, basedir.toPath() );
-            getLog().info( "Unpacked " + buffer().strong( distributionType ) + " type wrapper distribution "
-                + artifact );
+            return Files.createDirectories( dir );
         }
-        catch ( IOException e )
+        catch ( IOException ioe )
         {
-            throw new MojoExecutionException( e.getMessage(), e );
-        }
-
-        mavenVersion = getVersion( mavenVersion, Maven.class, "org.apache.maven/maven-core" );
-        try
-        {
-            replaceProperties( wrapperVersion, Files.createDirectories( basedir.toPath().resolve( ".mvn/wrapper" ) ) );
-        }
-        catch ( IOException e )
-        {
-            throw new MojoExecutionException( "can't create maven-wrapper.properties", e );
+            throw new MojoExecutionException( ioe.getMessage(), ioe );
         }
     }
-    
-    private Artifact downloadWrapperDistribution( String wrapperVersion ) throws MojoExecutionException
+
+    private void cleanup( Path wrapperDir )
+        throws MojoExecutionException
     {
-        Artifact artifact = repositorySystem.createArtifactWithClassifier(
-            WRAPPER_DISTRIBUTION_GROUP_ID,
-            WRAPPER_DISTRIBUTION_ARTIFACT_ID,
-            wrapperVersion,
-            WRAPPER_DISTRIBUTION_EXTENSION,
-            distributionType );
+        try ( DirectoryStream<Path> dsClass = Files.newDirectoryStream( wrapperDir, "*.class" ) )
+        {
+            for ( Path file : dsClass )
+            {
+                // Cleanup old compiled *.class
+                Files.deleteIfExists( file );
+            }
+            Files.deleteIfExists( wrapperDir.resolve( "MavenWrapperDownloader.java" ) );
+            Files.deleteIfExists( wrapperDir.resolve( "maven-wrapper.jar" ) );
+        }
+        catch ( IOException ioe )
+        {
+            throw new MojoExecutionException( ioe.getMessage(), ioe );
+        }
+    }
+
+    private Artifact downloadWrapperDistribution( String wrapperVersion )
+        throws MojoExecutionException
+    {
+        Artifact artifact =
+            repositorySystem.createArtifactWithClassifier( WRAPPER_DISTRIBUTION_GROUP_ID,
+                                                           WRAPPER_DISTRIBUTION_ARTIFACT_ID, wrapperVersion,
+                                                           WRAPPER_DISTRIBUTION_EXTENSION, distributionType );
 
         MavenExecutionRequest executionRequest = session.getRequest();
 
@@ -190,10 +207,9 @@ public class WrapperMojo extends AbstractMojo
 
         return artifact;
     }
-    
-    private void unpack( Artifact artifact, Path targetFolder ) throws IOException 
+
+    private void unpack( Artifact artifact, Path targetFolder )
     {
-        targetFolder = Files.createDirectories( targetFolder );
         UnArchiver unarchiver = unarchivers.get( WRAPPER_DISTRIBUTION_EXTENSION );
         unarchiver.setDestDirectory( targetFolder.toFile() );
         unarchiver.setSourceFile( artifact.getFile() );
@@ -201,8 +217,8 @@ public class WrapperMojo extends AbstractMojo
         {
             unarchiver.setFileSelectors( new FileSelector[] { new FileSelector()
             {
-                public boolean isSelected( @Nonnull
-                FileInfo fileInfo )
+                @Override
+                public boolean isSelected( @Nonnull FileInfo fileInfo )
                     throws IOException
                 {
                     return !fileInfo.getName().contains( "Debug" );
@@ -210,24 +226,26 @@ public class WrapperMojo extends AbstractMojo
             } } );
         }
         unarchiver.extract();
+        getLog().info( "Unpacked " + buffer().strong( distributionType ) + " type wrapper distribution " + artifact );
     }
-    
+
     /**
      * As long as the content only contains the license and the distributionUrl, we can simply replace it.
      * No need to look for other properties, restore them, respecting comments, etc.
-     * 
+     *
      * @param wrapperVersion the wrapper version
      * @param targetFolder the folder containing the wrapper.properties
-     * @throws IOException if writing fails
+     * @throws MojoExecutionException if writing fails
      */
-    private void replaceProperties( String wrapperVersion, Path targetFolder ) throws IOException
+    private void replaceProperties( String wrapperVersion, Path targetFolder )
+        throws MojoExecutionException
     {
         String repoUrl = getRepoUrl();
 
         String distributionUrl =
             repoUrl + "/org/apache/maven/apache-maven/" + mavenVersion + "/apache-maven-" + mavenVersion + "-bin.zip";
-        String wrapperUrl = repoUrl + "/org/apache/maven/wrapper/maven-wrapper/" + wrapperVersion
-            + "/maven-wrapper-" + wrapperVersion + ".jar";
+        String wrapperUrl = repoUrl + "/org/apache/maven/wrapper/maven-wrapper/" + wrapperVersion + "/maven-wrapper-"
+            + wrapperVersion + ".jar";
 
         Path wrapperPropertiesFile = targetFolder.resolve( "maven-wrapper.properties" );
 
@@ -250,26 +268,32 @@ public class WrapperMojo extends AbstractMojo
             + "# KIND, either express or implied.  See the License for the%n"
             + "# specific language governing permissions and limitations%n"
             + "# under the License.%n";
-        
+
         try ( BufferedWriter out = Files.newBufferedWriter( wrapperPropertiesFile, StandardCharsets.UTF_8 ) )
         {
             out.append( String.format( Locale.ROOT, license ) );
             out.append( "distributionUrl=" + distributionUrl + System.lineSeparator() );
             out.append( "wrapperUrl=" + wrapperUrl + System.lineSeparator() );
         }
+        catch ( IOException ioe )
+        {
+            throw new MojoExecutionException( "Can't create maven-wrapper.properties", ioe );
+        }
     }
-    
+
     private String getVersion( String defaultVersion, Class<?> clazz, String path )
     {
         String version = defaultVersion;
         if ( version == null )
         {
             Properties props = new Properties();
-            try ( InputStream is =
-                clazz.getResourceAsStream( "/META-INF/maven/" + path + "/pom.properties" ) )
+            try ( InputStream is = clazz.getResourceAsStream( "/META-INF/maven/" + path + "/pom.properties" ) )
             {
-                props.load( is );
-                version = props.getProperty( "version" );
+                if ( is != null )
+                {
+                    props.load( is );
+                    version = props.getProperty( "version" );
+                }
             }
             catch ( IOException e )
             {
@@ -295,7 +319,7 @@ public class WrapperMojo extends AbstractMojo
             getLog().debug( "Using repo URL from " + MVNW_REPOURL + " environment variable." );
         }
         // otherwise mirror from settings
-        else if ( settings.getMirrors() != null && settings.getMirrors().size() > 0 )
+        else if ( settings.getMirrors() != null && !settings.getMirrors().isEmpty() )
         {
             for ( Mirror current : settings.getMirrors() )
             {

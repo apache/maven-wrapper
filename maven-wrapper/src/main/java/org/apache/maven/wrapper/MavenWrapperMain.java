@@ -19,11 +19,15 @@ package org.apache.maven.wrapper;
  * under the License.
  */
 
-import java.io.File;
 import java.io.InputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 
 import org.apache.maven.wrapper.cli.CommandLineParser;
@@ -36,10 +40,10 @@ import org.apache.maven.wrapper.cli.SystemPropertiesCommandLineConverter;
  */
 public class MavenWrapperMain
 {
-    private static final String POM_PROPERTIES = "/META-INF/maven/org.apache.maven.wrapper/"
-        + "maven-wrapper/pom.properties";
+    private static final String POM_PROPERTIES =
+        "/META-INF/maven/org.apache.maven.wrapper/maven-wrapper/pom.properties";
 
-    public static final String DEFAULT_MAVEN_USER_HOME = System.getProperty( "user.home" ) + "/.m2";
+    private static final Path DEFAULT_MAVEN_USER_HOME = Paths.get( System.getProperty( "user.home" ) ).resolve( ".m2" );
 
     public static final String MAVEN_USER_HOME_PROPERTY_KEY = "maven.user.home";
 
@@ -56,9 +60,9 @@ public class MavenWrapperMain
     public static void main( String[] args )
         throws Exception
     {
-        File wrapperJar = wrapperJar();
-        File propertiesFile = wrapperProperties( wrapperJar );
-        File rootDir = rootDir( wrapperJar );
+        Path wrapperJar = wrapperJar();
+        Path propertiesFile = wrapperProperties( wrapperJar );
+        Path rootDir = rootDir( wrapperJar );
 
         String wrapperVersion = wrapperVersion();
         Logger.info( "Apache Maven Wrapper " + wrapperVersion );
@@ -68,7 +72,7 @@ public class MavenWrapperMain
 
         addSystemProperties( rootDir );
 
-        WrapperExecutor wrapperExecutor = WrapperExecutor.forWrapperPropertiesFile( propertiesFile, System.out );
+        WrapperExecutor wrapperExecutor = WrapperExecutor.forWrapperPropertiesFile( propertiesFile );
         wrapperExecutor.execute( args, new Installer( new DefaultDownloader( "mvnw", wrapperVersion ),
                                                       new PathAssembler( mavenUserHome() ) ),
                                  new BootstrapMainStarter() );
@@ -83,25 +87,26 @@ public class MavenWrapperMain
         return converter.convert( commandLineParser.parse( args ) );
     }
 
-    private static void addSystemProperties( File rootDir )
+    private static void addSystemProperties( Path rootDir )
     {
-        System.getProperties().putAll( SystemPropertiesHandler.getSystemProperties( new File( mavenUserHome(),
-                                                                                              "maven.properties" ) ) );
-        System.getProperties().putAll( SystemPropertiesHandler.getSystemProperties( new File( rootDir,
-                                                                                              "maven.properties" ) ) );
+        System.getProperties().putAll( SystemPropertiesHandler.getSystemProperties( mavenUserHome()
+                                                                                    .resolve( "maven.properties" ) ) );
+        System.getProperties().putAll( SystemPropertiesHandler.getSystemProperties( rootDir
+                                                                                    .resolve( "maven.properties" ) ) );
     }
 
-    private static File rootDir( File wrapperJar )
+    private static Path rootDir( Path wrapperJar )
     {
-        return wrapperJar.getParentFile().getParentFile().getParentFile();
+        return wrapperJar.getParent().getParent().getParent();
     }
 
-    private static File wrapperProperties( File wrapperJar )
+    private static Path wrapperProperties( Path wrapperJar )
     {
-        return new File( wrapperJar.getParent(), wrapperJar.getName().replaceFirst( "\\.jar$", ".properties" ) );
+        return wrapperJar.resolveSibling( wrapperJar.getFileName().toString().replaceFirst( "\\.jar$",
+                                                                                            ".properties" ) );
     }
 
-    private static File wrapperJar()
+    private static Path wrapperJar()
     {
         URI location;
         try
@@ -112,12 +117,13 @@ public class MavenWrapperMain
         {
             throw new RuntimeException( e );
         }
-        if ( !location.getScheme().equals( "file" ) )
+        if ( !"file".equals( location.getScheme() ) )
         {
-            throw new RuntimeException( String.format( "Cannot determine classpath for wrapper Jar from codebase '%s'.",
+            throw new RuntimeException( String.format( Locale.ROOT,
+                                                       "Cannot determine classpath for wrapper Jar from codebase '%s'.",
                                                        location ) );
         }
-        return new File( location.getPath() );
+        return Paths.get( location );
     }
 
     static String wrapperVersion()
@@ -131,28 +137,23 @@ public class MavenWrapperMain
             Properties mavenProperties = new Properties();
             mavenProperties.load( resourceAsStream );
             String version = mavenProperties.getProperty( "version" );
-            if ( version == null )
-            {
-                throw new NullPointerException( "No version specified in " + POM_PROPERTIES );
-            }
+            Objects.requireNonNull( version, "No version specified in " + POM_PROPERTIES );
             return version;
         }
-        catch ( Exception e )
+        catch ( IOException e )
         {
             throw new RuntimeException( "Could not determine wrapper version.", e );
         }
     }
 
-    private static File mavenUserHome()
+    private static Path mavenUserHome()
     {
         String mavenUserHome = System.getProperty( MAVEN_USER_HOME_PROPERTY_KEY );
-        if ( mavenUserHome != null )
+        if ( mavenUserHome == null )
         {
-            return new File( mavenUserHome );
+            mavenUserHome = System.getenv( MAVEN_USER_HOME_ENV_KEY );
         }
 
-        mavenUserHome = System.getenv( MAVEN_USER_HOME_ENV_KEY );
-
-        return new File( mavenUserHome == null ? DEFAULT_MAVEN_USER_HOME : mavenUserHome );
+        return mavenUserHome == null ? DEFAULT_MAVEN_USER_HOME : Paths.get( mavenUserHome );
     }
 }

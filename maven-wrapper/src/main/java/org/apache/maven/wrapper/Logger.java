@@ -22,20 +22,20 @@ package org.apache.maven.wrapper;
 /**
  * @author <a href="mailto:konstantin.sobolev@gmail.com">Konstantin Sobolev</a>
  */
-public class Logger
+public final class Logger
 {
-    private static final boolean VERBOSE = "true".equalsIgnoreCase( System.getenv( MavenWrapperMain.MVNW_VERBOSE ) );
+    private static final boolean VERBOSE = Boolean.parseBoolean( System.getenv( MavenWrapperMain.MVNW_VERBOSE ) );
 
     public static void info( String msg )
     {
         if ( VERBOSE )
         {
-            System.out.println( msg );
+            System.out.printf( "[INFO] %s%n", msg );
         }
     }
 
     public static void warn( String msg )
     {
-        System.out.println( msg );
+        System.err.printf( "[WARNING] %s%n", msg );
     }
 }

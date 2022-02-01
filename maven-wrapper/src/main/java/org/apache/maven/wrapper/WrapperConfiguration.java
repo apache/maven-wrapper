@@ -20,6 +20,7 @@ package org.apache.maven.wrapper;
  */
 
 import java.net.URI;
+import java.nio.file.Path;
 
 /**
  * Wrapper configuration.
@@ -38,11 +39,11 @@ public class WrapperConfiguration
 
     private String distributionBase = PathAssembler.MAVEN_USER_HOME_STRING;
 
-    private String distributionPath = Installer.DEFAULT_DISTRIBUTION_PATH;
+    private Path distributionPath = Installer.DEFAULT_DISTRIBUTION_PATH;
 
     private String zipBase = PathAssembler.MAVEN_USER_HOME_STRING;
 
-    private String zipPath = Installer.DEFAULT_DISTRIBUTION_PATH;
+    private Path zipPath = Installer.DEFAULT_DISTRIBUTION_PATH;
 
     public boolean isAlwaysDownload()
     {
@@ -84,12 +85,12 @@ public class WrapperConfiguration
         this.distributionBase = distributionBase;
     }
 
-    public String getDistributionPath()
+    public Path getDistributionPath()
     {
         return distributionPath;
     }
 
-    public void setDistributionPath( String distributionPath )
+    public void setDistributionPath( Path distributionPath )
     {
         this.distributionPath = distributionPath;
     }
@@ -104,12 +105,12 @@ public class WrapperConfiguration
         this.zipBase = zipBase;
     }
 
-    public String getZipPath()
+    public Path getZipPath()
     {
         return zipPath;
     }
 
-    public void setZipPath( String zipPath )
+    public void setZipPath( Path zipPath )
     {
         this.zipPath = zipPath;
     }
