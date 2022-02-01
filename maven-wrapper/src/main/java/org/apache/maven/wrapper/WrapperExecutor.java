@@ -19,18 +19,20 @@ package org.apache.maven.wrapper;
  * under the License.
  */
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Locale;
 import java.util.Properties;
 
 /**
  * Wrapper executor, running {@link Installer} to get a Maven distribution ready, followed by
  * {@link BootstrapMainStarter} to launch the Maven bootstrap.
- * 
+ *
  * @author Hans Dockter
  */
 public class WrapperExecutor
@@ -47,47 +49,45 @@ public class WrapperExecutor
 
     private final Properties properties;
 
-    private final File propertiesFile;
-
-    private final Appendable warningOutput;
+    private final Path propertiesFile;
 
     private final WrapperConfiguration config = new WrapperConfiguration();
 
-    public static WrapperExecutor forProjectDirectory( File projectDir, Appendable warningOutput )
+    public static WrapperExecutor forProjectDirectory( Path projectDir )
     {
-        return new WrapperExecutor( new File( projectDir, "maven/wrapper/maven-wrapper.properties" ), new Properties(),
-                                    warningOutput );
+        return new WrapperExecutor( projectDir.resolve( "maven/wrapper/maven-wrapper.properties" ), new Properties() );
     }
 
-    public static WrapperExecutor forWrapperPropertiesFile( File propertiesFile, Appendable warningOutput )
+    public static WrapperExecutor forWrapperPropertiesFile( Path propertiesFile )
     {
-        if ( !propertiesFile.exists() )
+        if ( Files.notExists( propertiesFile ) )
         {
-            throw new RuntimeException( String.format( "Wrapper properties file '%s' does not exist.",
+            throw new RuntimeException( String.format( Locale.ROOT, "Wrapper properties file '%s' does not exist.",
                                                        propertiesFile ) );
         }
-        return new WrapperExecutor( propertiesFile, new Properties(), warningOutput );
+        return new WrapperExecutor( propertiesFile, new Properties() );
     }
 
-    WrapperExecutor( File propertiesFile, Properties properties, Appendable warningOutput )
+    WrapperExecutor( Path propertiesFile, Properties properties )
     {
         this.properties = properties;
         this.propertiesFile = propertiesFile;
-        this.warningOutput = warningOutput;
-        if ( propertiesFile.exists() )
+        if ( Files.exists( propertiesFile ) )
         {
             try
             {
                 loadProperties( propertiesFile, properties );
                 config.setDistribution( prepareDistributionUri() );
                 config.setDistributionBase( getProperty( DISTRIBUTION_BASE_PROPERTY, config.getDistributionBase() ) );
-                config.setDistributionPath( getProperty( DISTRIBUTION_PATH_PROPERTY, config.getDistributionPath() ) );
+                config.setDistributionPath( Paths.get( getProperty( DISTRIBUTION_PATH_PROPERTY,
+                                                                    config.getDistributionPath().toString() ) ) );
                 config.setZipBase( getProperty( ZIP_STORE_BASE_PROPERTY, config.getZipBase() ) );
-                config.setZipPath( getProperty( ZIP_STORE_PATH_PROPERTY, config.getZipPath() ) );
+                config.setZipPath( Paths.get( getProperty( ZIP_STORE_PATH_PROPERTY,
+                                                           config.getZipPath().toString() ) ) );
             }
             catch ( Exception e )
             {
-                throw new RuntimeException( String.format( "Could not load wrapper properties from '%s'.",
+                throw new RuntimeException( String.format( Locale.ROOT, "Could not load wrapper properties from '%s'.",
                                                            propertiesFile ),
                                             e );
             }
@@ -101,7 +101,7 @@ public class WrapperExecutor
         if ( source.getScheme() == null )
         {
             // no scheme means someone passed a relative url. In our context only file relative urls make sense.
-            return new File( propertiesFile.getParentFile(), source.getSchemeSpecificPart() ).toURI();
+            return propertiesFile.getParent().resolve( source.getSchemeSpecificPart() ).toUri();
         }
         else
         {
@@ -112,19 +112,13 @@ public class WrapperExecutor
     private URI readDistroUrl()
         throws URISyntaxException
     {
-        if ( properties.getProperty( DISTRIBUTION_URL_PROPERTY ) != null )
-        {
-            return new URI( getProperty( DISTRIBUTION_URL_PROPERTY ) );
-        }
-
-        reportMissingProperty( DISTRIBUTION_URL_PROPERTY );
-        return null; // previous line will fail
+        return new URI( getProperty( DISTRIBUTION_URL_PROPERTY ) );
     }
 
-    private static void loadProperties( File propertiesFile, Properties properties )
+    private static void loadProperties( Path propertiesFile, Properties properties )
         throws IOException
     {
-        try ( InputStream inStream = new FileInputStream( propertiesFile ) )
+        try ( InputStream inStream = Files.newInputStream( propertiesFile ) )
         {
             properties.load( inStream );
         }
@@ -133,6 +127,7 @@ public class WrapperExecutor
     /**
      * Returns the Maven distribution which this wrapper will use. Returns null if no wrapper meta-data was found in the
      * specified project directory.
+     *
      * @return the Maven distribution which this wrapper will use
      */
     public URI getDistribution()
@@ -142,6 +137,7 @@ public class WrapperExecutor
 
     /**
      * Returns the configuration for this wrapper.
+     *
      * @return the configuration for this wrapper
      */
     public WrapperConfiguration getConfiguration()
@@ -152,7 +148,7 @@ public class WrapperExecutor
     public void execute( String[] args, Installer install, BootstrapMainStarter bootstrapMainStarter )
         throws Exception
     {
-        File mavenHome = install.createDist( config );
+        Path mavenHome = install.createDist( config );
         bootstrapMainStarter.start( args, mavenHome );
     }
 
@@ -163,21 +159,18 @@ public class WrapperExecutor
 
     private String getProperty( String propertyName, String defaultValue )
     {
-        String value = properties.getProperty( propertyName );
-        if ( value != null )
+        String value = properties.getProperty( propertyName, defaultValue );
+        if ( value == null )
         {
-            return value;
+            reportMissingProperty( propertyName );
         }
-        if ( defaultValue != null )
-        {
-            return defaultValue;
-        }
-        return reportMissingProperty( propertyName );
+        return value;
     }
 
-    private String reportMissingProperty( String propertyName )
+    private void reportMissingProperty( String propertyName )
     {
-        throw new RuntimeException( String.format( "No value with key '%s' specified in wrapper properties file '%s'.",
+        throw new RuntimeException( String.format( Locale.ROOT,
+                                                   "No value with key '%s' specified in wrapper properties file '%s'.",
                                                    propertyName, propertiesFile ) );
     }
 }

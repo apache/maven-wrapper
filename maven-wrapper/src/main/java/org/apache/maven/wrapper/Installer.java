@@ -19,23 +19,27 @@ package org.apache.maven.wrapper;
  * under the License.
  */
 
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.net.URI;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.Formatter;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
-
 
 /**
  * Maven distribution installer, eventually using a {@link Downloader} first.
@@ -44,7 +48,7 @@ import java.util.zip.ZipFile;
  */
 public class Installer
 {
-    public static final String DEFAULT_DISTRIBUTION_PATH = "wrapper/dists";
+    public static final Path DEFAULT_DISTRIBUTION_PATH = Paths.get( "wrapper", "dists" );
 
     private final Downloader download;
 
@@ -56,7 +60,7 @@ public class Installer
         this.pathAssembler = pathAssembler;
     }
 
-    public File createDist( WrapperConfiguration configuration )
+    public Path createDist( WrapperConfiguration configuration )
         throws Exception
     {
         URI distributionUrl = configuration.getDistribution();
@@ -67,174 +71,165 @@ public class Installer
             Logger.info( "Detected MVNW_REPOURL environment variable " + mvnwRepoUrl );
             String mvnPath = distributionUrl.toURL().toString();
             mvnPath = mvnPath.substring( mvnPath.indexOf( "org/apache/maven" ) );
-            distributionUrl = new URI( mvnwRepoUrl + "/" + mvnPath );
+            distributionUrl = new URI( mvnwRepoUrl ).resolve( "/" ).resolve( mvnPath );
         }
 
         boolean alwaysDownload = configuration.isAlwaysDownload();
         boolean alwaysUnpack = configuration.isAlwaysUnpack();
 
         PathAssembler.LocalDistribution localDistribution = pathAssembler.getDistribution( configuration );
-        Logger.info( "Installing Maven distribution " + localDistribution.getDistributionDir().getAbsolutePath() );
+        Path localZipFile = localDistribution.getZipFile();
 
-        File localZipFile = localDistribution.getZipFile();
-        boolean downloaded = false;
-        if ( alwaysDownload || !localZipFile.exists() )
+        if ( alwaysDownload || alwaysUnpack || Files.notExists( localZipFile ) )
         {
-            File tmpZipFile = new File( localZipFile.getParentFile(), localZipFile.getName() + ".part" );
-            tmpZipFile.delete();
-            Logger.info( "Downloading " + distributionUrl );
-            download.download( distributionUrl, tmpZipFile );
-            tmpZipFile.renameTo( localZipFile );
-            downloaded = true;
+            Logger.info( "Installing Maven distribution " + localDistribution.getDistributionDir().toAbsolutePath() );
         }
 
-        File distDir = localDistribution.getDistributionDir();
-        List<File> dirs = listDirs( distDir );
+        boolean downloaded = false;
+        if ( alwaysDownload || Files.notExists( localZipFile ) )
+        {
+            Logger.info( "Downloading " + distributionUrl );
+            Path tmpZipFile = localZipFile.resolveSibling( localZipFile.getFileName() + ".part" );
+            Files.deleteIfExists( tmpZipFile );
+            download.download( distributionUrl, tmpZipFile );
+            Files.move( tmpZipFile, localZipFile, StandardCopyOption.REPLACE_EXISTING );
+            downloaded = Files.exists( localZipFile );
+        }
+
+        Path distDir = localDistribution.getDistributionDir();
+        List<Path> dirs = listDirs( distDir );
 
         if ( downloaded || alwaysUnpack || dirs.isEmpty() )
         {
-            for ( File dir : dirs )
+            for ( Path dir : dirs )
             {
-                Logger.info( "Deleting directory " + dir.getAbsolutePath() );
+                Logger.info( "Deleting directory " + dir.toAbsolutePath() );
                 deleteDir( dir );
             }
-            Logger.info( "Unzipping " + localZipFile.getAbsolutePath() + " to " + distDir.getAbsolutePath() );
+            Logger.info( "Unzipping " + localZipFile.toAbsolutePath() + " to " + distDir.toAbsolutePath() );
             unzip( localZipFile, distDir );
             dirs = listDirs( distDir );
             if ( dirs.isEmpty() )
             {
-                throw new RuntimeException( String.format( "Maven distribution '%s' does not contain any directory."
-                    + " Expected to find exactly 1 directory.", distDir ) );
+                throw new RuntimeException( String.format( Locale.ROOT,
+                                                           "Maven distribution '%s' does not contain any directory."
+                                                               + " Expected to find exactly 1 directory.",
+                                                           distDir ) );
             }
             setExecutablePermissions( dirs.get( 0 ) );
         }
         if ( dirs.size() != 1 )
         {
-            throw new RuntimeException( String.format( "Maven distribution '%s' contains too many directories."
-                + " Expected to find exactly 1 directory.", distDir ) );
+            throw new RuntimeException( String.format( Locale.ROOT,
+                                                       "Maven distribution '%s' contains too many directories."
+                                                           + " Expected to find exactly 1 directory.",
+                                                       distDir ) );
         }
         return dirs.get( 0 );
     }
 
-    private List<File> listDirs( File distDir )
+    private List<Path> listDirs( Path distDir )
+        throws IOException
     {
-        List<File> dirs = new ArrayList<File>();
-        if ( distDir.exists() )
+        List<Path> dirs = new ArrayList<>();
+        if ( Files.exists( distDir ) )
         {
-            for ( File file : distDir.listFiles() )
+            try ( DirectoryStream<Path> dirStream = Files.newDirectoryStream( distDir ) )
             {
-                if ( file.isDirectory() )
+                for ( Path file : dirStream )
                 {
-                    dirs.add( file );
+                    if ( Files.isDirectory( file ) )
+                    {
+                        dirs.add( file );
+                    }
                 }
             }
         }
         return dirs;
     }
 
-    private void setExecutablePermissions( File mavenHome )
+    private void setExecutablePermissions( Path mavenHome )
     {
         if ( isWindows() )
         {
             return;
         }
-        File mavenCommand = new File( mavenHome, "bin/mvn" );
-        String errorMessage = null;
+        Path mavenCommand = mavenHome.resolve( "bin/mvn" );
         try
         {
-            ProcessBuilder pb = new ProcessBuilder( "chmod", "755", mavenCommand.getCanonicalPath() );
-            Process p = pb.start();
-            if ( p.waitFor() == 0 )
-            {
-                Logger.info( "Set executable permissions for: " + mavenCommand.getAbsolutePath() );
-            }
-            else
-            {
-                try ( BufferedReader is = new BufferedReader( new InputStreamReader( p.getInputStream() ) );
-                                Formatter stdout = new Formatter() )
-                {
-                    String line;
-                    while ( ( line = is.readLine() ) != null )
-                    {
-                        stdout.format( "%s%n", line );
-                    }
-                    errorMessage = stdout.toString();
-                }
-            }
+            Set<PosixFilePermission> perms = PosixFilePermissions.fromString( "rwxr-xr-x" );
+            Files.setPosixFilePermissions( mavenCommand, perms );
         }
-        catch ( IOException | InterruptedException e )
+        catch ( IOException e )
         {
-            errorMessage = e.getMessage();
-        }
-        if ( errorMessage != null )
-        {
-            Logger.warn( "Could not set executable permissions for: " + mavenCommand.getAbsolutePath() );
-            Logger.warn( "Please do this manually if you want to use Maven." );
+            Logger.warn( "Could not set executable permissions for: " + mavenCommand.toAbsolutePath()
+                + ". Please do this manually if you want to use Maven." );
         }
     }
 
     private boolean isWindows()
     {
         String osName = System.getProperty( "os.name" ).toLowerCase( Locale.US );
-        if ( osName.indexOf( "windows" ) > -1 )
-        {
-            return true;
-        }
-        return false;
+        return osName.contains( "windows" );
     }
 
-    private boolean deleteDir( File dir )
-    {
-        if ( dir.isDirectory() )
-        {
-            String[] children = dir.list();
-            for ( int i = 0; i < children.length; i++ )
-            {
-                boolean success = deleteDir( new File( dir, children[i] ) );
-                if ( !success )
-                {
-                    return false;
-                }
-            }
-        }
-
-        // The directory is now empty so delete it
-        return dir.delete();
-    }
-
-    public void unzip( File zip, File dest )
+    private void deleteDir( Path dirPath )
         throws IOException
     {
-        Enumeration entries;
-        ZipFile zipFile = new ZipFile( zip );
-
-        entries = zipFile.entries();
-
-        while ( entries.hasMoreElements() )
+        Files.walkFileTree( dirPath, new SimpleFileVisitor<Path>()
         {
-            ZipEntry entry = (ZipEntry) entries.nextElement();
-
-            if ( entry.isDirectory() )
+            @Override
+            public FileVisitResult postVisitDirectory( Path dir, IOException exc )
+                throws IOException
             {
-                ( new File( dest, entry.getName() ) ).mkdirs();
-                continue;
+                Files.delete( dir );
+                if ( exc != null )
+                {
+                    throw exc;
+                }
+                return FileVisitResult.CONTINUE;
             }
 
-            new File( dest, entry.getName() ).getParentFile().mkdirs();
-
-            try ( InputStream in = zipFile.getInputStream( entry );
-                            OutputStream out =
-                                new BufferedOutputStream( new FileOutputStream( new File( dest, entry.getName() ) ) ) )
+            @Override
+            public FileVisitResult visitFile( Path file, BasicFileAttributes attrs )
+                throws IOException
             {
-                byte[] buffer = new byte[1024];
-                int len;
+                Files.delete( file );
+                return FileVisitResult.CONTINUE;
+            }
+        } );
+    }
 
-                while ( ( len = in.read( buffer ) ) >= 0 )
+    public void unzip( Path zip, Path dest )
+        throws IOException
+    {
+        final Path destDir = dest.normalize();
+        try ( final ZipFile zipFile = new ZipFile( zip.toFile() ) )
+        {
+            final Enumeration<? extends ZipEntry> entries = zipFile.entries();
+
+            while ( entries.hasMoreElements() )
+            {
+                final ZipEntry entry = entries.nextElement();
+
+                Path fileEntry = destDir.resolve( entry.getName() ).normalize();
+                if ( !fileEntry.startsWith( destDir ) )
                 {
-                    out.write( buffer, 0, len );
+                    throw new ZipException( "Zip includes an invalid entry: " + entry.getName() );
+                }
+
+                if ( entry.isDirectory() )
+                {
+                    continue;
+                }
+
+                Files.createDirectories( fileEntry.getParent() );
+
+                try ( InputStream inStream = zipFile.getInputStream( entry ) )
+                {
+                    Files.copy( inStream, fileEntry );
                 }
             }
         }
-        zipFile.close();
     }
 }

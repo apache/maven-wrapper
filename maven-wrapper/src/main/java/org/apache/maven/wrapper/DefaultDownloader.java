@@ -22,18 +22,19 @@ package org.apache.maven.wrapper;
 import static org.apache.maven.wrapper.MavenWrapperMain.MVNW_PASSWORD;
 import static org.apache.maven.wrapper.MavenWrapperMain.MVNW_USERNAME;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.Locale;
 
 /**
  * @author Hans Dockter
@@ -41,10 +42,6 @@ import java.net.URLConnection;
 public class DefaultDownloader
     implements Downloader
 {
-    private static final int PROGRESS_CHUNK = 500000;
-
-    private static final int BUFFER_SIZE = 10000;
-
     private final String applicationName;
 
     private final String applicationVersion;
@@ -72,6 +69,7 @@ public class DefaultDownloader
         {
             Authenticator.setDefault( new Authenticator()
             {
+                @Override
                 protected PasswordAuthentication getPasswordAuthentication()
                 {
                     return new PasswordAuthentication( System.getenv( MVNW_USERNAME ),
@@ -81,20 +79,26 @@ public class DefaultDownloader
         }
     }
 
-    public void download( URI address, File destination )
+    @Override
+    public void download( URI address, Path destination )
         throws Exception
     {
-        if ( destination.exists() )
+        if ( Files.exists( destination ) )
         {
             return;
         }
-        destination.getParentFile().mkdirs();
+        Files.createDirectories( destination.getParent() );
 
+        if ( !"https".equals( address.getScheme() ) )
+        {
+            Logger.warn( "Using an insecure connection to download the Maven distribution."
+                + " Please consider using HTTPS." );
+        }
         downloadInternal( address, destination );
     }
 
-    private void downloadInternal( URI address, File destination )
-        throws Exception
+    private void downloadInternal( URI address, Path destination )
+        throws IOException
     {
         URL url = address.toURL();
         URLConnection conn = url.openConnection();
@@ -102,39 +106,18 @@ public class DefaultDownloader
         final String userAgentValue = calculateUserAgent();
         conn.setRequestProperty( "User-Agent", userAgentValue );
 
-        try ( OutputStream out = new BufferedOutputStream( new FileOutputStream( destination ) );
-                        InputStream in = conn.getInputStream() )
+        try ( InputStream inStream = conn.getInputStream() )
         {
-            byte[] buffer = new byte[BUFFER_SIZE];
-            int numRead;
-            long progressCounter = 0;
-            while ( ( numRead = in.read( buffer ) ) != -1 )
-            {
-                progressCounter += numRead;
-                if ( progressCounter / PROGRESS_CHUNK > 0 )
-                {
-                    Logger.info( "." );
-                    progressCounter = progressCounter - PROGRESS_CHUNK;
-                }
-                out.write( buffer, 0, numRead );
-            }
+            Files.copy( inStream, destination, StandardCopyOption.REPLACE_EXISTING );
         }
-
-        Logger.info( "" );
     }
 
     private void addBasicAuthentication( URI address, URLConnection connection )
-        throws IOException
     {
         String userInfo = calculateUserInfo( address );
         if ( userInfo == null )
         {
             return;
-        }
-        if ( !"https".equals( address.getScheme() ) )
-        {
-            Logger.warn( "WARNING Using HTTP Basic Authentication over an insecure connection"
-                + " to download the Maven distribution. Please consider using HTTPS." );
         }
         connection.setRequestProperty( "Authorization", "Basic " + base64Encode( userInfo ) );
     }
@@ -158,7 +141,8 @@ public class DefaultDownloader
             Method encodeMethod =
                 loader.loadClass( "java.util.Base64$Encoder" ).getMethod( "encodeToString", byte[].class );
             Object encoder = getEncoderMethod.invoke( null );
-            return (String) encodeMethod.invoke( encoder, new Object[] { userInfo.getBytes( "UTF-8" ) } );
+            return (String) encodeMethod.invoke( encoder,
+                                                 new Object[] { userInfo.getBytes( StandardCharsets.UTF_8 ) } );
         }
         catch ( Exception java7OrEarlier )
         {
@@ -167,7 +151,8 @@ public class DefaultDownloader
                 Method encodeMethod =
                     loader.loadClass( "javax.xml.bind.DatatypeConverter" ).getMethod( "printBase64Binary",
                                                                                       byte[].class );
-                return (String) encodeMethod.invoke( null, new Object[] { userInfo.getBytes( "UTF-8" ) } );
+                return (String) encodeMethod.invoke( null,
+                                                     new Object[] { userInfo.getBytes( StandardCharsets.UTF_8 ) } );
             }
             catch ( Exception java5OrEarlier )
             {
@@ -198,8 +183,8 @@ public class DefaultDownloader
         String osName = System.getProperty( "os.name" );
         String osVersion = System.getProperty( "os.version" );
         String osArch = System.getProperty( "os.arch" );
-        return String.format( "%s/%s (%s;%s;%s) (%s;%s;%s)", applicationName, appVersion, osName, osVersion, osArch,
-                              javaVendor, javaVersion, javaVendorVersion );
+        return String.format( Locale.ROOT, "%s/%s (%s;%s;%s) (%s;%s;%s)", applicationName, appVersion, osName,
+                              osVersion, osArch, javaVendor, javaVersion, javaVendorVersion );
     }
 
     private static class SystemPropertiesProxyAuthenticator

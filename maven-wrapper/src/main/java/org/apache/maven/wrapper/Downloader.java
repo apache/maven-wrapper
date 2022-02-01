@@ -19,8 +19,8 @@ package org.apache.maven.wrapper;
  * under the License.
  */
 
-import java.io.File;
 import java.net.URI;
+import java.nio.file.Path;
 
 /**
  * Maven distribution downloader.
@@ -29,6 +29,6 @@ import java.net.URI;
  */
 public interface Downloader
 {
-    void download( URI address, File destination )
+    void download( URI address, Path destination )
         throws Exception;
 }

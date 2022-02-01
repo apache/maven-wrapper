@@ -20,46 +20,62 @@ package org.apache.maven.wrapper;
  */
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import java.io.File;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 
-public class DownloaderTest {
+public class DownloaderTest
+{
 
   private DefaultDownloader download;
 
-  private File testDir;
+  private Path testDir;
 
-  private File downloadFile;
+  private Path downloadFile;
 
-  private File rootDir;
+  private Path rootDir;
 
   private URI sourceRoot;
 
-  private File remoteFile;
+  private Path remoteFile;
 
   @Before
-  public void setUp() throws Exception {
-    download = new DefaultDownloader("mvnw", "aVersion");
-    testDir = new File("target/test-files/DownloadTest");
-    rootDir = new File(testDir, "root");
-    downloadFile = new File(rootDir, "file");
-    if (downloadFile.exists())
-      downloadFile.delete();
-    remoteFile = new File(testDir, "remoteFile");
-    FileUtils.write(remoteFile, "sometext");
-    sourceRoot = remoteFile.toURI();
+  public void setUp()
+    throws Exception
+  {
+    download = new DefaultDownloader( "mvnw", "aVersion" );
+    testDir = Paths.get( "target/test-files/DownloadTest" );
+    Files.createDirectories( testDir );
+    rootDir = testDir.resolve( "root" );
+    downloadFile = rootDir.resolve( "file" );
+    Files.deleteIfExists( downloadFile );
+    remoteFile = testDir.resolve( "remoteFile" );
+    try ( BufferedWriter writer = Files.newBufferedWriter( remoteFile, StandardCharsets.UTF_8 ) )
+    {
+      writer.write( "sometext" );
+    }
+    sourceRoot = remoteFile.toUri();
   }
 
   @Test
-  public void testDownload() throws Exception {
-    assert !downloadFile.exists();
-    download.download(sourceRoot, downloadFile);
-    assert downloadFile.exists();
-    assertEquals("sometext", FileUtils.readFileToString(downloadFile));
+  public void testDownload()
+    throws Exception
+  {
+    assertTrue( Files.notExists( downloadFile ) );
+    download.download( sourceRoot, downloadFile );
+    assertTrue( Files.exists( downloadFile ) );
+    try ( BufferedReader reader = Files.newBufferedReader( downloadFile, StandardCharsets.UTF_8 ) )
+    {
+      assertEquals( "sometext", reader.readLine() );
+    }
   }
 }
