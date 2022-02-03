@@ -60,7 +60,7 @@ import static org.apache.maven.shared.utils.logging.MessageUtils.buffer;
  * @author Robert Scholte
  * @since 3.0.0
  */
-@Mojo( name = "wrapper", aggregator = true, requiresDirectInvocation = true )
+@Mojo( name = "wrapper", aggregator = true, requiresDirectInvocation = true, threadSafe = true )
 public class WrapperMojo extends AbstractMojo
 {
     private static final String MVNW_REPOURL = "MVNW_REPOURL";
@@ -127,7 +127,7 @@ public class WrapperMojo extends AbstractMojo
     private Map<String, UnArchiver> unarchivers;
     
     @Override
-    public void execute()
+    public synchronized void execute()
         throws MojoExecutionException, MojoFailureException
     {
         String wrapperVersion = getVersion( null, this.getClass(), "org.apache.maven.plugins/maven-wrapper-plugin" );
