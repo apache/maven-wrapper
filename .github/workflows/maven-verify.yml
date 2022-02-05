@@ -19,8 +19,6 @@ name: Verify
 
 on:
   push:
-    branches-ignore:
-      - dependabot/**
   pull_request:
 
 jobs:
