@@ -15,17 +15,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Verify
-
-on:
-  push:
-    branches-ignore:
-      - dependabot/**
-  pull_request:
-
-jobs:
-  build:
-    name: Verify
-    uses: apache/maven-gh-actions-shared/.github/workflows/maven-verify.yml@v2
-    with:
-      verify-fail-fast: false
+version: 2
+updates:
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
