@@ -146,6 +146,24 @@ public class WrapperMojo extends AbstractMojo
         }
 
         mavenVersion = getVersion( mavenVersion, Maven.class, "org.apache.maven/maven-core" );
+
+        try {
+            File downloaderClass = basedir.toPath().resolve(".mvn/wrapper/MavenWrapperDownloader.class").toFile();
+            if ( downloaderClass.exists() ) {
+                downloaderClass.delete();
+            }
+            if ( ! "source".equals( distributionType ) ) {
+                File downloaderJava = basedir.toPath().resolve(".mvn/wrapper/MavenWrapperDownloader.class").toFile();
+                if ( downloaderJava.exists() ) {
+                    downloaderJava.delete();
+                }
+            }
+        }
+        catch ( Exception e )
+        {
+            throw new MojoExecutionException( "distributionType can't clean up MavenWrapperDownloader", e );
+        }
+
         try
         {
             replaceProperties( wrapperVersion, Files.createDirectories( basedir.toPath().resolve( ".mvn/wrapper" ) ) );
