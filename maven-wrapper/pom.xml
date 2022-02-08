@@ -68,7 +68,7 @@ under the License.
     <dependency>
       <groupId>org.apache.ant</groupId>
       <artifactId>ant</artifactId>
-      <version>1.10.11</version>
+      <version>1.10.12</version>
       <scope>test</scope>
       <exclusions>
         <!-- workaround for provided dependency to com:sun:tools on jdk8 -->
