@@ -244,10 +244,10 @@ else
           QUIET=""
         fi
         if [ -z "$MVNW_USERNAME" ] || [ -z "$MVNW_PASSWORD" ]; then
-            wget $QUIET "$wrapperUrl" -O "$wrapperJarPath" || rm -f "$wrapperJarPath"
+            wget $QUIET "$wrapperUrl" -O "$wrapperJarPath"
         else
-            wget $QUIET --http-user=$MVNW_USERNAME --http-password=$MVNW_PASSWORD "$wrapperUrl" -O "$wrapperJarPath" || rm -f "$wrapperJarPath"
-        fi
+            wget $QUIET --http-user="$MVNW_USERNAME" --http-password="$MVNW_PASSWORD" "$wrapperUrl" -O "$wrapperJarPath"
+        fi || rm -f "$wrapperJarPath"
     elif command -v curl > /dev/null; then
         QUIET="--silent"
         if [ "$MVNW_VERBOSE" = true ]; then
@@ -255,11 +255,10 @@ else
           QUIET=""
         fi
         if [ -z "$MVNW_USERNAME" ] || [ -z "$MVNW_PASSWORD" ]; then
-            curl $QUIET -o "$wrapperJarPath" "$wrapperUrl" -f
+            curl $QUIET -o "$wrapperJarPath" "$wrapperUrl" -f -L
         else
-            curl $QUIET --user $MVNW_USERNAME:$MVNW_PASSWORD -o "$wrapperJarPath" "$wrapperUrl" -f
-        fi
-
+            curl $QUIET --user "$MVNW_USERNAME:$MVNW_PASSWORD" -o "$wrapperJarPath" "$wrapperUrl" -f -L
+        fi || rm -f "$wrapperJarPath"
     else
         if [ "$MVNW_VERBOSE" = true ]; then
           echo "Falling back to using Java to download"
