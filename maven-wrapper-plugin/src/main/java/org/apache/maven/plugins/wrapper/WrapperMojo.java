@@ -165,7 +165,6 @@ public class WrapperMojo
                 // Cleanup old compiled *.class
                 Files.deleteIfExists( file );
             }
-            Files.deleteIfExists( wrapperDir.resolve( "MavenWrapperDownloader.java" ) );
             Files.deleteIfExists( wrapperDir.resolve( "maven-wrapper.jar" ) );
         }
         catch ( IOException ioe )

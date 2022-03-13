@@ -58,7 +58,6 @@ under the License.
         <configuration>
           <descriptors>
             <descriptor>src/assembly/script.xml</descriptor>
-            <descriptor>src/assembly/source.xml</descriptor>
             <descriptor>src/assembly/bin.xml</descriptor>
           </descriptors>
           <delimiters>

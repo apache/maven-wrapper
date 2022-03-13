@@ -260,33 +260,43 @@ else
             curl $QUIET --user $MVNW_USERNAME:$MVNW_PASSWORD -o "$wrapperJarPath" "$wrapperUrl" -f
         fi
 
-    else
+    elif TEMP_DIR="`mktemp -d`"; then
         if [ "$MVNW_VERBOSE" = true ]; then
           echo "Falling back to using Java to download"
         fi
-        javaSource="$BASE_DIR/.mvn/wrapper/MavenWrapperDownloader.java"
-        javaClass="$BASE_DIR/.mvn/wrapper/MavenWrapperDownloader.class"
+        javaSource="$TEMP_DIR/MavenWrapperDownloader.java"
+        javaClass="$TEMP_DIR/MavenWrapperDownloader.class"
         # For Cygwin, switch paths to Windows format before running javac
         if $cygwin; then
           javaSource=`cygpath --path --windows "$javaSource"`
           javaClass=`cygpath --path --windows "$javaClass"`
         fi
-        if [ -e "$javaSource" ]; then
-            if [ ! -e "$javaClass" ]; then
-                if [ "$MVNW_VERBOSE" = true ]; then
-                  echo " - Compiling MavenWrapperDownloader.java ..."
-                fi
-                # Compiling the Java class
-                ("$JAVA_HOME/bin/javac" "$javaSource")
-            fi
-            if [ -e "$javaClass" ]; then
-                # Running the downloader
-                if [ "$MVNW_VERBOSE" = true ]; then
-                  echo " - Running MavenWrapperDownloader.java ..."
-                fi
-                ("$JAVA_HOME/bin/java" -cp .mvn/wrapper MavenWrapperDownloader "$MAVEN_PROJECTBASEDIR")
-            fi
+        cat > "$javaSource" <<-END
+		class MavenWrapperDownloader extends java.net.Authenticator
+		{
+		  protected java.net.PasswordAuthentication getPasswordAuthentication()
+		  {
+		    return new java.net.PasswordAuthentication( System.getenv( "MVNW_USERNAME" ), System.getenv( "MVNW_PASSWORD" ).toCharArray() );
+		  }
+		  public static void main( String[] args ) throws Exception
+		  {
+		    setDefault( new MavenWrapperDownloader() );
+		    java.nio.file.Files.copy( new java.net.URL( args[0] ).openStream(), java.nio.file.Paths.get( args[1] ).toAbsolutePath().normalize() );
+		  }
+		}
+		END
+        if [ "$MVNW_VERBOSE" = true ]; then
+          echo " - Compiling MavenWrapperDownloader.java ..."
         fi
+        # Compiling the Java class
+        "$JAVA_HOME/bin/javac" "$javaSource"
+        if [ "$MVNW_VERBOSE" = true ]; then
+          echo " - Running MavenWrapperDownloader.java ..."
+        fi
+        # Running the downloader
+        "$JAVA_HOME/bin/java" -cp "$javaClass/.." MavenWrapperDownloader "$wrapperUrl" "$wrapperJarPath"
+
+	rm -rf -- "$TEMP_DIR"
     fi
 fi
 ##########################################################################################

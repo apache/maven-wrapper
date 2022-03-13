@@ -105,8 +105,7 @@ If the JAR is not found to be available by the scripts they will attempt to
 download the file from the URL specified in
 `.mvn/wrapper/maven-wrapper.properties` under `wrapperUrl` and put it in place.
 The download is attempted via curl, wget and, as last resort, by compiling the
-`./mvn/wrapper/MavenWrapperDownloader.java` file and executing the resulting
-class.
+inline java downloader source and executing the resulting class.
 
 If your Maven repository is password protected you can specify your username via
 the environment variable `MVNW_USERNAME` and the password via the environment
