@@ -59,7 +59,7 @@ under the License.
 
   <properties>
     <maven.site.path>wrapper-archives/wrapper-LATEST</maven.site.path>
-    <mavenVersion>3.1.0</mavenVersion>
+    <mavenVersion>3.8.5</mavenVersion>
     <javaVersion>7</javaVersion>
     <project.build.outputTimestamp>2021-12-13T20:56:44Z</project.build.outputTimestamp>
   </properties>
