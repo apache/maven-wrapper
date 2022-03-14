@@ -102,8 +102,8 @@ public class MavenWrapperMain
 
     private static Path wrapperProperties( Path wrapperJar )
     {
-        return wrapperJar.resolveSibling( wrapperJar.getFileName().toString().replaceFirst( "\\.jar$",
-                                                                                            ".properties" ) );
+        return Paths.get( System.getProperty( "maven.multiModuleProjectDirectory" )
+                     + "/.mvn/wrapper/maven-wrapper.properties" );
     }
 
     private static Path wrapperJar()
