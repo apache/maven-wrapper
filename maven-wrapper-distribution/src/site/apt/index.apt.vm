@@ -36,6 +36,8 @@ mvnw.cmd
 ----
 
  but every distribution has specific content to manage different strategies to get {{{../maven-wrapper/}<<<maven-wrapper.jar>>>}}:
+
+ - <<<only-script>>>: the new lite implementation of <<<mvnw>>>/<<<mvnw.cmd>>> scripts will download the maven directly with <<<wget>>> or <<<curl>>> on *nix, or PowerShell on Windows, then exec/call the original <<<mvn>>>/<<<mvn.cmd>>> scripts of the downloaded maven distribution.
  
  - <<<script>>>: <<<mvnw>>>/<<<mvnw.cmd>>> scripts will download {{{../maven-wrapper/}<<<maven-wrapper.jar>>>}} with <<<wget>>> or <<<curl>>> on *nix, or PowerShell on Windows
  
