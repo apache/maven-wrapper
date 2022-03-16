@@ -34,7 +34,7 @@ under the License.
   <packaging>pom</packaging>
 
   <name>Apache Maven Wrapper</name>
-  <inceptionYear>2016</inceptionYear>
+  <inceptionYear>2013</inceptionYear>
 
   <scm>
     <connection>scm:git:https://gitbox.apache.org/repos/asf/maven-wrapper.git</connection>
