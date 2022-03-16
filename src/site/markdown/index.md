@@ -24,7 +24,7 @@ _Why might this be necessary?_ Maven to date has been very stable for users, is
 available on most systems or is easy to procure: but with many of the recent
 changes in Maven it will be easier for users to have a fully encapsulated build
 setup provided by the project. With the Maven Wrapper, this is very easy to do
-and it's a great idea borrowed from Gradle.
+and it's a great idea and initial implementation borrowed from Gradle.
 
 The easiest way to setup the Maven Wrapper for your project is to use the
 [Maven Wrapper Plugin][1] with its provided `wrapper` goal. To add or update all
