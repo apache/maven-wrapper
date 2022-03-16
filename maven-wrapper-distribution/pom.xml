@@ -57,6 +57,7 @@ under the License.
         </executions>
         <configuration>
           <descriptors>
+            <descriptor>src/assembly/only-script.xml</descriptor>
             <descriptor>src/assembly/script.xml</descriptor>
             <descriptor>src/assembly/source.xml</descriptor>
             <descriptor>src/assembly/bin.xml</descriptor>
