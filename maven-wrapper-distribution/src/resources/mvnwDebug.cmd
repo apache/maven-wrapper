@@ -1,3 +1,4 @@
+@REM ----------------------------------------------------------------------------
 @REM Licensed to the Apache Software Foundation (ASF) under one
 @REM or more contributor license agreements.  See the NOTICE file
 @REM distributed with this work for additional information
@@ -14,31 +15,13 @@
 @REM KIND, either express or implied.  See the License for the
 @REM specific language governing permissions and limitations
 @REM under the License.
+@REM ----------------------------------------------------------------------------
 
-@REM -----------------------------------------------------------------------------
-@REM Apache Maven Debug Script
-@REM
-@REM Environment Variable Prerequisites
-@REM
-@REM   JAVA_HOME           (Optional) Points to a Java installation.
-@REM   MAVEN_BATCH_ECHO    (Optional) Set to 'on' to enable the echoing of the batch commands.
-@REM   MAVEN_BATCH_PAUSE   (Optional) set to 'on' to wait for a key stroke before ending.
-@REM   MAVEN_OPTS          (Optional) Java runtime options used when Maven is executed.
-@REM   MAVEN_SKIP_RC       (Optional) Flag to disable loading of mavenrc files.
-@REM   MAVEN_DEBUG_ADDRESS (Optional) Set the debug address. Default value is localhost:8000
-@REM -----------------------------------------------------------------------------
+@REM ----------------------------------------------------------------------------
+@REM Maven Wrapper Batch script @project.artifactId@:@project.version@
+@REM ----------------------------------------------------------------------------
 
-@REM Begin all REM lines with '@' in case MAVEN_BATCH_ECHO is 'on'
-@echo off
-@REM set title of command window
-title %0
-@REM enable echoing by setting MAVEN_BATCH_ECHO to 'on'
-@if "%MAVEN_BATCH_ECHO%"=="on" echo %MAVEN_BATCH_ECHO%
-
-@setlocal
-
-IF "%MAVEN_DEBUG_ADDRESS%"=="" @set MAVEN_DEBUG_ADDRESS=localhost:8000
-
-@set MAVEN_DEBUG_OPTS=-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=%MAVEN_DEBUG_ADDRESS%
-
-@call "%~dp0"mvnw.cmd %*
+@SET __MVNW_ARG0_NAME__=%~nx0
+@%~dp0mvnw.cmd %*
+@echo "Cannot find %~dp0mvnw.cmd" >&2
+@cmd /c exit /b 2
