@@ -21,7 +21,6 @@ package org.apache.maven.plugins.wrapper;
 
 import static org.apache.maven.shared.utils.logging.MessageUtils.buffer;
 
-import javax.annotation.Nonnull;
 import javax.inject.Inject;
 
 import java.io.BufferedWriter;
@@ -218,8 +217,7 @@ public class WrapperMojo
             unarchiver.setFileSelectors( new FileSelector[] { new FileSelector()
             {
                 @Override
-                public boolean isSelected( @Nonnull FileInfo fileInfo )
-                    throws IOException
+                public boolean isSelected( FileInfo fileInfo )
                 {
                     return !fileInfo.getName().contains( "Debug" );
                 }
