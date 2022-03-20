@@ -70,8 +70,12 @@ public class Installer
         {
             Logger.info( "Detected MVNW_REPOURL environment variable " + mvnwRepoUrl );
             String mvnPath = distributionUrl.toURL().toString();
-            mvnPath = mvnPath.substring( mvnPath.indexOf( "org/apache/maven" ) );
-            distributionUrl = new URI( mvnwRepoUrl ).resolve( "/" ).resolve( mvnPath );
+            int pathIdx =  mvnPath.indexOf( "org/apache/maven" );
+            if ( 0 <= pathIdx )
+            {
+                mvnPath = mvnPath.substring( pathIdx );
+                distributionUrl = new URI( mvnwRepoUrl ).resolve( "/" ).resolve( mvnPath );
+            }
         }
 
         boolean alwaysDownload = configuration.isAlwaysDownload();

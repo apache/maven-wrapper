@@ -45,6 +45,7 @@ under the License.
             </arguments>
             <environmentVariables>
               <MVNW_VERBOSE>true</MVNW_VERBOSE>
+	      <HOME>${project.build.directory}</HOME>
             </environmentVariables>
           </configuration>
         </plugin>

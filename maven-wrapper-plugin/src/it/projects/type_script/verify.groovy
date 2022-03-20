@@ -30,5 +30,4 @@ assert log.contains('[INFO] Unpacked script type wrapper distribution org.apache
 
 // check "mvnw -v" output
 assert log.contains("Couldn't find ")
-assert log.contains(", downloading it ...")
-assert new File(basedir,'.mvn/wrapper/maven-wrapper.jar').exists()
+assert log.contains(", downloading and installing it ...")
