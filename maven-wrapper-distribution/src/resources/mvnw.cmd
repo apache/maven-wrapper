@@ -34,7 +34,7 @@
 )
 @SET __MVNW_ARG0_NAME__=
 @IF NOT "%__MVNW_CMD__%"=="" (%__MVNW_CMD__% %*)
-@echo "Cannot Start Maven" >&2 && cmd /c exit /b 2
+@echo Cannot start maven from wrapper >&2 && cmd /c exit /b 2
 @GOTO :EOF
 : end batch / begin powershell #>
 
@@ -56,7 +56,7 @@ if ($env:MVNW_REPOURL) {
 $distributionUrlName = $distributionUrl -replace '^.*/',''
 $distributionUrlNameMain = $distributionUrlName -replace '-bin\.zip$',''
 $MAVEN_HOME_PARENT = "$HOME/.m2/wrapper/dists/$distributionUrlNameMain"
-$MAVEN_HOME_NAME = (Get-FileHash -InputStream ([IO.MemoryStream]::new([byte[]][char[]]$distributionUrl))).Hash.ToLower()
+$MAVEN_HOME_NAME = ([System.Security.Cryptography.MD5]::Create().ComputeHash([byte[]][char[]]$distributionUrl) | %{$_.ToString("x2")}) -join ''
 $MAVEN_HOME = "$MAVEN_HOME_PARENT/$MAVEN_HOME_NAME"
 $MVN_CMD = $script -replace '^mvnw','mvn'
 
