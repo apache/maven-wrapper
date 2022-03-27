@@ -32,7 +32,7 @@ import java.util.Properties;
 
 public final class MavenWrapperDownloader
 {
-    private static final String WRAPPER_VERSION = "@project.version@";
+    private static final String WRAPPER_VERSION = "@@project.version@@";
 
     private static final boolean VERBOSE = Boolean.parseBoolean( System.getenv( "MVNW_VERBOSE" ) );
 

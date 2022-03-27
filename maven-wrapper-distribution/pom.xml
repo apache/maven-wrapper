@@ -62,7 +62,7 @@ under the License.
             <descriptor>src/assembly/bin.xml</descriptor>
           </descriptors>
           <delimiters>
-            <delimiter>@</delimiter>
+            <delimiter>@@</delimiter>
           </delimiters>
         </configuration>
       </plugin>
