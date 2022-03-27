@@ -24,7 +24,6 @@
 @REM JAVA_HOME - location of a JDK home dir
 @REM
 @REM Optional ENV vars
-@REM M2_HOME - location of maven2's installed home dir
 @REM MAVEN_BATCH_ECHO - set to 'on' to enable the echoing of the batch commands
 @REM MAVEN_BATCH_PAUSE - set to 'on' to wait for a keystroke before ending
 @REM MAVEN_OPTS - parameters passed to the Java VM when running Maven
