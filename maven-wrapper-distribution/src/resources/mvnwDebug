@@ -18,7 +18,7 @@
 # under the License.
 
 # -----------------------------------------------------------------------------
-# Apache Maven Debug Script
+# Apache Maven Wrapper debug script, version @@project.version@@
 #
 # Environment Variable Prerequisites
 #
