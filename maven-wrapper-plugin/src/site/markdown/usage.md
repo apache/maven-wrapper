@@ -54,4 +54,4 @@ Debugging
 
 The apache-maven-wrapper distributions all contains the `mvnwDebug`-script for both Windows and Unix based operating systems. 
 This makes it possible to debug through Apache Maven, Maven Plugin or Maven Extension. 
-You can exclude these scripts by calling `mvn wrapper:wrapper -DincludeDebug=false`
+You can include these scripts by calling `mvn wrapper:wrapper -DincludeDebug=true`
