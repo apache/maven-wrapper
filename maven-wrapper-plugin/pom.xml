@@ -131,7 +131,6 @@ under the License.
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-invoker-plugin</artifactId>
-            <version>3.2.2</version>
             <configuration>
               <goals>
                 <goal>${project.groupId}:${project.artifactId}:${project.version}:wrapper</goal>
