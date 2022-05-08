@@ -70,6 +70,18 @@ under the License.
     <module>maven-wrapper-plugin</module>
   </modules>
 
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-release-plugin</artifactId>
+        <configuration>
+          <!-- we prefer tagging as maven-wrapper instead of maven-wrapper-parent -->
+          <tagNameFormat>maven-wrapper-@{project.version}</tagNameFormat>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
   <profiles>
     <profile>
       <id>apache-release</id>
