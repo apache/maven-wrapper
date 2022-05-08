@@ -25,7 +25,7 @@ under the License.
   <parent>
     <groupId>org.apache.maven.wrapper</groupId>
     <artifactId>maven-wrapper-parent</artifactId>
-    <version>3.1.1-SNAPSHOT</version>
+    <version>3.1.1</version>
   </parent>
 
   <groupId>org.apache.maven.plugins</groupId>
