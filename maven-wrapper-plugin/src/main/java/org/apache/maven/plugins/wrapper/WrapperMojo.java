@@ -258,7 +258,7 @@ public class WrapperMojo
             + "# \"License\"); you may not use this file except in compliance%n"
             + "# with the License.  You may obtain a copy of the License at%n"
             + "#%n"
-            + "#   https://www.apache.org/licenses/LICENSE-2.0%n"
+            + "#   http://www.apache.org/licenses/LICENSE-2.0%n"
             + "#%n"
             + "# Unless required by applicable law or agreed to in writing,%n"
             + "# software distributed under the License is distributed on an%n"
