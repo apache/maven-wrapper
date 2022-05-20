@@ -43,6 +43,8 @@ The downside is that the project will contain a binary file in the source contro
 - **source**: Since Maven already requires Java to run, why not compile and run a classfile to download the maven-wrapper jar? 
 This type comes with a `.mvn/wrapper/MavenWrapperDownloader.java` which will be compiled and executed on the fly.
 
+The type can be specified with `mvn wrapper:wrapper -Dtype=x`, where x is any of the types listed above.
+
 Maven Version
 -------------
 By default the plugin will assume the same version as the Maven runtime (calling `mvn -v`). But you can pick a different version.
