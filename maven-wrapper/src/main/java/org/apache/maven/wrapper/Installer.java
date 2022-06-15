@@ -65,15 +65,6 @@ public class Installer
     {
         URI distributionUrl = configuration.getDistribution();
 
-        String mvnwRepoUrl = System.getenv( MavenWrapperMain.MVNW_REPOURL );
-        if ( mvnwRepoUrl != null && !mvnwRepoUrl.isEmpty() )
-        {
-            Logger.info( "Detected MVNW_REPOURL environment variable " + mvnwRepoUrl );
-            String mvnPath = distributionUrl.toURL().toString();
-            mvnPath = mvnPath.substring( mvnPath.indexOf( "org/apache/maven" ) );
-            distributionUrl = new URI( mvnwRepoUrl ).resolve( "/" ).resolve( mvnPath );
-        }
-
         boolean alwaysDownload = configuration.isAlwaysDownload();
         boolean alwaysUnpack = configuration.isAlwaysUnpack();
 

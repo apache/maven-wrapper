@@ -29,6 +29,8 @@ import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.Properties;
 
+import static org.apache.maven.wrapper.MavenWrapperMain.MVNW_REPOURL;
+
 /**
  * Wrapper executor, running {@link Installer} to get a Maven distribution ready, followed by
  * {@link BootstrapMainStarter} to launch the Maven bootstrap.
@@ -94,6 +96,11 @@ public class WrapperExecutor
         }
     }
 
+    protected String getEnv( String key )
+    {
+        return System.getenv( key );
+    }
+
     private URI prepareDistributionUri()
         throws URISyntaxException
     {
@@ -105,6 +112,27 @@ public class WrapperExecutor
         }
         else
         {
+            String mvnwRepoUrl = getEnv( MVNW_REPOURL );
+            if ( mvnwRepoUrl != null && !mvnwRepoUrl.isEmpty() )
+            {
+                Logger.info( "Detected MVNW_REPOURL environment variable " + mvnwRepoUrl );
+                if ( mvnwRepoUrl.endsWith( "/" ) )
+                {
+                    mvnwRepoUrl = mvnwRepoUrl.substring( 0, mvnwRepoUrl.length() - 1 );
+                }
+                String distributionPath = source.getPath();
+                int index = distributionPath.indexOf( "org/apache/maven" );
+                if ( index > 1 )
+                {
+                    distributionPath = "/".concat( distributionPath.substring( index ) );
+                }
+                else
+                {
+                    Logger.warn( "distributionUrl don't contain package name " + source.getPath() );
+                }
+                return new URI( mvnwRepoUrl + distributionPath );
+            }
+
             return source;
         }
     }

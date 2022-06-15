@@ -19,6 +19,7 @@ package org.apache.maven.wrapper;
  * under the License.
  */
 
+import static org.apache.maven.wrapper.MavenWrapperMain.MVNW_REPOURL;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -28,6 +29,8 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import org.junit.Assert;
@@ -189,6 +192,78 @@ public class WrapperExecutorTest
     WrapperExecutor wrapper = WrapperExecutor.forWrapperPropertiesFile( propertiesFile );
     Assert.assertNotEquals( "some/relative/url/to/bin.zip", wrapper.getDistribution().getSchemeSpecificPart() );
     Assert.assertTrue( wrapper.getDistribution().getSchemeSpecificPart().endsWith( "some/relative/url/to/bin.zip" ) );
+  }
+
+  @Test
+  public void testEnvironmentVariableOverwrite_simpleCase()
+    throws Exception
+  {
+    final Map<String, String> environmentVariables = new HashMap<>();
+    environmentVariables.put( MVNW_REPOURL, "https://repo/test" );
+
+    properties = new Properties();
+    properties.put( "distributionUrl", "https://server/path/to/bin.zip" );
+    writePropertiesFile( properties, propertiesFile, "header" );
+
+    WrapperExecutor wrapper = prepareWrapperExecutorWithEnvironmentVariables(environmentVariables);
+
+    Assert.assertEquals( "https://repo/test/path/to/bin.zip", wrapper.getDistribution().toString() );
+  }
+
+  @Test
+  public void testEnvironmentVariableOverwrite_mvnwRepoUrl_trailingSlash()
+          throws Exception
+  {
+    final Map<String, String> environmentVariables = new HashMap<>();
+    environmentVariables.put( MVNW_REPOURL, "https://repo/test/" );
+    properties = new Properties();
+    properties.put( "distributionUrl", "https://server/path/to/bin.zip" );
+    writePropertiesFile( properties, propertiesFile, "header" );
+
+    WrapperExecutor wrapper = prepareWrapperExecutorWithEnvironmentVariables(environmentVariables);
+
+    Assert.assertEquals( "https://repo/test/path/to/bin.zip", wrapper.getDistribution().toString() );
+  }
+
+  @Test
+  public void testEnvironmentVariableOverwrite_packageName()
+          throws Exception
+  {
+    final Map<String, String> environmentVariables = new HashMap<>();
+    environmentVariables.put( MVNW_REPOURL, "https://repo/test" );
+    properties = new Properties();
+    properties.put( "distributionUrl", "https://server/org/apache/maven/to/bin.zip" );
+    writePropertiesFile( properties, propertiesFile, "header" );
+
+    WrapperExecutor wrapper = prepareWrapperExecutorWithEnvironmentVariables(environmentVariables);
+
+    Assert.assertEquals( "https://repo/test/org/apache/maven/to/bin.zip", wrapper.getDistribution().toString() );
+  }
+
+  @Test
+  public void testEnvironmentVariableOverwrite_packageName_trailingSpace()
+          throws Exception
+  {
+    final Map<String, String> environmentVariables = new HashMap<>();
+    environmentVariables.put( MVNW_REPOURL, "https://repo/test/" );
+    properties = new Properties();
+    properties.put( "distributionUrl", "https://server/whatever/org/apache/maven/to/bin.zip" );
+    writePropertiesFile( properties, propertiesFile, "header" );
+
+    WrapperExecutor wrapper = prepareWrapperExecutorWithEnvironmentVariables(environmentVariables);
+
+    Assert.assertEquals( "https://repo/test/org/apache/maven/to/bin.zip", wrapper.getDistribution().toString() );
+  }
+
+  private WrapperExecutor prepareWrapperExecutorWithEnvironmentVariables(final Map<String, String> environmentVariables )
+  {
+    return new WrapperExecutor( propertiesFile, new Properties() ) {
+      @Override
+      protected String getEnv( String key )
+      {
+        return environmentVariables.get( key );
+      }
+    };
   }
 
   private void writePropertiesFile( Properties properties, Path propertiesFile, String message )
