@@ -34,10 +34,10 @@ Apache Maven Wrapper Distribution Types
 
 There are 3 types available:
 
-- **script** _(default)_: With this type the scripts will try to download the scripts via wget or curl in case of Unix based system, or use Powershell in case of Windows
+- **script**: With this type the scripts will try to download the scripts via wget or curl in case of Unix based system, or use Powershell in case of Windows
 
 
-- **bin**: With this type the maven-wrapper jar is already available in the `.mvn/wrapper` folder, so you don't have to rely on wget/curl or Powershell 
+- **bin** _(default)_: With this type the maven-wrapper jar is already available in the `.mvn/wrapper` folder, so you don't have to rely on wget/curl or Powershell 
 The downside is that the project will contain a binary file in the source control management system.
 
 - **source**: Since Maven already requires Java to run, why not compile and run a classfile to download the maven-wrapper jar? 
