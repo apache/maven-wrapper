@@ -282,7 +282,7 @@ public class WrapperMojo
     private String getVersion( String defaultVersion, Class<?> clazz, String path )
     {
         String version = defaultVersion;
-        if ( version == null )
+        if ( version == null || version.trim().length() == 0 || "true".equals( version )  )
         {
             Properties props = new Properties();
             try ( InputStream is = clazz.getResourceAsStream( "/META-INF/maven/" + path + "/pom.properties" ) )
