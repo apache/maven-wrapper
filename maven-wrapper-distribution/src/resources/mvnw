@@ -194,7 +194,8 @@ else
       wrapperUrl="https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper/@@project.version@@/maven-wrapper-@@project.version@@.jar"
     fi
     while IFS="=" read key value; do
-      case "$key" in (wrapperUrl) wrapperUrl="$value"; break ;;
+      # Remove invalid line endings from value
+      case "$key" in (wrapperUrl) wrapperUrl="${value%$'\r'}"; break ;;
       esac
     done < "$MAVEN_PROJECTBASEDIR/.mvn/wrapper/maven-wrapper.properties"
     log "Downloading from: $wrapperUrl"
