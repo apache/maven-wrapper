@@ -32,10 +32,13 @@ The scripts work like this:
 Apache Maven Wrapper Distribution Types
 -----
 
-There are 3 types available:
+There are 4 types available:
+
+- **only-script**: the lite implementation of `mvnw`/`mvnw.cmd` scripts will download the maven directly via wget or curl on *nix, or PowerShell on Windows,
+then exec/call the original `mvn`/`mvn.cmd` scripts of the downloaded maven distribution. This type does not use `maven-wrapper.jar` nor `MavenWrapperDownloader.java`,
+only the wrapper scripts are required.
 
 - **script**: With this type the scripts will try to download the scripts via wget or curl in case of Unix based system, or use Powershell in case of Windows
-
 
 - **bin** _(default)_: With this type the maven-wrapper jar is already available in the `.mvn/wrapper` folder, so you don't have to rely on wget/curl or Powershell 
 The downside is that the project will contain a binary file in the source control management system.
