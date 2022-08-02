@@ -170,6 +170,16 @@ maven-wrapper-plugin, the URL is used in the maven-wrapper.properties file.
 If not set, but your mirror URL in your settings.xml is configured, it will be
 used.
 
+## Checksum verification of downloaded binaries
+
+To avoid supply-chain-attacks by downloading a corrupted artifact, it
+is possible to specify checksums for both the *maven-wrapper.jar* and 
+the downloaded distribution. To apply verification, add the expected
+file's SHA-256 sum in hex notation, using only small caps, to 
+`maven-wrapper.properties`. The property for validating the 
+*maven-wrapper.jar* file is named `wrapperSha256Sum` whereas the 
+distribution file property is named `distributionSha256Sum`.
+
 ## Internals
 
 Maven Wrapper is composed of 3 pieces:

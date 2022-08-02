@@ -98,6 +98,34 @@ public class WrapperMojo
     @Parameter( defaultValue = "false", property = "includeDebug" )
     private boolean includeDebugScript;
 
+    /**
+     * The expected SHA-256 checksum of the <i>maven-wrapper.jar</i> that is
+     * used to load the configured Maven distribution.
+     */
+    @Parameter( property = "wrapperSha256Sum" )
+    private String wrapperSha256Sum;
+
+    /**
+     * The expected SHA-256 checksum of the Maven distribution that is
+     * executed by the installed wrapper.
+     */
+    @Parameter( property = "distributionSha256Sum" )
+    private String distributionSha256Sum;
+
+    /**
+     * Determines if the Maven distribution should be downloaded
+     * on every execution of the Maven wrapper.
+     */
+    @Parameter(  defaultValue = "false", property = "alwaysDownload" )
+    private boolean alwaysDownload;
+
+    /**
+     * Determines if the Maven distribution should be unpacked
+     * on every execution of the Maven wrapper.
+     */
+    @Parameter(  defaultValue = "false", property = "alwaysUnpack" )
+    private boolean alwaysUnpack;
+
     // READONLY PARAMETERS
 
     @Parameter( defaultValue = "${session}", readonly = true, required = true )
@@ -271,7 +299,23 @@ public class WrapperMojo
         {
             out.append( String.format( Locale.ROOT, license ) );
             out.append( "distributionUrl=" + distributionUrl + System.lineSeparator() );
+            if ( distributionSha256Sum != null )
+            {
+                out.append( "distributionSha256Sum=" + distributionSha256Sum + System.lineSeparator() );
+            }
             out.append( "wrapperUrl=" + wrapperUrl + System.lineSeparator() );
+            if ( wrapperSha256Sum != null )
+            {
+                out.append( "wrapperSha256Sum=" + wrapperSha256Sum + System.lineSeparator() );
+            }
+            if ( alwaysDownload )
+            {
+                out.append( "alwaysDownload=" + Boolean.TRUE + System.lineSeparator() );
+            }
+            if ( alwaysUnpack )
+            {
+                out.append( "alwaysUnpack=" + Boolean.TRUE + System.lineSeparator() );
+            }
         }
         catch ( IOException ioe )
         {

@@ -75,6 +75,8 @@ public class InstallerTest
 
   private Downloader download;
 
+  private Verifier verifier;
+
   private PathAssembler pathAssembler;
 
   private PathAssembler.LocalDistribution localDistribution;
@@ -92,12 +94,14 @@ public class InstallerTest
     configuration.setDistribution( new URI( "http://server/maven-0.9.zip" ) );
     configuration.setAlwaysDownload( false );
     configuration.setAlwaysUnpack( false );
+    configuration.setDistributionSha256Sum( "" );
     distributionDir = testDir.resolve( "someDistPath" );
     mavenHomeDir = distributionDir.resolve( "maven-0.9" );
     zipStore = testDir.resolve( "zips" );
     zipDestination = zipStore.resolve( "maven-0.9.zip" );
 
     download = mock( Downloader.class );
+    verifier = mock ( Verifier.class );
     pathAssembler = mock( PathAssembler.class );
     localDistribution = mock( PathAssembler.LocalDistribution.class );
 
@@ -105,7 +109,7 @@ public class InstallerTest
     when( localDistribution.getDistributionDir() ).thenReturn( distributionDir );
     when( pathAssembler.getDistribution( configuration ) ).thenReturn( localDistribution );
 
-    install = new Installer( download, pathAssembler );
+    install = new Installer( download, verifier, pathAssembler );
   }
 
   private void createTestZip( Path zipDestination )

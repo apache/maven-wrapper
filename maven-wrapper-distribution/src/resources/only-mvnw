@@ -86,9 +86,13 @@ die() {
   exit 1
 }
 
-# calculate distributionUrl, requires .mvn/wrapper/maven-wrapper.properties
+# calculate distributionUrl and get optional distributionSha256Sum, requires .mvn/wrapper/maven-wrapper.properties
+distributionSha256Sum=""
 while IFS="=" read -r key value; do
-  case "$key" in (distributionUrl) distributionUrl="${value:-$distributionUrl}"; break ;; esac
+  case "$key" in
+    distributionUrl) distributionUrl="${value:-$distributionUrl}";;
+    distributionSha256Sum) distributionSha256Sum="${value:-distributionSha256Sum}";;
+  esac
 done < "${0%/*}/.mvn/wrapper/maven-wrapper.properties"
 [ -n "${distributionUrl-}" ] || die "cannot read distributionUrl property in ${0%/*}/.mvn/wrapper/maven-wrapper.properties"
 [ -z "${MVNW_REPOURL-}" ] || distributionUrl="$MVNW_REPOURL/org/apache/maven/${distributionUrl#*/org/apache/maven/}"
@@ -170,6 +174,29 @@ elif set_java_home; then
   "$(native_path "$JAVACCMD")" "$(native_path "$javaSource")"
   verbose " - Running Downloader.java ..."
   "$(native_path "$JAVACMD")" -cp "$(native_path "$TMP_DOWNLOAD_DIR")" Downloader "$distributionUrl" "$(native_path "$targetZip")"
+fi
+
+# If specified, validate the SHA-256 sum of the Maven distribution zip file
+if [ -n "$distributionSha256Sum" ]; then
+  distributionSha256Result=false
+  if command -v sha256sum > /dev/null; then
+    if echo "$distributionSha256Sum  $TMP_DOWNLOAD_DIR/$distributionUrlName" | sha256sum -c > /dev/null 2>&1; then
+      distributionSha256Result=true
+    fi
+  elif command -v shasum > /dev/null; then
+    if echo "$distributionSha256Sum  $TMP_DOWNLOAD_DIR/$distributionUrlName" | shasum -a 256 -c > /dev/null 2>&1; then
+      distributionSha256Result=true
+    fi
+  else
+    echo "Checksum validation was requested but neither 'sha256sum' or 'shasum' are available."
+    echo "Please install either command, or disable validation by removing 'distributionSha256Sum' from your maven-wrapper.properties."
+    exit 1
+  fi
+  if [ $distributionSha256Result = false ]; then
+    echo "Error: Failed to validate Maven distribution SHA-256, your Maven distribution might be compromised." >&2
+    echo "If you updated your Maven version, you need to update the specified distributionSha256Sum property." >&2
+    exit 1
+  fi
 fi
 
 # unzip and move

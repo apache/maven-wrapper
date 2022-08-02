@@ -49,6 +49,12 @@ public class WrapperExecutor
 
     public static final String ZIP_STORE_PATH_PROPERTY = "zipStorePath";
 
+    public static final String DISTRIBUTION_SHA_256_SUM = "distributionSha256Sum";
+
+    public static final String ALWAYS_DOWNLOAD = "alwaysDownload";
+
+    public static final String ALWAYS_UNPACK = "alwaysUnpack";
+
     private final Properties properties;
 
     private final Path propertiesFile;
@@ -86,6 +92,11 @@ public class WrapperExecutor
                 config.setZipBase( getProperty( ZIP_STORE_BASE_PROPERTY, config.getZipBase() ) );
                 config.setZipPath( Paths.get( getProperty( ZIP_STORE_PATH_PROPERTY,
                                                            config.getZipPath().toString() ) ) );
+                config.setDistributionSha256Sum( getProperty( DISTRIBUTION_SHA_256_SUM, "" ) );
+                config.setAlwaysUnpack( Boolean.parseBoolean( getProperty( ALWAYS_UNPACK,
+                                                              Boolean.FALSE.toString() ) ) );
+                config.setAlwaysDownload( Boolean.parseBoolean( getProperty( ALWAYS_DOWNLOAD,
+                                                                Boolean.FALSE.toString() ) ) );
             }
             catch ( Exception e )
             {
