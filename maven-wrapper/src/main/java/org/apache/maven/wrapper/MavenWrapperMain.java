@@ -74,6 +74,7 @@ public class MavenWrapperMain
 
         WrapperExecutor wrapperExecutor = WrapperExecutor.forWrapperPropertiesFile( propertiesFile );
         wrapperExecutor.execute( args, new Installer( new DefaultDownloader( "mvnw", wrapperVersion ),
+                                                      new HashAlgorithmVerifier(),
                                                       new PathAssembler( mavenUserHome() ) ),
                                  new BootstrapMainStarter() );
     }

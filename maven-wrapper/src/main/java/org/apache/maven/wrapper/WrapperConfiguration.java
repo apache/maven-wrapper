@@ -45,6 +45,8 @@ public class WrapperConfiguration
 
     private Path zipPath = Installer.DEFAULT_DISTRIBUTION_PATH;
 
+    private String distributionSha256Sum;
+
     public boolean isAlwaysDownload()
     {
         return alwaysDownload;
@@ -113,5 +115,15 @@ public class WrapperConfiguration
     public void setZipPath( Path zipPath )
     {
         this.zipPath = zipPath;
+    }
+
+    public String getDistributionSha256Sum()
+    {
+        return distributionSha256Sum;
+    }
+
+    public void setDistributionSha256Sum( String distributionSha256Sum )
+    {
+        this.distributionSha256Sum = distributionSha256Sum;
     }
 }

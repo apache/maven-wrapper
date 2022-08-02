@@ -52,11 +52,14 @@ public class Installer
 
     private final Downloader download;
 
+    private final Verifier verifier;
+
     private final PathAssembler pathAssembler;
 
-    public Installer( Downloader download, PathAssembler pathAssembler )
+    public Installer( Downloader download, Verifier verifier, PathAssembler pathAssembler )
     {
         this.download = download;
+        this.verifier = verifier;
         this.pathAssembler = pathAssembler;
     }
 
@@ -67,6 +70,7 @@ public class Installer
 
         boolean alwaysDownload = configuration.isAlwaysDownload();
         boolean alwaysUnpack = configuration.isAlwaysUnpack();
+        boolean verifyDistributionSha256Sum = !configuration.getDistributionSha256Sum().isEmpty();
 
         PathAssembler.LocalDistribution localDistribution = pathAssembler.getDistribution( configuration );
         Path localZipFile = localDistribution.getZipFile();
@@ -92,6 +96,13 @@ public class Installer
 
         if ( downloaded || alwaysUnpack || dirs.isEmpty() )
         {
+            if ( verifyDistributionSha256Sum )
+            {
+                verifier.verify( localZipFile,
+                        "distributionSha256Sum",
+                        Verifier.SHA_256_ALGORITHM,
+                        configuration.getDistributionSha256Sum() );
+            }
             for ( Path dir : dirs )
             {
                 Logger.info( "Deleting directory " + dir.toAbsolutePath() );
