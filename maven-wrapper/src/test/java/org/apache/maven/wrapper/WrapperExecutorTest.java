@@ -138,9 +138,13 @@ public class WrapperExecutorTest
   {
     WrapperExecutor wrapper = WrapperExecutor.forProjectDirectory( propertiesFile );
 
-    wrapper.execute( new String[] { "arg" }, install, start );
+    final String[] args = { "arg" };
+    wrapper.execute( args, install, start );
     verify( install ).createDist( Mockito.any( WrapperConfiguration.class ) );
-    verify( start ).start( new String[] { "arg" }, mockInstallDir );
+    verify( start ).start(
+            Mockito.eq( args ),
+            Mockito.eq( mockInstallDir ),
+            Mockito.any( Properties.class ) );
   }
 
   @Test( )

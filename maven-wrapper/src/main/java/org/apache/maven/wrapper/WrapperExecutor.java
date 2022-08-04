@@ -177,7 +177,7 @@ public class WrapperExecutor
         throws Exception
     {
         Path mavenHome = install.createDist( config );
-        bootstrapMainStarter.start( args, mavenHome );
+        bootstrapMainStarter.start( args, mavenHome, properties );
     }
 
     private String getProperty( String propertyName )
