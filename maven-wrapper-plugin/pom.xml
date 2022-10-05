@@ -138,7 +138,6 @@ under the License.
                 <!-- e.g. ensure that Java7 picks up TLSv1.2 when connecting with Central -->
                 <https.protocols>${https.protocols}</https.protocols>
               </properties>
-              <ignoreFailures>${maven.it.failure.ignore}</ignoreFailures>
               <streamLogsOnFailures>true</streamLogsOnFailures>
               <filterProperties>
                 <mrm.repository.url>${mrm.repository.url}</mrm.repository.url>
