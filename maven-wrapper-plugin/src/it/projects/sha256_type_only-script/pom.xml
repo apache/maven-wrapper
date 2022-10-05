@@ -40,7 +40,9 @@ under the License.
           <version>3.0.0</version>
           <configuration>
             <executable>mvnw${cmd}</executable>
-            <successCodes>1</successCodes>
+            <successCodes>
+              <successCode>1</successCode>
+            </successCodes>
             <arguments>
               <argument>-v</argument>
             </arguments>
