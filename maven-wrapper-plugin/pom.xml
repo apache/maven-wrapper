@@ -135,8 +135,6 @@ under the License.
               <properties>
                 <maven.compiler.source>${invoker.maven.compiler.source}</maven.compiler.source>
                 <maven.compiler.target>${invoker.maven.compiler.target}</maven.compiler.target>
-                <!-- e.g. ensure that Java7 picks up TLSv1.2 when connecting with Central -->
-                <https.protocols>${https.protocols}</https.protocols>
               </properties>
               <streamLogsOnFailures>true</streamLogsOnFailures>
               <filterProperties>
