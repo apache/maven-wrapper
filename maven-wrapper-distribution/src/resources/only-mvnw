@@ -132,27 +132,6 @@ esac
 MAVEN_HOME="$HOME/.m2/wrapper/dists/${distributionUrlNameMain-}/$(hash_string "$distributionUrl")"
 
 exec_maven() {
-  ! $_MVNW_USE_MVND || set_java_home || die "maven-mvnd requires JAVA_HOME"
-  if $_MVNW_USE_MVND && [ "$MVN_CMD" != mvnd.sh ] && ! "$MAVEN_HOME/bin/$MVN_CMD" --status >/dev/null 2>/dev/null; then
-    echo "native maven-mvnd does not work, fall back to pure java version" >&2
-    MVN_CMD=mvnd.sh
-  fi
-  if $_MVNW_USE_MVND && [ "$MVN_CMD" = mvnd.sh ]; then
-    case "$("$(native_path "$JAVACCMD")" -version 2>&1)" in
-    ("javac "[1-9][0-9][0-9]*) ;;
-    ("javac "[2-9][0-9]*) ;;
-    ("javac "1[1-9]*) ;;
-    (*) echo "maven-mvnd java version requires JDK11, fall back to normal maven" >&2
-        _MVNW_USE_MVND=false
-        MAVEN_HOME="$MAVEN_HOME/mvn"
-        MVN_CMD=mvn
-        ;;
-    esac
-  fi
-  if $_MVNW_USE_MVND && [ -z "${JAVA_HOME-}" ]; then
-    JAVA_HOME="$(native_path "$(cd -- "${JAVACMD%/*}/.." && pwd)")"
-    export JAVA_HOME
-  fi
   unset MVNW_VERBOSE MVNW_USERNAME MVNW_PASSWORD MVNW_REPOURL || :
   exec "$MAVEN_HOME/bin/$MVN_CMD" "$@" || die "cannot exec $MAVEN_HOME/bin/$MVN_CMD"
 }
