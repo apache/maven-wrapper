@@ -70,13 +70,9 @@ The wrapper should work on various operating systems including
 * OSX / macOS
 * Windows (various newer versions)
 * Solaris (10 and 11)
+* BSD
 
-For all those *nix operating systems, various shells should work including
-
-* sh
-* bash
-* dash
-* zsh
+A POSIX-compatible Bourne shell is required to run the wrapper script.
 
 In terms of Apache Maven versions itself, the wrapper should work with any Maven
 3.x version and it defaults to the release used when setting up the wrapper. We do NOT
