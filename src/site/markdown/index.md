@@ -94,14 +94,25 @@ binary file `.mvn/wrapper/maven-wrapper.jar`. It is used to bootstrap the
 download and invocation of Maven from the wrapper shell scripts.
 
 If your project is not allowed to contain binary files like this, you can
-configure your version control system to exclude checkin/commit of the wrapper
-jar.
+use the source distribution of the maven wrapper which adds a file
+`.mvn/wrapper/MavenWrapperDownloader.java` file instead:
+
+```shell
+# defaults to bin
+mvn wrapper:wrapper -Dtype=source 
+```
+
+You can also chose to opt out of all additional resources except the wrapper scripts:
+
+```shell
+mvn wrapper:wrapper -Dtype=script
+```
 
 If the JAR is not found to be available by the scripts they will attempt to
 download the file from the URL specified in
 `.mvn/wrapper/maven-wrapper.properties` under `wrapperUrl` and put it in place.
 The download is attempted via curl, wget and, as last resort, by compiling the
-`./mvn/wrapper/MavenWrapperDownloader.java` file and executing the resulting
+`.mvn/wrapper/MavenWrapperDownloader.java` file and executing the resulting
 class.
 
 If your Maven repository is password protected you can specify your username via
