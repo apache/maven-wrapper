@@ -1,5 +1,3 @@
-package org.apache.maven.wrapper.cli;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.apache.maven.wrapper.cli;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,35 +16,28 @@ package org.apache.maven.wrapper.cli;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.maven.wrapper.cli;
 
 /**
  * Command line converter.
  *
  * @param <T> type
  */
-public abstract class AbstractCommandLineConverter<T>
-    implements CommandLineConverter<T>
-{
-    public T convert( Iterable<String> args )
-        throws CommandLineArgumentException
-    {
+public abstract class AbstractCommandLineConverter<T> implements CommandLineConverter<T> {
+    public T convert(Iterable<String> args) throws CommandLineArgumentException {
         CommandLineParser parser = new CommandLineParser();
-        configure( parser );
-        return convert( parser.parse( args ) );
+        configure(parser);
+        return convert(parser.parse(args));
     }
 
-    public T convert( ParsedCommandLine args )
-        throws CommandLineArgumentException
-    {
-        return convert( args, newInstance() );
+    public T convert(ParsedCommandLine args) throws CommandLineArgumentException {
+        return convert(args, newInstance());
     }
 
-    public T convert( Iterable<String> args, T target )
-        throws CommandLineArgumentException
-    {
+    public T convert(Iterable<String> args, T target) throws CommandLineArgumentException {
         CommandLineParser parser = new CommandLineParser();
-        configure( parser );
-        return convert( parser.parse( args ), target );
+        configure(parser);
+        return convert(parser.parse(args), target);
     }
 
     protected abstract T newInstance();

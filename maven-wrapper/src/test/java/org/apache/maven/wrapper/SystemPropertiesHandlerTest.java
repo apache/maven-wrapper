@@ -1,5 +1,3 @@
-package org.apache.maven.wrapper;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.apache.maven.wrapper;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,9 +16,7 @@ package org.apache.maven.wrapper;
  * specific language governing permissions and limitations
  * under the License.
  */
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
+package org.apache.maven.wrapper;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -34,43 +30,39 @@ import java.util.Properties;
 import org.junit.Before;
 import org.junit.Test;
 
-public class SystemPropertiesHandlerTest
-{
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 
-  private Path tmpDir = Paths.get( "target/test-files/SystemPropertiesHandlerTest" );
+public class SystemPropertiesHandlerTest {
 
-  @Before
-  public void setupTempDir()
-    throws IOException
-  {
-    Files.createDirectories( tmpDir );
-  }
+    private Path tmpDir = Paths.get("target/test-files/SystemPropertiesHandlerTest");
 
-  @Test
-  public void testParsePropertiesFile()
-    throws Exception
-  {
-    Path propFile = tmpDir.resolve( "props" );
-    Properties props = new Properties();
-    props.put( "a", "b" );
-    props.put( "systemProp.c", "d" );
-    props.put( "systemProp.", "e" );
-
-    try ( OutputStream fos = Files.newOutputStream( propFile ) )
-    {
-      props.store( fos, "" );
+    @Before
+    public void setupTempDir() throws IOException {
+        Files.createDirectories(tmpDir);
     }
 
-    Map<String, String> expected = new HashMap<String, String>();
-    expected.put( "c", "d" );
+    @Test
+    public void testParsePropertiesFile() throws Exception {
+        Path propFile = tmpDir.resolve("props");
+        Properties props = new Properties();
+        props.put("a", "b");
+        props.put("systemProp.c", "d");
+        props.put("systemProp.", "e");
 
-    assertThat( SystemPropertiesHandler.getSystemProperties( propFile ), equalTo( expected ) );
-  }
+        try (OutputStream fos = Files.newOutputStream(propFile)) {
+            props.store(fos, "");
+        }
 
-  @Test
-  public void ifNoPropertyFileExistShouldReturnEmptyMap()
-  {
-    Map<String, String> expected = new HashMap<String, String>();
-    assertThat( SystemPropertiesHandler.getSystemProperties( tmpDir.resolve( "unknown" ) ), equalTo( expected ) );
-  }
+        Map<String, String> expected = new HashMap<String, String>();
+        expected.put("c", "d");
+
+        assertThat(SystemPropertiesHandler.getSystemProperties(propFile), equalTo(expected));
+    }
+
+    @Test
+    public void ifNoPropertyFileExistShouldReturnEmptyMap() {
+        Map<String, String> expected = new HashMap<String, String>();
+        assertThat(SystemPropertiesHandler.getSystemProperties(tmpDir.resolve("unknown")), equalTo(expected));
+    }
 }

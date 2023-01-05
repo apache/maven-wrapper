@@ -1,5 +1,3 @@
-package org.apache.maven.wrapper;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.apache.maven.wrapper;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.apache.maven.wrapper;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.maven.wrapper;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,37 +32,28 @@ import java.util.regex.Pattern;
 /**
  * @author Hans Dockter
  */
-public class SystemPropertiesHandler
-{
+public class SystemPropertiesHandler {
 
-    private static final Pattern SYSPROP_PATTERN = Pattern.compile( "systemProp\\.(.*)" );
+    private static final Pattern SYSPROP_PATTERN = Pattern.compile("systemProp\\.(.*)");
 
-    public static Map<String, String> getSystemProperties( Path propertiesFile )
-    {
+    public static Map<String, String> getSystemProperties(Path propertiesFile) {
         Map<String, String> propertyMap = new HashMap<>();
-        if ( !Files.isRegularFile( propertiesFile ) )
-        {
+        if (!Files.isRegularFile(propertiesFile)) {
             return propertyMap;
         }
         Properties properties = new Properties();
-        try ( InputStream inStream = Files.newInputStream( propertiesFile ) )
-        {
-            properties.load( inStream );
-        }
-        catch ( IOException e )
-        {
-            throw new RuntimeException( "Error when loading properties file=" + propertiesFile, e );
+        try (InputStream inStream = Files.newInputStream(propertiesFile)) {
+            properties.load(inStream);
+        } catch (IOException e) {
+            throw new RuntimeException("Error when loading properties file=" + propertiesFile, e);
         }
 
-        for ( Entry<Object, Object> entrySet : properties.entrySet() )
-        {
-            Matcher matcher = SYSPROP_PATTERN.matcher( entrySet.getKey().toString() );
-            if ( matcher.find() )
-            {
-                String key = matcher.group( 1 );
-                if ( key.length() > 0 )
-                {
-                    propertyMap.put( key, entrySet.getValue().toString() );
+        for (Entry<Object, Object> entrySet : properties.entrySet()) {
+            Matcher matcher = SYSPROP_PATTERN.matcher(entrySet.getKey().toString());
+            if (matcher.find()) {
+                String key = matcher.group(1);
+                if (key.length() > 0) {
+                    propertyMap.put(key, entrySet.getValue().toString());
                 }
             }
         }

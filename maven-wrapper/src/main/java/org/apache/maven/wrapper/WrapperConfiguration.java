@@ -1,5 +1,3 @@
-package org.apache.maven.wrapper;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.apache.maven.wrapper;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.apache.maven.wrapper;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.maven.wrapper;
 
 import java.net.URI;
 import java.nio.file.Path;
@@ -25,15 +24,14 @@ import java.nio.file.Path;
 /**
  * Wrapper configuration.
  */
-public class WrapperConfiguration
-{
+public class WrapperConfiguration {
     public static final String ALWAYS_UNPACK_ENV = "MAVEN_WRAPPER_ALWAYS_UNPACK";
 
     public static final String ALWAYS_DOWNLOAD_ENV = "MAVEN_WRAPPER_ALWAYS_DOWNLOAD";
 
-    private boolean alwaysUnpack = Boolean.parseBoolean( System.getenv( ALWAYS_UNPACK_ENV ) );
+    private boolean alwaysUnpack = Boolean.parseBoolean(System.getenv(ALWAYS_UNPACK_ENV));
 
-    private boolean alwaysDownload = Boolean.parseBoolean( System.getenv( ALWAYS_DOWNLOAD_ENV ) );
+    private boolean alwaysDownload = Boolean.parseBoolean(System.getenv(ALWAYS_DOWNLOAD_ENV));
 
     private URI distribution;
 
@@ -47,83 +45,67 @@ public class WrapperConfiguration
 
     private String distributionSha256Sum;
 
-    public boolean isAlwaysDownload()
-    {
+    public boolean isAlwaysDownload() {
         return alwaysDownload;
     }
 
-    public void setAlwaysDownload( boolean alwaysDownload )
-    {
+    public void setAlwaysDownload(boolean alwaysDownload) {
         this.alwaysDownload = alwaysDownload;
     }
 
-    public boolean isAlwaysUnpack()
-    {
+    public boolean isAlwaysUnpack() {
         return alwaysUnpack;
     }
 
-    public void setAlwaysUnpack( boolean alwaysUnpack )
-    {
+    public void setAlwaysUnpack(boolean alwaysUnpack) {
         this.alwaysUnpack = alwaysUnpack;
     }
 
-    public URI getDistribution()
-    {
+    public URI getDistribution() {
         return distribution;
     }
 
-    public void setDistribution( URI distribution )
-    {
+    public void setDistribution(URI distribution) {
         this.distribution = distribution;
     }
 
-    public String getDistributionBase()
-    {
+    public String getDistributionBase() {
         return distributionBase;
     }
 
-    public void setDistributionBase( String distributionBase )
-    {
+    public void setDistributionBase(String distributionBase) {
         this.distributionBase = distributionBase;
     }
 
-    public Path getDistributionPath()
-    {
+    public Path getDistributionPath() {
         return distributionPath;
     }
 
-    public void setDistributionPath( Path distributionPath )
-    {
+    public void setDistributionPath(Path distributionPath) {
         this.distributionPath = distributionPath;
     }
 
-    public String getZipBase()
-    {
+    public String getZipBase() {
         return zipBase;
     }
 
-    public void setZipBase( String zipBase )
-    {
+    public void setZipBase(String zipBase) {
         this.zipBase = zipBase;
     }
 
-    public Path getZipPath()
-    {
+    public Path getZipPath() {
         return zipPath;
     }
 
-    public void setZipPath( Path zipPath )
-    {
+    public void setZipPath(Path zipPath) {
         this.zipPath = zipPath;
     }
 
-    public String getDistributionSha256Sum()
-    {
+    public String getDistributionSha256Sum() {
         return distributionSha256Sum;
     }
 
-    public void setDistributionSha256Sum( String distributionSha256Sum )
-    {
+    public void setDistributionSha256Sum(String distributionSha256Sum) {
         this.distributionSha256Sum = distributionSha256Sum;
     }
 }

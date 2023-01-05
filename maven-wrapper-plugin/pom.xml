@@ -1,5 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
-
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -18,7 +17,6 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -->
-
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
@@ -33,9 +31,7 @@ under the License.
   <packaging>maven-plugin</packaging>
 
   <name>Apache Maven Wrapper Plugin</name>
-  <description>
-    The Maven Wrapper Plugin is a plugin that provides support for the Maven Wrapper by unpacking Maven Wrapper Distribution to current project.
-  </description>
+  <description>The Maven Wrapper Plugin is a plugin that provides support for the Maven Wrapper by unpacking Maven Wrapper Distribution to current project.</description>
 
   <prerequisites>
     <maven>${mavenVersion}</maven>
@@ -162,7 +158,7 @@ under the License.
                 <localRepo>
                   <source>${project.build.directory}/local-repo</source>
                 </localRepo>
-                <proxyRepo/>
+                <proxyRepo />
               </repositories>
             </configuration>
             <executions>

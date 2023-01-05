@@ -1,5 +1,3 @@
-package org.apache.maven.wrapper.cli;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.apache.maven.wrapper.cli;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.apache.maven.wrapper.cli;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.maven.wrapper.cli;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,46 +29,38 @@ import java.util.Set;
 /**
  * Parsed command line.
  */
-public class ParsedCommandLine
-{
+public class ParsedCommandLine {
     private final Map<String, ParsedCommandLineOption> optionsByString = new HashMap<String, ParsedCommandLineOption>();
 
     private final Set<String> presentOptions = new HashSet<String>();
 
     private final List<String> extraArguments = new ArrayList<String>();
 
-    ParsedCommandLine( Iterable<CommandLineOption> options )
-    {
-        for ( CommandLineOption option : options )
-        {
+    ParsedCommandLine(Iterable<CommandLineOption> options) {
+        for (CommandLineOption option : options) {
             ParsedCommandLineOption parsedOption = new ParsedCommandLineOption();
-            for ( String optionStr : option.getOptions() )
-            {
-                optionsByString.put( optionStr, parsedOption );
+            for (String optionStr : option.getOptions()) {
+                optionsByString.put(optionStr, parsedOption);
             }
         }
     }
 
     @Override
-    public String toString()
-    {
-        return String.format( "options: %s, extraArguments: %s", quoteAndJoin( presentOptions ),
-                              quoteAndJoin( extraArguments ) );
+    public String toString() {
+        return String.format(
+                "options: %s, extraArguments: %s", quoteAndJoin(presentOptions), quoteAndJoin(extraArguments));
     }
 
-    private String quoteAndJoin( Iterable<String> strings )
-    {
+    private String quoteAndJoin(Iterable<String> strings) {
         StringBuilder output = new StringBuilder();
         boolean isFirst = true;
-        for ( String string : strings )
-        {
-            if ( !isFirst )
-            {
-                output.append( ", " );
+        for (String string : strings) {
+            if (!isFirst) {
+                output.append(", ");
             }
-            output.append( "'" );
-            output.append( string );
-            output.append( "'" );
+            output.append("'");
+            output.append(string);
+            output.append("'");
             isFirst = false;
         }
         return output.toString();
@@ -77,28 +68,24 @@ public class ParsedCommandLine
 
     /**
      * Returns true if the given option is present in this command-line.
-     * 
+     *
      * @param option The option, without the '-' or '--' prefix.
      * @return true if the option is present.
      */
-    public boolean hasOption( String option )
-    {
-        option( option );
-        return presentOptions.contains( option );
+    public boolean hasOption(String option) {
+        option(option);
+        return presentOptions.contains(option);
     }
 
     /**
      * See also {@link #hasOption}.
-     * 
+     *
      * @param logLevelOptions the options to check
      * @return true if any of the passed options is present
      */
-    public boolean hasAnyOption( Collection<String> logLevelOptions )
-    {
-        for ( String option : logLevelOptions )
-        {
-            if ( hasOption( option ) )
-            {
+    public boolean hasAnyOption(Collection<String> logLevelOptions) {
+        for (String option : logLevelOptions) {
+            if (hasOption(option)) {
                 return true;
             }
         }
@@ -107,34 +94,29 @@ public class ParsedCommandLine
 
     /**
      * Returns the value of the given option.
-     * 
+     *
      * @param option The option, without the '-' or '--' prefix.
      * @return The option. never returns null.
      */
-    public ParsedCommandLineOption option( String option )
-    {
-        ParsedCommandLineOption parsedOption = optionsByString.get( option );
-        if ( parsedOption == null )
-        {
-            throw new IllegalArgumentException( String.format( "Option '%s' not defined.", option ) );
+    public ParsedCommandLineOption option(String option) {
+        ParsedCommandLineOption parsedOption = optionsByString.get(option);
+        if (parsedOption == null) {
+            throw new IllegalArgumentException(String.format("Option '%s' not defined.", option));
         }
         return parsedOption;
     }
 
-    public List<String> getExtraArguments()
-    {
+    public List<String> getExtraArguments() {
         return extraArguments;
     }
 
-    void addExtraValue( String value )
-    {
-        extraArguments.add( value );
+    void addExtraValue(String value) {
+        extraArguments.add(value);
     }
 
-    ParsedCommandLineOption addOption( String optionStr, CommandLineOption option )
-    {
-        ParsedCommandLineOption parsedOption = optionsByString.get( optionStr );
-        presentOptions.addAll( option.getOptions() );
+    ParsedCommandLineOption addOption(String optionStr, CommandLineOption option) {
+        ParsedCommandLineOption parsedOption = optionsByString.get(optionStr);
+        presentOptions.addAll(option.getOptions());
         return parsedOption;
     }
 }

@@ -1,5 +1,3 @@
-package org.apache.maven.wrapper.cli;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.apache.maven.wrapper.cli;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.apache.maven.wrapper.cli;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.maven.wrapper.cli;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,35 +24,28 @@ import java.util.List;
 /**
  * Parsed command line option.
  */
-public class ParsedCommandLineOption
-{
+public class ParsedCommandLineOption {
     private final List<String> values = new ArrayList<String>();
 
-    public String getValue()
-    {
-        if ( !hasValue() )
-        {
-            throw new IllegalStateException( "Option does not have any value." );
+    public String getValue() {
+        if (!hasValue()) {
+            throw new IllegalStateException("Option does not have any value.");
         }
-        if ( values.size() > 1 )
-        {
-            throw new IllegalStateException( "Option has multiple values." );
+        if (values.size() > 1) {
+            throw new IllegalStateException("Option has multiple values.");
         }
-        return values.get( 0 );
+        return values.get(0);
     }
 
-    public List<String> getValues()
-    {
+    public List<String> getValues() {
         return values;
     }
 
-    public void addArgument( String argument )
-    {
-        values.add( argument );
+    public void addArgument(String argument) {
+        values.add(argument);
     }
 
-    public boolean hasValue()
-    {
+    public boolean hasValue() {
         return !values.isEmpty();
     }
 }

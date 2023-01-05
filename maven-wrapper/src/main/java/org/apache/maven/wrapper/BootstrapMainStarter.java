@@ -1,5 +1,3 @@
-package org.apache.maven.wrapper;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.apache.maven.wrapper;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.apache.maven.wrapper;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.maven.wrapper;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -35,40 +34,35 @@ import java.util.Locale;
  *
  * @author Hans Dockter
  */
-public class BootstrapMainStarter
-{
-    public void start( String[] args, Path mavenHome )
-        throws Exception
-    {
-        final Path mavenJar = findLauncherJar( mavenHome );
-        URLClassLoader contextClassLoader = new URLClassLoader( new URL[] { mavenJar.toUri().toURL() },
-                                                                ClassLoader.getSystemClassLoader().getParent() );
-        Thread.currentThread().setContextClassLoader( contextClassLoader );
-        Class<?> mainClass = contextClassLoader.loadClass( "org.codehaus.plexus.classworlds.launcher.Launcher" );
+public class BootstrapMainStarter {
+    public void start(String[] args, Path mavenHome) throws Exception {
+        final Path mavenJar = findLauncherJar(mavenHome);
+        URLClassLoader contextClassLoader = new URLClassLoader(
+                new URL[] {mavenJar.toUri().toURL()},
+                ClassLoader.getSystemClassLoader().getParent());
+        Thread.currentThread().setContextClassLoader(contextClassLoader);
+        Class<?> mainClass = contextClassLoader.loadClass("org.codehaus.plexus.classworlds.launcher.Launcher");
 
-        System.setProperty( "maven.home", mavenHome.toAbsolutePath().toString() );
-        System.setProperty( "classworlds.conf", mavenHome.resolve( "bin/m2.conf" ).toAbsolutePath().toString() );
+        System.setProperty("maven.home", mavenHome.toAbsolutePath().toString());
+        System.setProperty(
+                "classworlds.conf",
+                mavenHome.resolve("bin/m2.conf").toAbsolutePath().toString());
 
-        Method mainMethod = mainClass.getMethod( "main", String[].class );
-        mainMethod.invoke( null, new Object[] { args } );
+        Method mainMethod = mainClass.getMethod("main", String[].class);
+        mainMethod.invoke(null, new Object[] {args});
     }
 
-    private Path findLauncherJar( Path mavenHome )
-        throws IOException
-    {
-        final Path mavenBoot = mavenHome.resolve( "boot" );
-        if ( Files.isDirectory( mavenBoot ) )
-        {
-            try ( DirectoryStream<Path> ds = Files.newDirectoryStream( mavenBoot, "plexus-classworlds-*.jar" ) )
-            {
+    private Path findLauncherJar(Path mavenHome) throws IOException {
+        final Path mavenBoot = mavenHome.resolve("boot");
+        if (Files.isDirectory(mavenBoot)) {
+            try (DirectoryStream<Path> ds = Files.newDirectoryStream(mavenBoot, "plexus-classworlds-*.jar")) {
                 Iterator<Path> iterator = ds.iterator();
-                if ( iterator.hasNext() )
-                {
+                if (iterator.hasNext()) {
                     return iterator.next();
                 }
             }
         }
-        throw new FileNotFoundException( String.format( Locale.ROOT, "Could not locate the Maven launcher JAR"
-            + " in Maven distribution '%s'.", mavenHome ) );
+        throw new FileNotFoundException(String.format(
+                Locale.ROOT, "Could not locate the Maven launcher JAR" + " in Maven distribution '%s'.", mavenHome));
     }
 }
