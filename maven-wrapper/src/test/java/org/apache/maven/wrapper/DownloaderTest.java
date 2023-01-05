@@ -1,5 +1,3 @@
-package org.apache.maven.wrapper;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.apache.maven.wrapper;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,9 +16,7 @@ package org.apache.maven.wrapper;
  * specific language governing permissions and limitations
  * under the License.
  */
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+package org.apache.maven.wrapper;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -33,49 +29,45 @@ import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Test;
 
-public class DownloaderTest
-{
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-  private DefaultDownloader download;
+public class DownloaderTest {
 
-  private Path testDir;
+    private DefaultDownloader download;
 
-  private Path downloadFile;
+    private Path testDir;
 
-  private Path rootDir;
+    private Path downloadFile;
 
-  private URI sourceRoot;
+    private Path rootDir;
 
-  private Path remoteFile;
+    private URI sourceRoot;
 
-  @Before
-  public void setUp()
-    throws Exception
-  {
-    download = new DefaultDownloader( "mvnw", "aVersion" );
-    testDir = Paths.get( "target/test-files/DownloadTest" );
-    Files.createDirectories( testDir );
-    rootDir = testDir.resolve( "root" );
-    downloadFile = rootDir.resolve( "file" );
-    Files.deleteIfExists( downloadFile );
-    remoteFile = testDir.resolve( "remoteFile" );
-    try ( BufferedWriter writer = Files.newBufferedWriter( remoteFile, StandardCharsets.UTF_8 ) )
-    {
-      writer.write( "sometext" );
+    private Path remoteFile;
+
+    @Before
+    public void setUp() throws Exception {
+        download = new DefaultDownloader("mvnw", "aVersion");
+        testDir = Paths.get("target/test-files/DownloadTest");
+        Files.createDirectories(testDir);
+        rootDir = testDir.resolve("root");
+        downloadFile = rootDir.resolve("file");
+        Files.deleteIfExists(downloadFile);
+        remoteFile = testDir.resolve("remoteFile");
+        try (BufferedWriter writer = Files.newBufferedWriter(remoteFile, StandardCharsets.UTF_8)) {
+            writer.write("sometext");
+        }
+        sourceRoot = remoteFile.toUri();
     }
-    sourceRoot = remoteFile.toUri();
-  }
 
-  @Test
-  public void testDownload()
-    throws Exception
-  {
-    assertTrue( Files.notExists( downloadFile ) );
-    download.download( sourceRoot, downloadFile );
-    assertTrue( Files.exists( downloadFile ) );
-    try ( BufferedReader reader = Files.newBufferedReader( downloadFile, StandardCharsets.UTF_8 ) )
-    {
-      assertEquals( "sometext", reader.readLine() );
+    @Test
+    public void testDownload() throws Exception {
+        assertTrue(Files.notExists(downloadFile));
+        download.download(sourceRoot, downloadFile);
+        assertTrue(Files.exists(downloadFile));
+        try (BufferedReader reader = Files.newBufferedReader(downloadFile, StandardCharsets.UTF_8)) {
+            assertEquals("sometext", reader.readLine());
+        }
     }
-  }
 }

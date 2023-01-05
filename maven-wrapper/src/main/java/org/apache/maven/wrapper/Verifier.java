@@ -1,5 +1,3 @@
-package org.apache.maven.wrapper;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.apache.maven.wrapper;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.apache.maven.wrapper;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.maven.wrapper;
 
 import java.nio.file.Path;
 
@@ -26,11 +25,9 @@ import java.nio.file.Path;
  *
  * @author Rafael Winterhalter
  */
-public interface Verifier
-{
+public interface Verifier {
 
     String SHA_256_ALGORITHM = "SHA-256";
 
-    void verify( Path file, String property, String algorithm, String expectedSum )
-        throws Exception;
+    void verify(Path file, String property, String algorithm, String expectedSum) throws Exception;
 }
