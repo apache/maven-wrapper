@@ -21,6 +21,7 @@ package org.apache.maven.wrapper;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -29,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Locale;
+import java.util.Properties;
 
 /**
  * Maven starter, from a provided Maven home directory.
@@ -37,20 +39,49 @@ import java.util.Locale;
  */
 public class BootstrapMainStarter
 {
-    public void start( String[] args, Path mavenHome )
+    public void start( String[] args, Path mavenHome, Properties properties )
         throws Exception
     {
         final Path mavenJar = findLauncherJar( mavenHome );
         URLClassLoader contextClassLoader = new URLClassLoader( new URL[] { mavenJar.toUri().toURL() },
-                                                                ClassLoader.getSystemClassLoader().getParent() );
+                ClassLoader.getSystemClassLoader().getParent() );
+
+        // can be useful to leak the classloader with some daemon mojo but generally a wrong idea so off by default
+        if ( Boolean.parseBoolean( properties.getProperty( getClass().getName() + ".leakClassloader" ) ) )
+        {
+            doStart( args, mavenHome, properties, contextClassLoader );
+            return;
+        }
+
+        try ( final URLClassLoader ref = contextClassLoader )
+        {
+            doStart( args, mavenHome, properties, contextClassLoader );
+        }
+    }
+
+    private void doStart( final String[] args, final Path mavenHome,
+                          final Properties properties,
+                          final URLClassLoader contextClassLoader )
+            throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException
+    {
         Thread.currentThread().setContextClassLoader( contextClassLoader );
         Class<?> mainClass = contextClassLoader.loadClass( "org.codehaus.plexus.classworlds.launcher.Launcher" );
 
         System.setProperty( "maven.home", mavenHome.toAbsolutePath().toString() );
-        System.setProperty( "classworlds.conf", mavenHome.resolve( "bin/m2.conf" ).toAbsolutePath().toString() );
+        System.setProperty( "classworlds.conf", getClassworldsConf( properties, mavenHome ) );
 
         Method mainMethod = mainClass.getMethod( "main", String[].class );
         mainMethod.invoke( null, new Object[] { args } );
+    }
+
+    private String getClassworldsConf( Properties properties, Path mavenHome )
+    {
+        final String override = properties.getProperty( "classworlds.conf" );
+        if ( override != null )
+        {
+            return override;
+        }
+        return mavenHome.resolve( "bin/m2.conf" ).toAbsolutePath().toString();
     }
 
     private Path findLauncherJar( Path mavenHome )
