@@ -82,8 +82,7 @@ public class WrapperExecutorTest {
         assertEquals(
                 "testDistPath", wrapper.getConfiguration().getDistributionPath().toString());
         assertEquals("testZipBase", wrapper.getConfiguration().getZipBase());
-        assertEquals(
-                "testZipPath", wrapper.getConfiguration().getZipPath().toString());
+        assertEquals("testZipPath", wrapper.getConfiguration().getZipPath().toString());
     }
 
     @Test
@@ -98,8 +97,7 @@ public class WrapperExecutorTest {
         assertEquals(
                 "testDistPath", wrapper.getConfiguration().getDistributionPath().toString());
         assertEquals("testZipBase", wrapper.getConfiguration().getZipBase());
-        assertEquals(
-                "testZipPath", wrapper.getConfiguration().getZipPath().toString());
+        assertEquals("testZipPath", wrapper.getConfiguration().getZipPath().toString());
     }
 
     @Test
@@ -145,9 +143,9 @@ public class WrapperExecutorTest {
     void executeInstallAndLaunch() throws Exception {
         WrapperExecutor wrapper = WrapperExecutor.forProjectDirectory(propertiesFile);
 
-        wrapper.execute(new String[]{"arg"}, install, start);
+        wrapper.execute(new String[] {"arg"}, install, start);
         verify(install).createDist(Mockito.any(WrapperConfiguration.class));
-        verify(start).start(new String[]{"arg"}, mockInstallDir);
+        verify(start).start(new String[] {"arg"}, mockInstallDir);
     }
 
     @Test
