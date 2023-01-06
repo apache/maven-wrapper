@@ -27,23 +27,23 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
-public class SystemPropertiesHandlerTest {
+class SystemPropertiesHandlerTest {
 
     private Path tmpDir = Paths.get("target/test-files/SystemPropertiesHandlerTest");
 
-    @Before
-    public void setupTempDir() throws IOException {
+    @BeforeEach
+    void setupTempDir() throws IOException {
         Files.createDirectories(tmpDir);
     }
 
     @Test
-    public void testParsePropertiesFile() throws Exception {
+    void testParsePropertiesFile() throws Exception {
         Path propFile = tmpDir.resolve("props");
         Properties props = new Properties();
         props.put("a", "b");
@@ -61,7 +61,7 @@ public class SystemPropertiesHandlerTest {
     }
 
     @Test
-    public void ifNoPropertyFileExistShouldReturnEmptyMap() {
+    void ifNoPropertyFileExistShouldReturnEmptyMap() {
         Map<String, String> expected = new HashMap<String, String>();
         assertThat(SystemPropertiesHandler.getSystemProperties(tmpDir.resolve("unknown")), equalTo(expected));
     }
