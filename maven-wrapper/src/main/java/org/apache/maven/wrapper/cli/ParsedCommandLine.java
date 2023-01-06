@@ -30,11 +30,11 @@ import java.util.Set;
  * Parsed command line.
  */
 public class ParsedCommandLine {
-    private final Map<String, ParsedCommandLineOption> optionsByString = new HashMap<String, ParsedCommandLineOption>();
+    private final Map<String, ParsedCommandLineOption> optionsByString = new HashMap<>();
 
-    private final Set<String> presentOptions = new HashSet<String>();
+    private final Set<String> presentOptions = new HashSet<>();
 
-    private final List<String> extraArguments = new ArrayList<String>();
+    private final List<String> extraArguments = new ArrayList<>();
 
     ParsedCommandLine(Iterable<CommandLineOption> options) {
         for (CommandLineOption option : options) {

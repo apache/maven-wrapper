@@ -25,7 +25,7 @@ import java.util.List;
  * Parsed command line option.
  */
 public class ParsedCommandLineOption {
-    private final List<String> values = new ArrayList<String>();
+    private final List<String> values = new ArrayList<>();
 
     public String getValue() {
         if (!hasValue()) {
