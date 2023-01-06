@@ -38,7 +38,7 @@ public abstract class AbstractPropertiesCommandLineConverter extends AbstractCom
     }
 
     protected Map<String, String> newInstance() {
-        return new HashMap<String, String>();
+        return new HashMap<>();
     }
 
     public Map<String, String> convert(ParsedCommandLine options, Map<String, String> properties)
