@@ -54,7 +54,7 @@ class SystemPropertiesHandlerTest {
             props.store(fos, "");
         }
 
-        Map<String, String> expected = new HashMap<String, String>();
+        Map<String, String> expected = new HashMap<>();
         expected.put("c", "d");
 
         assertThat(SystemPropertiesHandler.getSystemProperties(propFile), equalTo(expected));
@@ -62,7 +62,7 @@ class SystemPropertiesHandlerTest {
 
     @Test
     void ifNoPropertyFileExistShouldReturnEmptyMap() {
-        Map<String, String> expected = new HashMap<String, String>();
+        Map<String, String> expected = new HashMap<>();
         assertThat(SystemPropertiesHandler.getSystemProperties(tmpDir.resolve("unknown")), equalTo(expected));
     }
 }

@@ -47,7 +47,6 @@ import org.apache.maven.repository.RepositorySystem;
 import org.apache.maven.settings.Mirror;
 import org.apache.maven.settings.Settings;
 import org.codehaus.plexus.archiver.UnArchiver;
-import org.codehaus.plexus.components.io.fileselectors.FileInfo;
 import org.codehaus.plexus.components.io.fileselectors.FileSelector;
 
 import static org.apache.maven.shared.utils.logging.MessageUtils.buffer;
@@ -221,14 +220,8 @@ public class WrapperMojo extends AbstractMojo {
         unarchiver.setDestDirectory(targetFolder.toFile());
         unarchiver.setSourceFile(artifact.getFile());
         if (!includeDebugScript) {
-            unarchiver.setFileSelectors(new FileSelector[] {
-                new FileSelector() {
-                    @Override
-                    public boolean isSelected(FileInfo fileInfo) {
-                        return !fileInfo.getName().contains("Debug");
-                    }
-                }
-            });
+            unarchiver.setFileSelectors(
+                    new FileSelector[] {fileInfo -> !fileInfo.getName().contains("Debug")});
         }
         unarchiver.extract();
         getLog().info("Unpacked " + buffer().strong(distributionType) + " type wrapper distribution " + artifact);

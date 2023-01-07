@@ -60,7 +60,7 @@ import java.util.TreeSet;
  * </ul>
  */
 public class CommandLineParser {
-    private Map<String, CommandLineOption> optionsByString = new HashMap<String, CommandLineOption>();
+    private Map<String, CommandLineOption> optionsByString = new HashMap<>();
 
     private boolean allowMixedOptions;
 
@@ -100,7 +100,7 @@ public class CommandLineParser {
         ParserState parseState = new BeforeFirstSubCommand(parsedCommandLine);
         for (String arg : commandLine) {
             if (parseState.maybeStartOption(arg)) {
-                if (arg.equals("--")) {
+                if ("--".equals(arg)) {
                     parseState = new AfterOptions(parsedCommandLine);
                 } else if (arg.matches("--[^=]+")) {
                     OptionParserState parsedOption = parseState.onStartOption(arg, arg.substring(2));
@@ -173,13 +173,13 @@ public class CommandLineParser {
      */
     public void printUsage(Appendable out) {
         Formatter formatter = new Formatter(out);
-        Set<CommandLineOption> orderedOptions = new TreeSet<CommandLineOption>(new OptionComparator());
+        Set<CommandLineOption> orderedOptions = new TreeSet<>(new OptionComparator());
         orderedOptions.addAll(optionsByString.values());
-        Map<String, String> lines = new LinkedHashMap<String, String>();
+        Map<String, String> lines = new LinkedHashMap<>();
         for (CommandLineOption option : orderedOptions) {
-            Set<String> orderedOptionStrings = new TreeSet<String>(new OptionStringComparator());
+            Set<String> orderedOptionStrings = new TreeSet<>(new OptionStringComparator());
             orderedOptionStrings.addAll(option.getOptions());
-            List<String> prefixedStrings = new ArrayList<String>();
+            List<String> prefixedStrings = new ArrayList<>();
             for (String optionString : orderedOptionStrings) {
                 if (optionString.length() == 1) {
                     prefixedStrings.add("-" + optionString);
@@ -251,7 +251,7 @@ public class CommandLineParser {
         return option;
     }
 
-    private static class OptionString {
+    private static final class OptionString {
         private final String arg;
 
         private final String option;
@@ -304,7 +304,7 @@ public class CommandLineParser {
         }
     }
 
-    private class BeforeFirstSubCommand extends OptionAwareParserState {
+    private final class BeforeFirstSubCommand extends OptionAwareParserState {
         private BeforeFirstSubCommand(ParsedCommandLine commandLine) {
             super(commandLine);
         }
@@ -325,7 +325,7 @@ public class CommandLineParser {
         }
     }
 
-    private class AfterFirstSubCommand extends OptionAwareParserState {
+    private final class AfterFirstSubCommand extends OptionAwareParserState {
         private AfterFirstSubCommand(ParsedCommandLine commandLine) {
             super(commandLine);
         }
@@ -340,7 +340,7 @@ public class CommandLineParser {
         }
     }
 
-    private static class AfterOptions extends ParserState {
+    private static final class AfterOptions extends ParserState {
         private final ParsedCommandLine commandLine;
 
         private AfterOptions(ParsedCommandLine commandLine) {
@@ -364,7 +364,7 @@ public class CommandLineParser {
         }
     }
 
-    private static class MissingOptionArgState extends ParserState {
+    private static final class MissingOptionArgState extends ParserState {
         private final OptionParserState option;
 
         private MissingOptionArgState(OptionParserState option) {
@@ -402,7 +402,7 @@ public class CommandLineParser {
         public abstract ParserState onComplete();
     }
 
-    private class KnownOptionParserState extends OptionParserState {
+    private final class KnownOptionParserState extends OptionParserState {
         private final OptionString optionString;
 
         private final CommandLineOption option;
@@ -411,7 +411,7 @@ public class CommandLineParser {
 
         private final ParserState state;
 
-        private final List<String> values = new ArrayList<String>();
+        private final List<String> values = new ArrayList<>();
 
         private KnownOptionParserState(
                 OptionString optionString, CommandLineOption option, ParsedCommandLine commandLine, ParserState state) {
@@ -475,7 +475,7 @@ public class CommandLineParser {
         }
     }
 
-    private static class UnknownOptionParserState extends OptionParserState {
+    private static final class UnknownOptionParserState extends OptionParserState {
         private final ParserState state;
 
         private final String arg;

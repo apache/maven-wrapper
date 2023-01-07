@@ -26,7 +26,7 @@ import java.util.Set;
  * Command line option.
  */
 public class CommandLineOption {
-    private final Set<String> options = new HashSet<String>();
+    private final Set<String> options = new HashSet<>();
 
     private Class<?> argumentType = Void.TYPE;
 
