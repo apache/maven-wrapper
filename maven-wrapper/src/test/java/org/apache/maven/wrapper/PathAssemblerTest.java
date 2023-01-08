@@ -26,13 +26,13 @@ import java.util.regex.Pattern;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Hans Dockter
@@ -44,8 +44,8 @@ public class PathAssemblerTest {
 
     final WrapperConfiguration configuration = new WrapperConfiguration();
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         configuration.setDistributionBase(PathAssembler.MAVEN_USER_HOME_STRING);
         configuration.setDistributionPath(Paths.get("somePath"));
         configuration.setZipBase(PathAssembler.MAVEN_USER_HOME_STRING);
@@ -53,7 +53,7 @@ public class PathAssemblerTest {
     }
 
     @Test
-    public void distributionDirWithMavenUserHomeBase() throws Exception {
+    void distributionDirWithMavenUserHomeBase() throws Exception {
         configuration.setDistribution(new URI("http://server/dist/maven-0.9-bin.zip"));
 
         Path distributionDir = pathAssembler.getDistribution(configuration).getDistributionDir();
@@ -62,7 +62,7 @@ public class PathAssemblerTest {
     }
 
     @Test
-    public void distributionDirWithProjectBase() throws Exception {
+    void distributionDirWithProjectBase() throws Exception {
         configuration.setDistributionBase(PathAssembler.PROJECT_STRING);
         configuration.setDistribution(new URI("http://server/dist/maven-0.9-bin.zip"));
 
@@ -72,7 +72,7 @@ public class PathAssemblerTest {
     }
 
     @Test
-    public void distributionDirWithUnknownBase() throws Exception {
+    void distributionDirWithUnknownBase() throws Exception {
         configuration.setDistribution(new URI("http://server/dist/maven-1.0.zip"));
         configuration.setDistributionBase("unknownBase");
 
@@ -85,7 +85,7 @@ public class PathAssemblerTest {
     }
 
     @Test
-    public void distZipWithMavenUserHomeBase() throws Exception {
+    void distZipWithMavenUserHomeBase() throws Exception {
         configuration.setDistribution(new URI("http://server/dist/maven-1.0.zip"));
 
         Path dist = pathAssembler.getDistribution(configuration).getZipFile();
@@ -95,7 +95,7 @@ public class PathAssemblerTest {
     }
 
     @Test
-    public void distZipWithProjectBase() throws Exception {
+    void distZipWithProjectBase() throws Exception {
         configuration.setZipBase(PathAssembler.PROJECT_STRING);
         configuration.setDistribution(new URI("http://server/dist/maven-1.0.zip"));
 

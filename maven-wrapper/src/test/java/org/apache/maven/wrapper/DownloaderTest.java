@@ -26,13 +26,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class DownloaderTest {
+class DownloaderTest {
 
     private DefaultDownloader download;
 
@@ -46,8 +46,8 @@ public class DownloaderTest {
 
     private Path remoteFile;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         download = new DefaultDownloader("mvnw", "aVersion");
         testDir = Paths.get("target/test-files/DownloadTest");
         Files.createDirectories(testDir);
@@ -62,7 +62,7 @@ public class DownloaderTest {
     }
 
     @Test
-    public void testDownload() throws Exception {
+    void testDownload() throws Exception {
         assertTrue(Files.notExists(downloadFile));
         download.download(sourceRoot, downloadFile);
         assertTrue(Files.exists(downloadFile));

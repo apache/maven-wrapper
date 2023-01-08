@@ -19,35 +19,37 @@
 package org.apache.maven.wrapper;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class HashAlgorithmVerifierTest {
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @TempDir
+    public File temporaryFolder;
 
     private Verifier verifier = new HashAlgorithmVerifier();
 
     private Path file;
 
-    @Before
-    public void setUp() throws Exception {
-        file = temporaryFolder.newFile().toPath();
+    @BeforeEach
+    void setUp() throws Exception {
+        file = File.createTempFile("junit", null, temporaryFolder).toPath();
         try (BufferedWriter writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8)) {
             writer.write("Sample file with content");
         }
     }
 
     @Test
-    public void sha256SumsMatch() throws Exception {
+    void sha256SumsMatch() throws Exception {
         verifier.verify(
                 file,
                 "property",
@@ -56,16 +58,16 @@ public class HashAlgorithmVerifierTest {
     }
 
     @Test
-    public void sha256SumsDoNotMatch() throws Exception {
+    void sha256SumsDoNotMatch() throws Exception {
         try {
             verifier.verify(
                     file,
                     "prop",
                     Verifier.SHA_256_ALGORITHM,
                     "d3b572c45972921782287d8edafa5b19533212f2ebbc61c13c375a67c8f2c48f");
-            Assert.fail("Expected RuntimeException");
+            fail("Expected RuntimeException");
         } catch (RuntimeException e) {
-            Assert.assertEquals(
+            assertEquals(
                     "Failed to validate Maven distribution SHA-256, your Maven "
                             + "distribution might be compromised. If you updated your Maven version, "
                             + "you need to update the specified prop property.",
