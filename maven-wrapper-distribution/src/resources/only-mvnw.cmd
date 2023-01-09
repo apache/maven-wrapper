@@ -40,7 +40,7 @@
 @SET __MVNW_ARG0_NAME__=
 @SET MVNW_USERNAME=
 @SET MVNW_PASSWORD=
-@IF /i "[%_parm1:~-4%]"=="[.exe]" (
+@IF /i "[%__MVNW_CMD__:~-4%]"=="[.exe]" (
   %__MVNW_CMD__% %*
   exit /b %errorlevel%
 ) ELSE IF NOT "%__MVNW_CMD__%"=="" (%__MVNW_CMD__% %*)
