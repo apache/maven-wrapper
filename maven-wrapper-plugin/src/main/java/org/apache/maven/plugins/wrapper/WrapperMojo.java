@@ -75,7 +75,7 @@ public class WrapperMojo extends AbstractMojo {
     /**
      * The version of Maven Daemon to require.
      */
-    @Parameter( property = "mvnd" )
+    @Parameter(property = "mvnd")
     private String mvndVersion;
 
     /**
@@ -249,11 +249,10 @@ public class WrapperMojo extends AbstractMojo {
         String wrapperUrl = repoUrl + "/org/apache/maven/wrapper/maven-wrapper/" + wrapperVersion + "/maven-wrapper-"
                 + wrapperVersion + ".jar";
 
-        if ( mvndVersion != null && mvndVersion.length() > 0 )
-        {
+        if (mvndVersion != null && mvndVersion.length() > 0) {
             // now maven-mvnd is not published to the central repo.
-            distributionUrl =
-                "https://downloads.apache.org/maven/mvnd/" + mvndVersion + "/maven-mvnd-" + mvndVersion + "-bin.zip";
+            distributionUrl = "https://downloads.apache.org/maven/mvnd/" + mvndVersion + "/maven-mvnd-" + mvndVersion
+                    + "-bin.zip";
         }
 
         Path wrapperPropertiesFile = targetFolder.resolve("maven-wrapper.properties");
