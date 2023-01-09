@@ -101,7 +101,7 @@ case "${distributionUrl##*/}" in
 (maven-mvnd-*bin.*)
   _MVNW_USE_MVND=true
   MVN_CMD=mvnd
-  case "${PROCESSOR_ARCHITECTURE}${PROCESSOR_ARCHITEW6432}:$(uname -a)" in
+  case "${PROCESSOR_ARCHITECTURE-}${PROCESSOR_ARCHITEW6432-}:$(uname -a)" in
   (*AMD64:CYGWIN*|*AMD64:MINGW*) distributionPlatform=windows-amd64; MVN_CMD=mvnd.exe ;;
   (:Darwin*x86_64) distributionPlatform=darwin-amd64 ;;
   (:Darwin*arm64) distributionPlatform=darwin-aarch64 ;;
