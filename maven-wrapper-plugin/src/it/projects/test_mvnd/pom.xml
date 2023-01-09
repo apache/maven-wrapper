@@ -62,7 +62,7 @@ under the License.
         <os><family>windows</family></os>
       </activation>
       <properties>
-        <cmd>.exe</cmd>
+        <cmd>.cmd</cmd>
       </properties>
     </profile>
   </profiles>

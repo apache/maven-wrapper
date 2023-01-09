@@ -101,11 +101,11 @@ case "${distributionUrl##*/}" in
 (maven-mvnd-*bin.*)
   _MVNW_USE_MVND=true
   MVN_CMD=mvnd
-  case "$(uname -a)" in
-  (CYGWIN*|MINGW*) distributionPlatform=windows-amd64; MVN_CMD=mvnd.exe ;;
-  (Darwin*x86_64) distributionPlatform=darwin-amd64 ;;
-  (Darwin*arm64) distributionPlatform=darwin-aarch64 ;;
-  (Linux*) distributionPlatform=linux-amd64 ;;
+  case "${PROCESSOR_ARCHITECTURE}${PROCESSOR_ARCHITEW6432}:$(uname -a)" in
+  (*AMD64:CYGWIN*|*AMD64:MINGW*) distributionPlatform=windows-amd64; MVN_CMD=mvnd.exe ;;
+  (:Darwin*x86_64) distributionPlatform=darwin-amd64 ;;
+  (:Darwin*arm64) distributionPlatform=darwin-aarch64 ;;
+  (:Linux*x86_64*) distributionPlatform=linux-amd64 ;;
   (*) echo "Cannot detect native platform for mvnd on $(uname)-$(uname -m), use pure java version" >&2
       distributionPlatform=linux-amd64
       MVN_CMD=mvnd.sh
@@ -214,7 +214,7 @@ if [ -n "$distributionSha256Sum" ]; then
   distributionSha256Result=false
   if $_MVNW_USE_MVND; then
     echo "Checksum validation is not supported for maven-mvnd." >&2
-    echo "Please install either command, or disable validation by removing 'distributionSha256Sum' from your maven-wrapper.properties." >&2
+    echo "Please disable validation by removing 'distributionSha256Sum' from your maven-wrapper.properties." >&2
     exit 1
   elif command -v sha256sum > /dev/null; then
     if echo "$distributionSha256Sum  $TMP_DOWNLOAD_DIR/$distributionUrlName" | sha256sum -c > /dev/null 2>&1; then

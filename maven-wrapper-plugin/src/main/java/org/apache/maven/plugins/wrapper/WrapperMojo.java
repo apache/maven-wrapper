@@ -87,6 +87,8 @@ public class WrapperMojo extends AbstractMojo {
      *   <dd>precompiled and packaged code</dd>
      *   <dt>source</dt>
      *   <dd>Java source code, will be compiled on the fly</dd>
+     *   <dt>only-script</dt>
+     *   <dd>the new lite implementation of mvnw/mvnw.cmd scripts downloads the maven directly and skips maven-wrapper.jar</dd>
      * </dl>
      *
      * Value will be used as classifier of the downloaded file
