@@ -1,0 +1,49 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+name: "shfmt: shell script code style"
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  shfmt:
+    name: shfmt
+    runs-on: ubuntu-latest
+    env:
+      SHFMT_VERSION: '3.6.0'
+      # --indent 2: 2 spaces of indentation
+      # --case-indent: switch cases will be indented
+      # --diff: error with a diff when the formatting differs
+      SHFMT_OPTS: '--indent 2 --case-indent --diff'
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: download
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.local/apps/shfmt_v${SHFMT_VERSION}_linux_amd64"
+          curl --silent --fail --show-error --retry 2 --retry-delay 1 --connect-timeout 5 --location --url "https://github.com/mvdan/sh/releases/download/v${SHFMT_VERSION}/shfmt_v${SHFMT_VERSION}_linux_amd64" -o "$HOME/.local/apps/shfmt_v${SHFMT_VERSION}_linux_amd64/shfmt"
+          chmod +x "$HOME/.local/apps/shfmt_v${SHFMT_VERSION}_linux_amd64/shfmt"
+          echo "$HOME/.local/apps/shfmt_v${SHFMT_VERSION}_linux_amd64" >> $GITHUB_PATH
+
+      - name: check
+        shell: bash
+        run: |
+          readarray -t SCRIPT_FILES < <(shfmt -f "$GITHUB_WORKSPACE/maven-wrapper-distribution/src/resources")
+          shfmt ${SHFMT_OPTS} "${SCRIPT_FILES[@]}"
