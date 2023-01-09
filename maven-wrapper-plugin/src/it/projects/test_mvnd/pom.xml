@@ -56,7 +56,6 @@ under the License.
 
   <profiles>
     <profile>
-      <!-- TODO support windows entry script -->
       <id>windows</id>
       <activation>
         <os><family>windows</family></os>
