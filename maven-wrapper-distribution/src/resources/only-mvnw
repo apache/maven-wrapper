@@ -86,21 +86,19 @@ die() {
   exit 1
 }
 
-# calculate distributionUrl and get optional distributionSha256Sum, requires .mvn/wrapper/maven-wrapper.properties
-distributionSha256Sum=""
+# parse distributionUrl and optional distributionSha256Sum, requires .mvn/wrapper/maven-wrapper.properties
 while IFS="=" read -r key value; do
-  case "$key" in
-    distributionUrl) distributionUrl="${value:-$distributionUrl}";;
-    distributionSha256Sum) distributionSha256Sum="${value:-distributionSha256Sum}";;
+  case "${key-}" in
+    distributionUrl) distributionUrl="${value-}" ;;
+    distributionSha256Sum) distributionSha256Sum="${value-}" ;;
   esac
 done < "${0%/*}/.mvn/wrapper/maven-wrapper.properties"
 [ -n "${distributionUrl-}" ] || die "cannot read distributionUrl property in ${0%/*}/.mvn/wrapper/maven-wrapper.properties"
 
-_MVNW_USE_MVND=false
+
 case "${distributionUrl##*/}" in
 (maven-mvnd-*bin.*)
-  _MVNW_USE_MVND=true
-  MVN_CMD=mvnd
+  _MVNW_USE_MVND=true MVN_CMD=mvnd _MVNW_REPO_PATTERN=/maven/mvnd/
   case "${PROCESSOR_ARCHITECTURE-}${PROCESSOR_ARCHITEW6432-}:$(uname -a)" in
   (*AMD64:CYGWIN*|*AMD64:MINGW*) distributionPlatform=windows-amd64; MVN_CMD=mvnd.exe ;;
   (:Darwin*x86_64) distributionPlatform=darwin-amd64 ;;
@@ -112,23 +110,17 @@ case "${distributionUrl##*/}" in
       ;;
   esac
   distributionUrl="${distributionUrl%-bin.*}-$distributionPlatform.zip"
-  distributionUrlName="${distributionUrl##*/}"
-  distributionUrlNameMain="${distributionUrlName%.*}"
   ;;
-(maven-mvnd-*)
-  _MVNW_USE_MVND=true
-  distributionUrlName="${distributionUrl##*/}"
-  distributionUrlNameMain="${distributionUrlName%.*}"
-  MVN_CMD=mvnd
-  ;;
-(*) [ -z "${MVNW_REPOURL-}" ] || distributionUrl="$MVNW_REPOURL/org/apache/maven/${distributionUrl#*/org/apache/maven/}"
-    distributionUrlName="${distributionUrl##*/}"
-    distributionUrlNameMain="${distributionUrlName%-bin.*}"
-    MVN_CMD="mvn${0##*/mvnw}"
-    ;;
+(maven-mvnd-*) _MVNW_USE_MVND=true MVN_CMD=mvnd _MVNW_REPO_PATTERN=/maven/mvnd/ ;;
+(*) _MVNW_USE_MVND=false MVN_CMD="mvn${0##*/mvnw}" _MVNW_REPO_PATTERN=/org/apache/maven/ ;;
 esac
 
-# calculate MAVEN_HOME, pattern ~/.m2/wrapper/dists/apache-maven-<version>/<hash>
+# apply MVNW_REPOURL and calculate MAVEN_HOME
+# maven home pattern: ~/.m2/wrapper/dists/{apache-maven-<version>,maven-mvnd-<version>-<platform>}/<hash>
+[ -z "${MVNW_REPOURL-}" ] || distributionUrl="$MVNW_REPOURL$_MVNW_REPO_PATTERN${distributionUrl#*"$_MVNW_REPO_PATTERN"}"
+distributionUrlName="${distributionUrl##*/}"
+distributionUrlNameMain="${distributionUrlName%.*}"
+distributionUrlNameMain="${distributionUrlName%-bin}"
 MAVEN_HOME="$HOME/.m2/wrapper/dists/${distributionUrlNameMain-}/$(hash_string "$distributionUrl")"
 
 exec_maven() {
@@ -142,8 +134,7 @@ if [ -d "$MAVEN_HOME" ]; then
 fi
 
 case "${distributionUrl-}" in
-(*?-bin.zip) ;;
-(*?maven-mvnd-?*-?*.zip) ;;
+(*?-bin.zip|*?maven-mvnd-?*-?*.zip) ;;
 (*) die "distributionUrl is not valid, must match *-bin.zip or maven-mvnd-*.zip, but found '${distributionUrl-}'" ;;
 esac
 
@@ -210,7 +201,7 @@ elif set_java_home; then
 fi
 
 # If specified, validate the SHA-256 sum of the Maven distribution zip file
-if [ -n "$distributionSha256Sum" ]; then
+if [ -n "${distributionSha256Sum-}" ]; then
   distributionSha256Result=false
   if $_MVNW_USE_MVND; then
     echo "Checksum validation is not supported for maven-mvnd." >&2
