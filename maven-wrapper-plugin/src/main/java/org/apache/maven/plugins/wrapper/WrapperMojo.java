@@ -253,7 +253,7 @@ public class WrapperMojo extends AbstractMojo {
 
         if (mvndVersion != null && mvndVersion.length() > 0) {
             // now maven-mvnd is not published to the central repo.
-            distributionUrl = "https://downloads.apache.org/maven/mvnd/" + mvndVersion + "/maven-mvnd-" + mvndVersion
+            distributionUrl = "https://archive.apache.org/dist/maven/mvnd/" + mvndVersion + "/maven-mvnd-" + mvndVersion
                     + "-bin.zip";
         }
 
