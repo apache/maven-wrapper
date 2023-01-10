@@ -59,30 +59,28 @@ if (!$distributionUrl) {
   Write-Error "cannot read distributionUrl property in $scriptDir/.mvn/wrapper/maven-wrapper.properties"
 }
 
-$USE_MVND = $false
 switch -wildcard -casesensitive ( $($distributionUrl -replace '^.*/','') ) {
-  "maven-mvnd-*bin.*" {
-    $distributionUrl = $distributionUrl -replace '-bin\.[^.]*$',"-windows-amd64.zip"
-  } # fall through
   "maven-mvnd-*" {
     $USE_MVND = $true
-    $distributionUrlName = $distributionUrl -replace '^.*/',''
-    $distributionUrlNameMain = $distributionUrlName -replace '\.[^.]*$',''
+    $distributionUrl = $distributionUrl -replace '-bin\.[^.]*$',"-windows-amd64.zip"
     $MVN_CMD = if (($env:PROCESSOR_ARCHITECTURE -eq 'AMD64') -or ($env:PROCESSOR_ARCHITEW6432 -eq 'AMD64')) { "mvnd.exe" } else { "mvnd.cmd" }
     break
   }
   default {
-    if ($env:MVNW_REPOURL) {
-      $distributionUrl = "$env:MVNW_REPOURL/org/apache/maven/$($distributionUrl -replace '^.*/org/apache/maven/','')"
-    }
-    $distributionUrlName = $distributionUrl -replace '^.*/',''
-    $distributionUrlNameMain = $distributionUrlName -replace '-bin\.zip$',''
+    $USE_MVND = $false
     $MVN_CMD = $script -replace '^mvnw','mvn'
     break
   }
 }
 
-# calculate MAVEN_HOME, pattern ~/.m2/wrapper/dists/apache-maven-<version>/<hash>
+# apply MVNW_REPOURL and calculate MAVEN_HOME
+# maven home pattern: ~/.m2/wrapper/dists/{apache-maven-<version>,maven-mvnd-<version>-<platform>}/<hash>
+if ($env:MVNW_REPOURL) {
+  $MVNW_REPO_PATTERN = if ($USE_MVND) { "/org/apache/maven/" } else { "/maven/mvnd/" }
+  $distributionUrl = "$env:MVNW_REPOURL$MVNW_REPO_PATTERN$($distributionUrl -replace '^.*'+$MVNW_REPO_PATTERN,'')"
+}
+$distributionUrlName = $distributionUrl -replace '^.*/',''
+$distributionUrlNameMain = $distributionUrlName -replace '\.[^.]*$','' -replace '-bin$',''
 $MAVEN_HOME_PARENT = "$HOME/.m2/wrapper/dists/$distributionUrlNameMain"
 $MAVEN_HOME_NAME = ([System.Security.Cryptography.MD5]::Create().ComputeHash([byte[]][char[]]$distributionUrl) | ForEach-Object {$_.ToString("x2")}) -join ''
 $MAVEN_HOME = "$MAVEN_HOME_PARENT/$MAVEN_HOME_NAME"
