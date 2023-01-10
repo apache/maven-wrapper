@@ -30,7 +30,7 @@ propertiesFile.withInputStream {
     props.load(it)
 }
 
-assert props.distributionUrl.equals('https://downloads.apache.org/maven/mvnd/1.0.0-m1/maven-mvnd-1.0.0-m1-bin.zip')
+assert props.distributionUrl.equals('https://archive.apache.org/dist/maven/mvnd/1.0.0-m1/maven-mvnd-1.0.0-m1-bin.zip')
 
 log = new File(basedir, 'build.log').text
 
