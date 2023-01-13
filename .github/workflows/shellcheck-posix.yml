@@ -27,7 +27,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SHELLCHECK_VERSION: '0.9.0'
-      SHELLCHECK_OPTS: '-e SC2009'
+      # SC1091: Don't error about unfollowable files; https://www.shellcheck.net/wiki/SC1091
+      # SC2009: Don't consider pgrep, not available everywhere; https://www.shellcheck.net/wiki/SC2009
+      SHELLCHECK_OPTS: '-e SC1091 -e SC2009'
     steps:
       - uses: actions/checkout@v3
       - name: download
@@ -39,7 +41,7 @@ jobs:
       - name: check
         run: |
           echo "$GITHUB_WORKSPACE/shellcheck-v${SHELLCHECK_VERSION}" >> $GITHUB_PATH
-          readarray -t SCRIPT_FILES < <(grep -ErIl '^#![[:blank:]]*/bin/(ba|da|c|k)?sh' "$GITHUB_WORKSPACE/maven-wrapper-distribution/src/resources")
+          readarray -t SCRIPT_FILES < <(grep -ErIl -e '^#![[:blank:]]*/bin/(ba|da|c|k|z)?sh' -e '^#!/usr/bin/env[[:blank:]]+(ba|da|c|k|z)?sh' "$GITHUB_WORKSPACE/maven-wrapper-distribution/src/resources")
           shellcheck \
             --source-path "$GITHUB_WORKSPACE/maven-wrapper-distribution/src/resources" \
             --format=gcc \
