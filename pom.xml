@@ -77,6 +77,44 @@ under the License.
           <tagNameFormat>maven-wrapper-@{project.version}</tagNameFormat>
         </configuration>
       </plugin>
+
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <configuration>
+          <formats>
+            <format>
+              <includes>
+                <include>src/**/*.sh</include>
+                <include>src/**/mvnw</include>
+                <include>src/**/mvnwDebug</include>
+                <include>src/**/only-mvnw</include>
+                <include>src/**/only-mvnwDebug</include>
+              </includes>
+
+              <prettier>
+                <devDependencyProperties>
+                  <property>
+                    <name>prettier</name>
+                    <value>2.8.2</value>
+                  </property>
+                  <property>
+                    <name>prettier-plugin-sh</name>
+                    <value>0.12.8</value>
+                  </property>
+                </devDependencyProperties>
+                <config>
+                  <parser>sh</parser>
+                  <useTabs>false</useTabs>
+                  <tabWidth>2</tabWidth>
+                  <switchCaseIndent>false</switchCaseIndent>
+                  <spaceRedirects>false</spaceRedirects>
+                </config>
+              </prettier>
+            </format>
+          </formats>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
