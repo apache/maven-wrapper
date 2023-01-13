@@ -32,7 +32,7 @@ under the License.
   <description>Maven Wrapper Jar download, installs and launches installed target Maven distribution as part of Maven Wrapper scripts run.</description>
 
   <properties>
-    <junit.version>5.9.1</junit.version>
+    <junit.version>5.9.2</junit.version>
     <mockito.version>4.11.0</mockito.version>
   </properties>
 
