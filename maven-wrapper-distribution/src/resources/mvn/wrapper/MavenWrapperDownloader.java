@@ -91,7 +91,7 @@ public final class MavenWrapperDownloader
     {
         if ( VERBOSE )
         {
-            System.out.println( msg );
+            System.err.println( msg );
         }
     }
 
