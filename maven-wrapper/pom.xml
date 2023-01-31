@@ -33,7 +33,7 @@ under the License.
 
   <properties>
     <junit.version>5.9.2</junit.version>
-    <mockito.version>4.11.0</mockito.version>
+    <mockito.version>5.1.1</mockito.version>
   </properties>
 
   <dependencyManagement>
