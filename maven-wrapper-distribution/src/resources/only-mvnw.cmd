@@ -40,10 +40,7 @@
 @SET __MVNW_ARG0_NAME__=
 @SET MVNW_USERNAME=
 @SET MVNW_PASSWORD=
-@IF /i "[%__MVNW_CMD__:~-4%]"=="[.exe]" (
-  %__MVNW_CMD__% %*
-  exit /b %errorlevel%
-) ELSE IF NOT "%__MVNW_CMD__%"=="" (%__MVNW_CMD__% %*)
+@IF NOT "%__MVNW_CMD__%"=="" (%__MVNW_CMD__% %*)
 @echo Cannot start maven from wrapper >&2 && exit /b 1
 @GOTO :EOF
 : end batch / begin powershell #>
@@ -63,7 +60,7 @@ switch -wildcard -casesensitive ( $($distributionUrl -replace '^.*/','') ) {
   "maven-mvnd-*" {
     $USE_MVND = $true
     $distributionUrl = $distributionUrl -replace '-bin\.[^.]*$',"-windows-amd64.zip"
-    $MVN_CMD = if (($env:PROCESSOR_ARCHITECTURE -eq 'AMD64') -or ($env:PROCESSOR_ARCHITEW6432 -eq 'AMD64')) { "mvnd.exe" } else { "mvnd.cmd" }
+    $MVN_CMD = "mvnd.cmd"
     break
   }
   default {

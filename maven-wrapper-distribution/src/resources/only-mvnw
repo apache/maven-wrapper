@@ -98,21 +98,20 @@ done < "${0%/*}/.mvn/wrapper/maven-wrapper.properties"
 
 case "${distributionUrl##*/}" in
 (maven-mvnd-*bin.*)
-  _MVNW_USE_MVND=true MVN_CMD=mvnd _MVNW_REPO_PATTERN=/maven/mvnd/
+  MVN_CMD=mvnd.sh _MVNW_REPO_PATTERN=/maven/mvnd/
   case "${PROCESSOR_ARCHITECTURE-}${PROCESSOR_ARCHITEW6432-}:$(uname -a)" in
-  (*AMD64:CYGWIN*|*AMD64:MINGW*) distributionPlatform=windows-amd64; MVN_CMD=mvnd.exe ;;
+  (*AMD64:CYGWIN*|*AMD64:MINGW*) distributionPlatform=windows-amd64 ;;
   (:Darwin*x86_64) distributionPlatform=darwin-amd64 ;;
   (:Darwin*arm64) distributionPlatform=darwin-aarch64 ;;
   (:Linux*x86_64*) distributionPlatform=linux-amd64 ;;
   (*) echo "Cannot detect native platform for mvnd on $(uname)-$(uname -m), use pure java version" >&2
       distributionPlatform=linux-amd64
-      MVN_CMD=mvnd.sh
       ;;
   esac
   distributionUrl="${distributionUrl%-bin.*}-$distributionPlatform.zip"
   ;;
-(maven-mvnd-*) _MVNW_USE_MVND=true MVN_CMD=mvnd _MVNW_REPO_PATTERN=/maven/mvnd/ ;;
-(*) _MVNW_USE_MVND=false MVN_CMD="mvn${0##*/mvnw}" _MVNW_REPO_PATTERN=/org/apache/maven/ ;;
+(maven-mvnd-*) MVN_CMD=mvnd.sh _MVNW_REPO_PATTERN=/maven/mvnd/ ;;
+(*) MVN_CMD="mvn${0##*/mvnw}" _MVNW_REPO_PATTERN=/org/apache/maven/ ;;
 esac
 
 # apply MVNW_REPOURL and calculate MAVEN_HOME
@@ -203,7 +202,7 @@ fi
 # If specified, validate the SHA-256 sum of the Maven distribution zip file
 if [ -n "${distributionSha256Sum-}" ]; then
   distributionSha256Result=false
-  if $_MVNW_USE_MVND; then
+  if [ "$MVN_CMD" = mvnd.sh ]; then
     echo "Checksum validation is not supported for maven-mvnd." >&2
     echo "Please disable validation by removing 'distributionSha256Sum' from your maven-wrapper.properties." >&2
     exit 1
