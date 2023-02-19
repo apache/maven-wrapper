@@ -160,6 +160,11 @@ public class WrapperMojo extends AbstractMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+        if (mvndVersion != null && mvndVersion.length() > 0 && !"only-script".equals(distributionType)) {
+            throw new MojoExecutionException("maven-wrapper with type=" + distributionType
+                    + " cannot work with mvnd, please set type to 'only-script'.");
+        }
+
         mavenVersion = getVersion(mavenVersion, Maven.class, "org.apache.maven/maven-core");
         String wrapperVersion = getVersion(null, this.getClass(), "org.apache.maven.plugins/maven-wrapper-plugin");
 
