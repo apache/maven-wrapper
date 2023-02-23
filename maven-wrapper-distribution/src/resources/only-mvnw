@@ -86,32 +86,55 @@ die() {
   exit 1
 }
 
-# calculate distributionUrl and get optional distributionSha256Sum, requires .mvn/wrapper/maven-wrapper.properties
-distributionSha256Sum=""
+# parse distributionUrl and optional distributionSha256Sum, requires .mvn/wrapper/maven-wrapper.properties
 while IFS="=" read -r key value; do
-  case "$key" in
-    distributionUrl) distributionUrl="${value:-$distributionUrl}";;
-    distributionSha256Sum) distributionSha256Sum="${value:-distributionSha256Sum}";;
+  case "${key-}" in
+    distributionUrl) distributionUrl="${value-}" ;;
+    distributionSha256Sum) distributionSha256Sum="${value-}" ;;
   esac
 done < "${0%/*}/.mvn/wrapper/maven-wrapper.properties"
 [ -n "${distributionUrl-}" ] || die "cannot read distributionUrl property in ${0%/*}/.mvn/wrapper/maven-wrapper.properties"
-[ -z "${MVNW_REPOURL-}" ] || distributionUrl="$MVNW_REPOURL/org/apache/maven/${distributionUrl#*/org/apache/maven/}"
 
-# calculate MAVEN_HOME, pattern ~/.m2/wrapper/dists/apache-maven-<version>/<hash>
+
+case "${distributionUrl##*/}" in
+(maven-mvnd-*bin.*)
+  MVN_CMD=mvnd.sh _MVNW_REPO_PATTERN=/maven/mvnd/
+  case "${PROCESSOR_ARCHITECTURE-}${PROCESSOR_ARCHITEW6432-}:$(uname -a)" in
+  (*AMD64:CYGWIN*|*AMD64:MINGW*) distributionPlatform=windows-amd64 ;;
+  (:Darwin*x86_64) distributionPlatform=darwin-amd64 ;;
+  (:Darwin*arm64) distributionPlatform=darwin-aarch64 ;;
+  (:Linux*x86_64*) distributionPlatform=linux-amd64 ;;
+  (*) echo "Cannot detect native platform for mvnd on $(uname)-$(uname -m), use pure java version" >&2
+      distributionPlatform=linux-amd64
+      ;;
+  esac
+  distributionUrl="${distributionUrl%-bin.*}-$distributionPlatform.zip"
+  ;;
+(maven-mvnd-*) MVN_CMD=mvnd.sh _MVNW_REPO_PATTERN=/maven/mvnd/ ;;
+(*) MVN_CMD="mvn${0##*/mvnw}" _MVNW_REPO_PATTERN=/org/apache/maven/ ;;
+esac
+
+# apply MVNW_REPOURL and calculate MAVEN_HOME
+# maven home pattern: ~/.m2/wrapper/dists/{apache-maven-<version>,maven-mvnd-<version>-<platform>}/<hash>
+[ -z "${MVNW_REPOURL-}" ] || distributionUrl="$MVNW_REPOURL$_MVNW_REPO_PATTERN${distributionUrl#*"$_MVNW_REPO_PATTERN"}"
 distributionUrlName="${distributionUrl##*/}"
-distributionUrlNameMain="${distributionUrlName%-bin.*}"
+distributionUrlNameMain="${distributionUrlName%.*}"
+distributionUrlNameMain="${distributionUrlNameMain%-bin}"
 MAVEN_HOME="$HOME/.m2/wrapper/dists/${distributionUrlNameMain-}/$(hash_string "$distributionUrl")"
-MVN_CMD="mvn${0##*/mvnw}"
+
+exec_maven() {
+  unset MVNW_VERBOSE MVNW_USERNAME MVNW_PASSWORD MVNW_REPOURL || :
+  exec "$MAVEN_HOME/bin/$MVN_CMD" "$@" || die "cannot exec $MAVEN_HOME/bin/$MVN_CMD"
+}
 
 if [ -d "$MAVEN_HOME" ]; then
   verbose "found existing MAVEN_HOME at $MAVEN_HOME"
-  unset MVNW_VERBOSE MVNW_USERNAME MVNW_PASSWORD MVNW_REPOURL
-  exec "$MAVEN_HOME/bin/$MVN_CMD" "$@" || die "MAVEN_HOME is not valid: cannot exec $MAVEN_HOME/bin/mvn"
+  exec_maven "$@"
 fi
 
 case "${distributionUrl-}" in
-(*?-bin.zip) ;;
-(*) die "distributionUrl is not valid, must end with *-bin.zip, but found '${distributionUrl-}'" ;;
+(*?-bin.zip|*?maven-mvnd-?*-?*.zip) ;;
+(*) die "distributionUrl is not valid, must match *-bin.zip or maven-mvnd-*.zip, but found '${distributionUrl-}'" ;;
 esac
 
 # prepare tmp dir
@@ -177,9 +200,13 @@ elif set_java_home; then
 fi
 
 # If specified, validate the SHA-256 sum of the Maven distribution zip file
-if [ -n "$distributionSha256Sum" ]; then
+if [ -n "${distributionSha256Sum-}" ]; then
   distributionSha256Result=false
-  if command -v sha256sum > /dev/null; then
+  if [ "$MVN_CMD" = mvnd.sh ]; then
+    echo "Checksum validation is not supported for maven-mvnd." >&2
+    echo "Please disable validation by removing 'distributionSha256Sum' from your maven-wrapper.properties." >&2
+    exit 1
+  elif command -v sha256sum > /dev/null; then
     if echo "$distributionSha256Sum  $TMP_DOWNLOAD_DIR/$distributionUrlName" | sha256sum -c > /dev/null 2>&1; then
       distributionSha256Result=true
     fi
@@ -188,8 +215,8 @@ if [ -n "$distributionSha256Sum" ]; then
       distributionSha256Result=true
     fi
   else
-    echo "Checksum validation was requested but neither 'sha256sum' or 'shasum' are available."
-    echo "Please install either command, or disable validation by removing 'distributionSha256Sum' from your maven-wrapper.properties."
+    echo "Checksum validation was requested but neither 'sha256sum' or 'shasum' are available." >&2
+    echo "Please install either command, or disable validation by removing 'distributionSha256Sum' from your maven-wrapper.properties." >&2
     exit 1
   fi
   if [ $distributionSha256Result = false ]; then
@@ -209,5 +236,4 @@ printf %s\\n "$distributionUrl" > "$TMP_DOWNLOAD_DIR/$distributionUrlNameMain/mv
 mv -- "$TMP_DOWNLOAD_DIR/$distributionUrlNameMain" "$MAVEN_HOME" || [ -d "$MAVEN_HOME" ] || die "fail to move MAVEN_HOME"
 
 clean || :
-unset MVNW_VERBOSE MVNW_USERNAME MVNW_PASSWORD MVNW_REPOURL || :
-exec "$MAVEN_HOME/bin/$MVN_CMD" "$@"
+exec_maven "$@"

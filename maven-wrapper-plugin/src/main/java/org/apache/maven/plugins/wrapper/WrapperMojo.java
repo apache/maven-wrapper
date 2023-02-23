@@ -73,6 +73,12 @@ public class WrapperMojo extends AbstractMojo {
     private String mavenVersion;
 
     /**
+     * The version of Maven Daemon to require.
+     */
+    @Parameter(property = "mvnd")
+    private String mvndVersion;
+
+    /**
      * Options are:
      * <dl>
      *   <dt>script</dt>
@@ -81,6 +87,8 @@ public class WrapperMojo extends AbstractMojo {
      *   <dd>precompiled and packaged code</dd>
      *   <dt>source</dt>
      *   <dd>Java source code, will be compiled on the fly</dd>
+     *   <dt>only-script</dt>
+     *   <dd>the new lite implementation of mvnw/mvnw.cmd scripts downloads the maven directly and skips maven-wrapper.jar</dd>
      * </dl>
      *
      * Value will be used as classifier of the downloaded file
@@ -152,6 +160,11 @@ public class WrapperMojo extends AbstractMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+        if (mvndVersion != null && mvndVersion.length() > 0 && !"only-script".equals(distributionType)) {
+            throw new MojoExecutionException("maven-wrapper with type=" + distributionType
+                    + " cannot work with mvnd, please set type to 'only-script'.");
+        }
+
         mavenVersion = getVersion(mavenVersion, Maven.class, "org.apache.maven/maven-core");
         String wrapperVersion = getVersion(null, this.getClass(), "org.apache.maven.plugins/maven-wrapper-plugin");
 
@@ -242,6 +255,12 @@ public class WrapperMojo extends AbstractMojo {
                 + mavenVersion + "-bin.zip";
         String wrapperUrl = repoUrl + "/org/apache/maven/wrapper/maven-wrapper/" + wrapperVersion + "/maven-wrapper-"
                 + wrapperVersion + ".jar";
+
+        if (mvndVersion != null && mvndVersion.length() > 0) {
+            // now maven-mvnd is not published to the central repo.
+            distributionUrl = "https://archive.apache.org/dist/maven/mvnd/" + mvndVersion + "/maven-mvnd-" + mvndVersion
+                    + "-bin.zip";
+        }
 
         Path wrapperPropertiesFile = targetFolder.resolve("maven-wrapper.properties");
 
