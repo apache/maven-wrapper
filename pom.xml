@@ -63,7 +63,7 @@ under the License.
 
   <properties>
     <maven.site.path>wrapper-archives/wrapper-LATEST</maven.site.path>
-    <mavenVersion>3.1.0</mavenVersion>
+    <mavenVersion>3.2.5</mavenVersion>
     <javaVersion>8</javaVersion>
     <project.build.outputTimestamp>2022-05-08T09:15:34Z</project.build.outputTimestamp>
   </properties>
