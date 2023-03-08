@@ -108,6 +108,15 @@ You can also chose to opt out of all additional resources except the wrapper scr
 mvn wrapper:wrapper -Dtype=script
 ```
 
+Another type is the lite implementation of `mvnw`/`mvnw.cmd` scripts which download the maven directly 
+via wget or curl on *nix, or PowerShell on Windows, then call the original `mvn`/`mvn.cmd` 
+scripts of the downloaded maven distribution. 
+This type does not use `maven-wrapper.jar` nor `MavenWrapperDownloader.java`, only the wrapper scripts are required.
+
+```shell
+mvn wrapper:wrapper -Dtype=only-script
+```
+
 If the JAR is not found to be available by the scripts they will attempt to
 download the file from the URL specified in
 `.mvn/wrapper/maven-wrapper.properties` under `wrapperUrl` and put it in place.
