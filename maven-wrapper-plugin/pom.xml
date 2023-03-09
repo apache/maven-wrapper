@@ -31,7 +31,7 @@ under the License.
   <packaging>maven-plugin</packaging>
 
   <name>Apache Maven Wrapper Plugin</name>
-  <description>The Maven Wrapper Plugin is a plugin that provides support for the Maven Wrapper by unpacking Maven Wrapper Distribution to current project.</description>
+  <description>The Maven Wrapper Plugin is a plugin that provides support for the Maven Wrapper by unpacking Maven Wrapper Distribution to the current project.</description>
 
   <prerequisites>
     <maven>${mavenVersion}</maven>
@@ -60,6 +60,11 @@ under the License.
       <groupId>org.apache.maven.shared</groupId>
       <artifactId>maven-shared-utils</artifactId>
       <version>3.3.4</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.inject</groupId>
+      <artifactId>javax.inject</artifactId>
+      <version>1</version>
     </dependency>
     <dependency>
       <groupId>org.codehaus.plexus</groupId>
