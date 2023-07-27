@@ -91,7 +91,7 @@ if $mingw; then
   [ -n "$JAVA_HOME" ] && [ -d "$JAVA_HOME" ] \
     && JAVA_HOME="$(
       cd "$JAVA_HOME" || (
-        echo "cannot cd into $JAVA_HOME."
+        echo "cannot cd into $JAVA_HOME." >&2
         exit 1
       )
       pwd
@@ -141,14 +141,14 @@ if [ ! -x "$JAVACMD" ]; then
 fi
 
 if [ -z "$JAVA_HOME" ]; then
-  echo "Warning: JAVA_HOME environment variable is not set."
+  echo "Warning: JAVA_HOME environment variable is not set." >&2
 fi
 
 # traverses directory structure from process work directory to filesystem root
 # first directory with .mvn subdirectory is considered project base directory
 find_maven_basedir() {
   if [ -z "$1" ]; then
-    echo "Path not specified to find_maven_basedir"
+    echo "Path not specified to find_maven_basedir" >&2
     return 1
   fi
 
@@ -292,8 +292,8 @@ if [ -n "$wrapperSha256Sum" ]; then
       wrapperSha256Result=true
     fi
   else
-    echo "Checksum validation was requested but neither 'sha256sum' or 'shasum' are available."
-    echo "Please install either command, or disable validation by removing 'wrapperSha256Sum' from your maven-wrapper.properties."
+    echo "Checksum validation was requested but neither 'sha256sum' or 'shasum' are available." >&2
+    echo "Please install either command, or disable validation by removing 'wrapperSha256Sum' from your maven-wrapper.properties." >&2
     exit 1
   fi
   if [ $wrapperSha256Result = false ]; then
