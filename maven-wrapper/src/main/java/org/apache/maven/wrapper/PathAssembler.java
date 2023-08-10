@@ -73,7 +73,11 @@ public class PathAssembler {
     }
 
     private String getBaseName(URI distUrl) {
-        return Paths.get(distUrl.getPath()).getFileName().toString();
+        if (distUrl.getScheme().equals("file")) {
+            return Paths.get(distUrl).getFileName().toString();
+        } else {
+            return Paths.get(distUrl.getPath()).getFileName().toString();
+        }
     }
 
     private Path getBaseDir(String base) {
