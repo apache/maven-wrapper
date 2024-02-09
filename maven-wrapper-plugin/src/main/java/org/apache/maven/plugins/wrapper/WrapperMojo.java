@@ -339,8 +339,11 @@ public class WrapperMojo extends AbstractMojo {
 
         // adapt to also support MVNW_REPOURL as supported by mvnw scripts from maven-wrapper
         String mvnwRepoUrl = System.getenv(MVNW_REPOURL);
-        if (mvnwRepoUrl != null && !mvnwRepoUrl.isEmpty()) {
-            repoUrl = mvnwRepoUrl;
+        if (mvnwRepoUrl != null && !mvnwRepoUrl.trim().isEmpty()) {
+            repoUrl = mvnwRepoUrl.trim();
+            if (repoUrl.endsWith("/")) {
+                repoUrl = repoUrl.substring(0, repoUrl.length() - 2);
+            }
             getLog().debug("Using repo URL from " + MVNW_REPOURL + " environment variable.");
         }
         // otherwise mirror from settings
