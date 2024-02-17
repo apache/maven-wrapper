@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -46,7 +47,7 @@ public final class MavenWrapperDownloader
         try
         {
             log( " - Downloader started" );
-            final URL wrapperUrl = new URL( args[0] );
+            final URL wrapperUrl = URI.create( args[0] ).toURL();
             final String jarPath = args[1].replace( "..", "" ); // Sanitize path
             final Path wrapperJarPath = Paths.get( jarPath ).toAbsolutePath().normalize();
             downloadFileFromURL( wrapperUrl, wrapperJarPath );
