@@ -62,7 +62,7 @@ import static org.apache.maven.shared.utils.logging.MessageUtils.buffer;
 public class WrapperMojo extends AbstractMojo {
     private static final String MVNW_REPOURL = "MVNW_REPOURL";
 
-    private static final String DEFAULT_REPOURL = "https://repo.maven.apache.org/maven2";
+    protected static final String DEFAULT_REPOURL = "https://repo.maven.apache.org/maven2";
 
     // CONFIGURATION PARAMETERS
 
@@ -334,28 +334,39 @@ public class WrapperMojo extends AbstractMojo {
      * Determine the repository URL to download Wrapper and Maven from.
      */
     private String getRepoUrl() {
-        // default
-        String repoUrl = DEFAULT_REPOURL;
-
         // adapt to also support MVNW_REPOURL as supported by mvnw scripts from maven-wrapper
-        String mvnwRepoUrl = System.getenv(MVNW_REPOURL);
-        if (mvnwRepoUrl != null && !mvnwRepoUrl.isEmpty()) {
-            repoUrl = mvnwRepoUrl;
-            getLog().debug("Using repo URL from " + MVNW_REPOURL + " environment variable.");
-        }
-        // otherwise mirror from settings
-        else if (settings.getMirrors() != null && !settings.getMirrors().isEmpty()) {
-            for (Mirror current : settings.getMirrors()) {
-                if ("*".equals(current.getMirrorOf())) {
-                    repoUrl = current.getUrl();
-                    break;
-                }
-            }
-            getLog().debug("Using repo URL from * mirror in settings file.");
-        }
+        String envRepoUrl = System.getenv(MVNW_REPOURL);
+        final String repoUrl = determineRepoUrl(envRepoUrl, this.settings);
 
         getLog().debug("Determined repo URL to use as " + repoUrl);
 
         return repoUrl;
+    }
+
+    protected String determineRepoUrl(String envRepoUrl, Settings settings) {
+
+        if (envRepoUrl != null && !envRepoUrl.trim().isEmpty() && envRepoUrl.length() > 4) {
+            String repoUrl = envRepoUrl.trim();
+
+            if (repoUrl.endsWith("/")) {
+                repoUrl = repoUrl.substring(0, repoUrl.length() - 1);
+            }
+
+            getLog().debug("Using repo URL from " + MVNW_REPOURL + " environment variable.");
+
+            return repoUrl;
+        }
+
+        // otherwise mirror from settings
+        if (settings.getMirrors() != null && !settings.getMirrors().isEmpty()) {
+            for (Mirror current : settings.getMirrors()) {
+                if ("*".equals(current.getMirrorOf())) {
+                    getLog().debug("Using repo URL from * mirror in settings file.");
+                    return current.getUrl();
+                }
+            }
+        }
+
+        return DEFAULT_REPOURL;
     }
 }
