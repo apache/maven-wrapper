@@ -63,10 +63,22 @@ under the License.
 
   <properties>
     <maven.site.path>wrapper-archives/wrapper-LATEST</maven.site.path>
-    <mavenVersion>3.2.5</mavenVersion>
+    <mavenVersion>3.9.6</mavenVersion>
     <javaVersion>8</javaVersion>
     <project.build.outputTimestamp>2023-03-08T23:06:24Z</project.build.outputTimestamp>
   </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.junit</groupId>
+        <artifactId>junit-bom</artifactId>
+        <version>5.10.2</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <build>
     <pluginManagement>
