@@ -34,7 +34,7 @@ under the License.
   <description>The Maven Wrapper Plugin is a plugin that provides support for the Maven Wrapper by unpacking Maven Wrapper Distribution to the current project.</description>
 
   <prerequisites>
-    <maven>3.2.5</maven>
+    <maven>3.6.3</maven>
   </prerequisites>
 
   <dependencies>
