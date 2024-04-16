@@ -21,13 +21,13 @@ package org.apache.maven.plugins.wrapper;
 import javax.inject.Inject;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
@@ -37,6 +37,7 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.settings.Mirror;
@@ -55,10 +56,9 @@ import static org.apache.maven.shared.utils.logging.MessageUtils.buffer;
 /**
  * Unpacks the maven-wrapper distribution files to the current project source tree.
  *
- * @author Robert Scholte
  * @since 3.0.0
  */
-@Mojo(name = "wrapper", aggregator = true, requiresDirectInvocation = true)
+@Mojo(name = "wrapper", aggregator = true, requiresProject = false)
 public class WrapperMojo extends AbstractMojo {
     private static final String MVNW_REPOURL = "MVNW_REPOURL";
 
@@ -148,15 +148,8 @@ public class WrapperMojo extends AbstractMojo {
 
     // READONLY PARAMETERS
 
-    @Parameter(defaultValue = "${session}", readonly = true, required = true)
+    @Component
     private MavenSession session;
-
-    @Parameter(defaultValue = "${settings}", readonly = true, required = true)
-    private Settings settings;
-
-    // Waiting for https://github.com/eclipse/sisu.inject/pull/39 PathTypeConverter
-    @Parameter(defaultValue = "${project.basedir}", readonly = true, required = true)
-    private File basedir;
 
     // CONSTANTS
 
@@ -181,14 +174,15 @@ public class WrapperMojo extends AbstractMojo {
                     + " cannot work with mvnd, please set type to 'only-script'.");
         }
 
+        Path baseDir = Paths.get(session.getRequest().getBaseDirectory());
         mavenVersion = getVersion(mavenVersion, Maven.class, "org.apache.maven/maven-core");
         String wrapperVersion = getVersion(null, this.getClass(), "org.apache.maven.plugins/maven-wrapper-plugin");
 
         final Artifact artifact = downloadWrapperDistribution(wrapperVersion);
-        final Path wrapperDir = createDirectories(basedir.toPath().resolve(".mvn/wrapper"));
+        final Path wrapperDir = createDirectories(baseDir.resolve(".mvn/wrapper"));
 
         cleanup(wrapperDir);
-        unpack(artifact, basedir.toPath());
+        unpack(artifact, baseDir);
         replaceProperties(wrapperVersion, wrapperDir);
     }
 
@@ -336,7 +330,7 @@ public class WrapperMojo extends AbstractMojo {
     private String getRepoUrl() {
         // adapt to also support MVNW_REPOURL as supported by mvnw scripts from maven-wrapper
         String envRepoUrl = System.getenv(MVNW_REPOURL);
-        final String repoUrl = determineRepoUrl(envRepoUrl, this.settings);
+        final String repoUrl = determineRepoUrl(envRepoUrl, session.getSettings());
 
         getLog().debug("Determined repo URL to use as " + repoUrl);
 
