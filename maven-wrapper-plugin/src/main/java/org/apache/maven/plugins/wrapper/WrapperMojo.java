@@ -88,18 +88,18 @@ public class WrapperMojo extends AbstractMojo {
      * <dl>
      *   <dt>script</dt>
      *   <dd>only mvnw scripts</dd>
-     *   <dt>bin (default)</dt>
+     *   <dt>bin</dt>
      *   <dd>precompiled and packaged code</dd>
      *   <dt>source</dt>
      *   <dd>Java source code, will be compiled on the fly</dd>
-     *   <dt>only-script</dt>
+     *   <dt>only-script (default)</dt>
      *   <dd>the new lite implementation of mvnw/mvnw.cmd scripts downloads the maven directly and skips maven-wrapper.jar - since 3.2.0</dd>
      * </dl>
      * Value will be used as classifier of the downloaded file
      *
      * @since 3.0.0
      */
-    @Parameter(defaultValue = "bin", property = "type")
+    @Parameter(defaultValue = "only-script", property = "type")
     private String distributionType;
 
     /**

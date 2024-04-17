@@ -36,6 +36,6 @@ assert mavenVersion1 == mavenVersion2
 
 log = new File( basedir, 'build.log' ).text
 // check "mvn wrapper:wrapper" output
-assert log.contains( '[INFO] Unpacked bin type wrapper distribution org.apache.maven.wrapper:maven-wrapper-distribution:zip:bin:' )
+assert log.contains( '[INFO] Unpacked only-script type wrapper distribution org.apache.maven.wrapper:maven-wrapper-distribution:zip:only-script:' )
 // check "mvnw -v" output
 assert log.contains( 'Apache Maven ' + mavenVersion1 )
