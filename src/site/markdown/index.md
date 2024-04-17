@@ -78,7 +78,7 @@ In terms of Apache Maven versions itself, the wrapper should work with any Maven
 3.x version and it defaults to the release used when setting up the wrapper. We do NOT
 plan to support the deprecated, EOL'ed Maven 2.x.
 
-The `maven-wrapper.jar` (to download and install target Maven version required by `mvnw`) and the Maven Wrapper Plugin (to inject Wrapper into a project) use Java 7.
+By default, the `only-script` type is installed (see below).
 
 ## Verbose Mode
 
@@ -87,9 +87,9 @@ is activated by setting the `MVNW_VERBOSE` environment variable to `true`.
 
 By default it is off.
 
-## Usage without Binary JAR
+## Usage with or without Binary JAR
 
-By default, the Maven Wrapper JAR archive is added to the using project as small
+Using `type=bin`, the Maven Wrapper JAR archive is added to the using project as small
 binary file `.mvn/wrapper/maven-wrapper.jar`. It is used to bootstrap the
 download and invocation of Maven from the wrapper shell scripts.
 
@@ -98,11 +98,10 @@ use the source distribution of the maven wrapper which adds a file
 `.mvn/wrapper/MavenWrapperDownloader.java` file instead:
 
 ```shell
-# defaults to bin
 mvn wrapper:wrapper -Dtype=source 
 ```
 
-You can also chose to opt out of all additional resources except the wrapper scripts:
+You can also choose to opt out of all additional resources except the wrapper scripts:
 
 ```shell
 mvn wrapper:wrapper -Dtype=script
@@ -112,6 +111,7 @@ Another type is the lite implementation of `mvnw`/`mvnw.cmd` scripts which downl
 via wget or curl on *nix, or PowerShell on Windows, then call the original `mvn`/`mvn.cmd` 
 scripts of the downloaded maven distribution. 
 This type does not use `maven-wrapper.jar` nor `MavenWrapperDownloader.java`, only the wrapper scripts are required.
+This is the default type being installed, when no type parameter is specified.
 
 ```shell
 mvn wrapper:wrapper -Dtype=only-script
