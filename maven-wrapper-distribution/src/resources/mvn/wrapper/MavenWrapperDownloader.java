@@ -27,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.concurrent.ThreadLocalRandom;
 
 public final class MavenWrapperDownloader
 {
@@ -81,9 +82,16 @@ public final class MavenWrapperDownloader
                 }
             } );
         }
+        Path temp = wrapperJarPath
+                .getParent()
+                .resolve(wrapperJarPath.getFileName() + "."
+                        + Long.toUnsignedString(ThreadLocalRandom.current().nextLong()) + ".tmp");
         try ( InputStream inStream = wrapperUrl.openStream() )
         {
-            Files.copy( inStream, wrapperJarPath, StandardCopyOption.REPLACE_EXISTING );
+            Files.copy(inStream, temp, StandardCopyOption.REPLACE_EXISTING);
+            Files.move(temp, wrapperJarPath, StandardCopyOption.REPLACE_EXISTING);
+        } finally {
+            Files.deleteIfExists(temp);
         }
         log( " - Downloader complete" );
     }
