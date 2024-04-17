@@ -19,5 +19,13 @@
  */
 
 log = new File(basedir, 'build.log').text
-// cover all methods: point is, there is no Maven version 0.0.0
-assert log.contains('wget: Failed to fetch') || log.contains('curl: Failed to fetch') || log.contains('- Error downloading:')
+boolean isWindows = System.getProperty('os.name', 'unknown').startsWith('Windows')
+
+if (isWindows) {
+    // on Windows: just the fact it failed is enough
+    assert log.contains('Exception calling "DownloadFile"')
+} else {
+    // on non-Windows: verify clear messages as well
+    // cover all methods: point is, there is no Maven version 0.0.0
+    assert log.contains('wget: Failed to fetch') || log.contains('curl: Failed to fetch') || log.contains('- Error downloading:')
+}
