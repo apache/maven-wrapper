@@ -18,6 +18,8 @@
  * under the License.
  */
 
+boolean isWindows = System.getProperty('os.name', 'unknown').startsWith('Windows')
+
 assert new File(basedir,'mvnw').exists()
 assert new File(basedir,'mvnw.cmd').exists()
 assert !(new File(basedir,'mvnwDebug').exists())
@@ -28,9 +30,16 @@ assert properties.exists()
 assert properties.text.contains('distributionSha256Sum=7e0c63c6a99639e57cc64375d6717d72e301d8ab829fef2e145ee860317bc3cb')
 
 log = new File(basedir, 'build.log').text
-// check "mvn wrapper:wrapper" output
-assert log.contains('Error: Failed to validate Maven distribution SHA-256, your Maven distribution might be compromised.')
-assert !log.contains('shasum:')
-
-// check "mvnw -v" output
-assert !log.contains('Apache Maven ')
+if (isWindows) {
+    // MWRAPPER-103: On Windows will succeed as error is demoted to Warning only
+    assert log.contains('Warning: Failed to validate Maven distribution SHA-256, your Maven distribution might be compromised.')
+    assert log.contains('shasum:')
+    // check "mvnw -v" output
+    assert log.contains('Apache Maven ')
+} else {
+    // check "mvn wrapper:wrapper" output
+    assert log.contains('Error: Failed to validate Maven distribution SHA-256, your Maven distribution might be compromised.')
+    assert !log.contains('shasum:')
+    // check "mvnw -v" output
+    assert !log.contains('Apache Maven ')
+}

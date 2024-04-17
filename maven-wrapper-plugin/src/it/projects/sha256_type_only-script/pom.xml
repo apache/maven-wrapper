@@ -29,6 +29,7 @@ under the License.
 
   <properties>
     <cmd></cmd>
+    <successCode>1</successCode>
   </properties>
 
   <build>
@@ -41,7 +42,7 @@ under the License.
           <configuration>
             <executable>mvnw${cmd}</executable>
             <successCodes>
-              <successCode>1</successCode>
+              <successCode>${successCode}</successCode>
             </successCodes>
             <arguments>
               <argument>-v</argument>
@@ -65,6 +66,8 @@ under the License.
       </activation>
       <properties>
         <cmd>.cmd</cmd>
+        <!-- MWRAPPER-103: On Windows will succeed as error is demoted to Warning only -->
+        <successCode>0</successCode>
       </properties>
     </profile>
   </profiles>
