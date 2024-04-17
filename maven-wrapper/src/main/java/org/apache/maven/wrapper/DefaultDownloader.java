@@ -92,8 +92,12 @@ public class DefaultDownloader implements Downloader {
         final String userAgentValue = calculateUserAgent();
         conn.setRequestProperty("User-Agent", userAgentValue);
 
+        Path temp = Files.createTempDirectory(destination.getParent(), "wrapper-dl");
         try (InputStream inStream = conn.getInputStream()) {
-            Files.copy(inStream, destination, StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(inStream, temp, StandardCopyOption.REPLACE_EXISTING);
+            Files.move(temp, destination, StandardCopyOption.REPLACE_EXISTING);
+        } finally {
+            Files.deleteIfExists(temp);
         }
     }
 
