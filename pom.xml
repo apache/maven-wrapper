@@ -23,7 +23,7 @@ under the License.
   <parent>
     <groupId>org.apache.maven</groupId>
     <artifactId>maven-parent</artifactId>
-    <version>41</version>
+    <version>42</version>
   </parent>
 
   <groupId>org.apache.maven.wrapper</groupId>
@@ -67,18 +67,6 @@ under the License.
     <javaVersion>8</javaVersion>
     <project.build.outputTimestamp>2023-03-08T23:06:24Z</project.build.outputTimestamp>
   </properties>
-
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>org.junit</groupId>
-        <artifactId>junit-bom</artifactId>
-        <version>5.10.2</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
 
   <build>
     <pluginManagement>
