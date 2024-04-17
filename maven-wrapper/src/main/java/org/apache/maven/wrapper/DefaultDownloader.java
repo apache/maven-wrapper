@@ -31,6 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Locale;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static org.apache.maven.wrapper.MavenWrapperMain.MVNW_PASSWORD;
 import static org.apache.maven.wrapper.MavenWrapperMain.MVNW_USERNAME;
@@ -92,8 +93,15 @@ public class DefaultDownloader implements Downloader {
         final String userAgentValue = calculateUserAgent();
         conn.setRequestProperty("User-Agent", userAgentValue);
 
+        Path temp = destination
+                .getParent()
+                .resolve(destination.getFileName() + "."
+                        + Long.toUnsignedString(ThreadLocalRandom.current().nextLong()) + ".tmp");
         try (InputStream inStream = conn.getInputStream()) {
-            Files.copy(inStream, destination, StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(inStream, temp, StandardCopyOption.REPLACE_EXISTING);
+            Files.move(temp, destination, StandardCopyOption.REPLACE_EXISTING);
+        } finally {
+            Files.deleteIfExists(temp);
         }
     }
 
