@@ -35,3 +35,9 @@ assert log.contains('[INFO] Unpacked script type wrapper distribution org.apache
 assert log.contains("Couldn't find ")
 assert log.contains(", downloading it ...")
 assert new File(basedir,'.mvn/wrapper/maven-wrapper.jar').exists()
+
+Properties props = new Properties()
+new File(basedir,'.mvn/wrapper/maven-wrapper.properties').withInputStream {
+    props.load(it)
+}
+assert props.wrapperVersion.equals(wrapperCurrentVersion)

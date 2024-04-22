@@ -30,3 +30,9 @@ log = new File(basedir, 'build.log').text
 assert log.contains('[INFO] Unpacked bin type wrapper distribution org.apache.maven.wrapper:maven-wrapper-distribution:zip:bin:')
 // check "mvnw -v" output
 assert log.contains('Apache Maven ')
+
+Properties props = new Properties()
+new File(basedir,'.mvn/wrapper/maven-wrapper.properties').withInputStream {
+    props.load(it)
+}
+assert props.wrapperVersion.equals(wrapperCurrentVersion)

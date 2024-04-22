@@ -34,3 +34,9 @@ assert log.contains('[INFO] Unpacked only-script type wrapper distribution org.a
 // check "mvnw -v" output
 assert log.contains("Couldn't find ")
 assert log.contains(", downloading and installing it ...")
+
+Properties props = new Properties()
+new File(basedir,'.mvn/wrapper/maven-wrapper.properties').withInputStream {
+    props.load(it)
+}
+assert props.wrapperVersion.equals(wrapperCurrentVersion)

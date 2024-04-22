@@ -176,6 +176,9 @@ under the License.
                 <artifact>org.apache.maven.wrapper:maven-wrapper-distribution:${project.version}:zip:script</artifact>
                 <artifact>org.apache.maven.wrapper:maven-wrapper-distribution:${project.version}:zip:source</artifact>
               </extraArtifacts>
+              <scriptVariables>
+                <wrapperCurrentVersion>${project.version}</wrapperCurrentVersion>
+              </scriptVariables>
             </configuration>
             <executions>
               <execution>
