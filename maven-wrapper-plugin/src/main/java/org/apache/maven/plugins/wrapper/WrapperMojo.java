@@ -287,6 +287,7 @@ public class WrapperMojo extends AbstractMojo {
 
         try (BufferedWriter out = Files.newBufferedWriter(wrapperPropertiesFile, StandardCharsets.UTF_8)) {
             out.append(String.format(Locale.ROOT, license));
+            out.append("wrapperVersion=" + wrapperVersion + System.lineSeparator());
             out.append("distributionUrl=" + distributionUrl + System.lineSeparator());
             if (distributionSha256Sum != null) {
                 out.append("distributionSha256Sum=" + distributionSha256Sum + System.lineSeparator());
