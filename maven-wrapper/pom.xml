@@ -23,7 +23,7 @@ under the License.
   <parent>
     <groupId>org.apache.maven.wrapper</groupId>
     <artifactId>maven-wrapper-parent</artifactId>
-    <version>3.3.1</version>
+    <version>3.3.2-SNAPSHOT</version>
   </parent>
 
   <artifactId>maven-wrapper</artifactId>
