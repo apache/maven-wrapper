@@ -27,7 +27,7 @@ assert new File(basedir,'.mvn/wrapper/MavenWrapperDownloader.java').exists()
 
 log = new File(basedir, 'build.log').text
 // check "mvn wrapper:wrapper" output
-assert log.contains('[INFO] Unpacked source type wrapper distribution org.apache.maven.wrapper:maven-wrapper-distribution:zip:source:')
+assert log.contains("[INFO] Unpacked source type wrapper distribution org.apache.maven.wrapper:maven-wrapper-distribution:zip:source:$wrapperCurrentVersion\n[INFO] Configuring .mvn/wrapper/maven-wrapper.properties to use Maven $mavenVersion and download from ")
 
 // check "mvnw -v" output
 assert log.contains("Couldn't find ")
@@ -38,4 +38,8 @@ Properties props = new Properties()
 new File(basedir,'.mvn/wrapper/maven-wrapper.properties').withInputStream {
     props.load(it)
 }
-assert props.wrapperVersion.equals(wrapperCurrentVersion)
+assert props.wrapperVersion == wrapperCurrentVersion
+assert props.wrapperUrl.endsWith("/org/apache/maven/wrapper/maven-wrapper/${props.wrapperVersion}/maven-wrapper-${props.wrapperVersion}.jar")
+assert props.distributionUrl.endsWith("/org/apache/maven/apache-maven/$mavenVersion/apache-maven-$mavenVersion-bin.zip")
+
+assert log.contains("[INFO] Apache Maven Wrapper ${props.wrapperVersion}\nApache Maven $mavenVersion")

@@ -23,21 +23,24 @@ assert new File(basedir,'mvnw.cmd').exists()
 assert !(new File(basedir,'mvnwDebug').exists())
 assert !(new File(basedir,'mvnwDebug.cmd').exists())
 
-wrapperProperties = new File(basedir,'.mvn/wrapper/maven-wrapper.properties')
-assert wrapperProperties.exists()
-assert wrapperProperties.text.contains('wrapperUrl')
+properties = new File(basedir,'.mvn/wrapper/maven-wrapper.properties')
+assert properties.exists()
+def props = new Properties()
+properties.withInputStream {
+    props.load( it )
+}
+assert props.wrapperVersion == wrapperCurrentVersion
+assert props.wrapperUrl.endsWith("/org/apache/maven/wrapper/maven-wrapper/${props.wrapperVersion}/maven-wrapper-${props.wrapperVersion}.jar")
+assert props.distributionUrl.endsWith("/org/apache/maven/apache-maven/$mavenVersion/apache-maven-$mavenVersion-bin.zip")
 
 log = new File(basedir, 'build.log').text
 // check "mvn wrapper:wrapper" output
-assert log.contains('[INFO] Unpacked script type wrapper distribution org.apache.maven.wrapper:maven-wrapper-distribution:zip:script:')
+assert log.contains("[INFO] Unpacked script type wrapper distribution org.apache.maven.wrapper:maven-wrapper-distribution:zip:script:${props.wrapperVersion}\n[INFO] Configuring .mvn/wrapper/maven-wrapper.properties to use Maven $mavenVersion and download from ")
+assert log.contains("\nApache Maven $mavenVersion ")
 
 // check "mvnw -v" output
 assert log.contains("Couldn't find ")
 assert log.contains(", downloading it ...")
+assert log.contains("[INFO] Apache Maven Wrapper ${props.wrapperVersion}\n[INFO] Installing Maven distribution ")
+assert !log.contains("[INFO] Apache Maven $mavenVersion")
 assert new File(basedir,'.mvn/wrapper/maven-wrapper.jar').exists()
-
-Properties props = new Properties()
-new File(basedir,'.mvn/wrapper/maven-wrapper.properties').withInputStream {
-    props.load(it)
-}
-assert props.wrapperVersion.equals(wrapperCurrentVersion)

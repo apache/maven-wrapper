@@ -30,15 +30,18 @@ propertiesFile.withInputStream {
     props.load(it)
 }
 
-assert props.distributionUrl.equals('https://archive.apache.org/dist/maven/mvnd/0.9.0/maven-mvnd-0.9.0-bin.zip')
+assert props.wrapperVersion == wrapperCurrentVersion
+assert props.wrapperUrl == null
+assert props.distributionUrl == 'https://archive.apache.org/dist/maven/mvnd/0.9.0/maven-mvnd-0.9.0-bin.zip'
 
 log = new File(basedir, 'build.log').text
 
 // check "mvn wrapper:wrapper" output
 // works only on 'only-script' type
-assert log.contains('[INFO] Unpacked only-script type wrapper distribution org.apache.maven.wrapper:maven-wrapper-distribution:zip:only-script:')
+assert log.contains("[INFO] Unpacked only-script type wrapper distribution org.apache.maven.wrapper:maven-wrapper-distribution:zip:only-script:$wrapperCurrentVersion")
 
 // check "mvnw --status" output
 assert log.contains("Status")
 assert log.contains("RSS")
 assert log.contains("Java home")
+assert !log.contains("Apache Maven")
