@@ -24,8 +24,6 @@ import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class WrapperMojoTest {
 
@@ -79,5 +77,45 @@ class WrapperMojoTest {
 
         // then
         Assertions.assertEquals(WrapperMojo.DEFAULT_REPOURL, determinedRepoUrl);
+    }
+
+    @Test
+    void default_wrapper_version_is_null() {
+        // given
+        WrapperMojo wrapperMojo = new WrapperMojo();
+
+        // when
+        String wrapperVersion = wrapperMojo.getWrapperVersion();
+
+        // then
+        Assertions.assertNull(wrapperVersion);
+    }
+
+    @Test
+    void requested_wrapper_version_is_used() {
+        // given
+        WrapperMojo wrapperMojo = new WrapperMojo();
+        wrapperMojo.requestedWrapperVersion = "3.3.1";
+
+        // when
+        String wrapperVersion = wrapperMojo.getWrapperVersion();
+
+        // then
+        Assertions.assertEquals("3.3.1", wrapperVersion);
+    }
+
+    @Test
+    void requested_wrapper_version_download_latest_is_successful() {
+        // given
+        WrapperMojo wrapperMojo = new WrapperMojo();
+        wrapperMojo.requestedWrapperVersion = "latest";
+
+        // when
+        String wrapperVersion = wrapperMojo.getWrapperVersion();
+
+        // then
+        Assertions.assertNotNull(wrapperVersion);
+        Assertions.assertFalse(wrapperVersion.isEmpty());
+        Assertions.assertTrue(wrapperVersion.matches("\\d+\\.\\d+\\.\\d+"));
     }
 }
