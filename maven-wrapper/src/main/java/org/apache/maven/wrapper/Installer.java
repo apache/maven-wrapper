@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.DirectoryStream;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,6 +40,8 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
+
+import static java.util.UUID.randomUUID;
 
 /**
  * Maven distribution installer, eventually using a {@link Downloader} first.
@@ -79,7 +82,7 @@ public class Installer {
         boolean downloaded = false;
         if (alwaysDownload || Files.notExists(localZipFile)) {
             Logger.info("Downloading " + distributionUrl);
-            Path tmpZipFile = localZipFile.resolveSibling(localZipFile.getFileName() + ".part");
+            Path tmpZipFile = localZipFile.resolveSibling(localZipFile.getFileName() + "-" + randomUUID() + ".part");
             Files.deleteIfExists(tmpZipFile);
             download.download(distributionUrl, tmpZipFile);
             Files.move(tmpZipFile, localZipFile, StandardCopyOption.REPLACE_EXISTING);
@@ -97,21 +100,32 @@ public class Installer {
                         Verifier.SHA_256_ALGORITHM,
                         configuration.getDistributionSha256Sum());
             }
-            for (Path dir : dirs) {
-                Logger.info("Deleting directory " + dir.toAbsolutePath());
-                deleteDir(dir);
+            if (alwaysUnpack) {
+                for (Path dir : dirs) {
+                    Logger.info("Deleting directory " + dir.toAbsolutePath());
+                    deleteDir(dir);
+                }
             }
-            Logger.info("Unzipping " + localZipFile.toAbsolutePath() + " to " + distDir.toAbsolutePath());
-            unzip(localZipFile, distDir);
-            dirs = listDirs(distDir);
+            Path tmpDistDir = distDir.resolveSibling(distDir.getFileName() + "-" + randomUUID());
+            Logger.info("Unzipping " + localZipFile.toAbsolutePath() + " to " + tmpDistDir.toAbsolutePath());
+            unzip(localZipFile, tmpDistDir);
+            dirs = listDirs(tmpDistDir);
             if (dirs.isEmpty()) {
                 throw new RuntimeException(String.format(
                         Locale.ROOT,
                         "Maven distribution '%s' does not contain any directory."
                                 + " Expected to find exactly 1 directory.",
-                        distDir));
+                        tmpDistDir));
             }
-            setExecutablePermissions(dirs.get(0));
+            Path tmpMavenHome = dirs.get(0);
+            Path mavenHome = distDir.resolve(tmpMavenHome.getFileName());
+            try {
+                Files.move(tmpMavenHome, mavenHome);
+                setExecutablePermissions(mavenHome);
+            } catch (FileAlreadyExistsException e) {
+                // Ignore since this just means that some other instance of Maven Wrapper has already unpacked the dist
+            }
+            dirs = listDirs(distDir);
         }
         if (dirs.size() != 1) {
             throw new RuntimeException(String.format(
