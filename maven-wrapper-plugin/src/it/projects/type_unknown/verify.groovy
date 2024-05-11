@@ -25,4 +25,5 @@ assert !new File( basedir, '.mvn/wrapper' ).exists()
 
 def buildLog = new File( basedir, "build.log").text;
 
-assert buildLog.matches('(?ms).*artifact: org.apache.maven.wrapper:maven-wrapper-distribution:zip:unknown-type:.* not resolved.*')
+assert buildLog.contains("artifact: org.apache.maven.wrapper:maven-wrapper-distribution:zip:unknown-type:$wrapperCurrentVersion not resolved")
+assert !buildLog.contains("Apache Maven")

@@ -25,12 +25,21 @@ assert !(new File(basedir,'mvnwDebug.cmd').exists())
 
 properties = new File(basedir,'.mvn/wrapper/maven-wrapper.properties')
 assert properties.exists()
-assert properties.text.contains('distributionSha256Sum=7e0c63c6a99639e57cc64375d6717d72e301d8ab829fef2e145ee860317bc3cb')
+def props = new Properties()
+properties.withInputStream {
+    props.load( it )
+}
+assert props.wrapperVersion == wrapperCurrentVersion
+assert props.wrapperUrl == null
+assert props.distributionUrl.endsWith("/org/apache/maven/apache-maven/$mavenVersion/apache-maven-$mavenVersion-bin.zip")
+assert props.distributionSha256Sum == '7e0c63c6a99639e57cc64375d6717d72e301d8ab829fef2e145ee860317bc3cb'
+assert props.wrapperSha256Sum == null
 
 log = new File(basedir, 'build.log').text
 // check "mvn wrapper:wrapper" output
 assert log.contains('Error: Failed to validate Maven distribution SHA-256, your Maven distribution might be compromised.')
 assert !log.contains('shasum:')
+assert log.contains("[INFO] Unpacked only-script type wrapper distribution org.apache.maven.wrapper:maven-wrapper-distribution:zip:only-script:$wrapperCurrentVersion")
 
 // check "mvnw -v" output
 assert !log.contains('Apache Maven ')

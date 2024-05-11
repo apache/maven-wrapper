@@ -19,10 +19,15 @@
 package org.apache.maven.plugins.wrapper;
 
 import javax.inject.Inject;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -50,6 +55,9 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.xml.sax.SAXException;
 
 import static org.apache.maven.shared.utils.logging.MessageUtils.buffer;
 
@@ -82,6 +90,14 @@ public class WrapperMojo extends AbstractMojo {
      */
     @Parameter(property = "mvnd")
     private String mvndVersion;
+
+    /**
+     * The specific wrapperVersion to be used (default is the currently executed wrapper:wrapper itself).
+     *
+     * @since 3.3.2
+     */
+    @Parameter(property = "version")
+    String requestedWrapperVersion;
 
     /**
      * Options are:
@@ -176,7 +192,7 @@ public class WrapperMojo extends AbstractMojo {
 
         Path baseDir = Paths.get(session.getRequest().getBaseDirectory());
         mavenVersion = getVersion(mavenVersion, Maven.class, "org.apache.maven/maven-core");
-        String wrapperVersion = getVersion(null, this.getClass(), "org.apache.maven.plugins/maven-wrapper-plugin");
+        String wrapperVersion = getWrapperVersion();
 
         final Artifact artifact = downloadWrapperDistribution(wrapperVersion);
         final Path wrapperDir = createDirectories(baseDir.resolve(".mvn/wrapper"));
@@ -184,6 +200,43 @@ public class WrapperMojo extends AbstractMojo {
         cleanup(wrapperDir);
         unpack(artifact, baseDir);
         replaceProperties(wrapperVersion, wrapperDir);
+    }
+
+    String getWrapperVersion() {
+        if (requestedWrapperVersion != null && requestedWrapperVersion.trim().matches("\\d+\\.\\d+\\.\\d+")) {
+            return requestedWrapperVersion.trim();
+        }
+        if ("latest".equals(requestedWrapperVersion)) {
+            String latest = determineLatestWrapperVersion();
+            if (latest != null) {
+                return latest;
+            }
+        }
+        return getVersion(null, this.getClass(), "org.apache.maven.plugins/maven-wrapper-plugin");
+    }
+
+    private String determineLatestWrapperVersion() {
+        try {
+            URL metadataUrl = new URL(DEFAULT_REPOURL + "/org/apache/maven/wrapper/maven-wrapper-distribution/maven-metadata.xml");
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            dbf.setExpandEntityReferences(false);
+            return downloadLatestWrapperVersion(metadataUrl, dbf);
+        } catch (MalformedURLException ignored) {
+            return null;
+        }
+    }
+
+    private String downloadLatestWrapperVersion(URL metadataUrl, DocumentBuilderFactory dbf) {
+        try (InputStream stream = metadataUrl.openStream()) {
+            DocumentBuilder docBuilder = dbf.newDocumentBuilder();
+            Document doc = docBuilder.parse(stream);
+            doc.getDocumentElement().normalize();
+            Node release = doc.getElementsByTagName("release").item(0);
+            return release.getTextContent();
+        } catch (ParserConfigurationException | IOException | SAXException ignored) {
+            getLog().warn("Could not get the latest maven-wrapper version");
+            return null;
+        }
     }
 
     private Path createDirectories(Path dir) throws MojoExecutionException {
@@ -311,7 +364,7 @@ public class WrapperMojo extends AbstractMojo {
 
     private String getVersion(String defaultVersion, Class<?> clazz, String path) {
         String version = defaultVersion;
-        if (version == null || version.trim().length() == 0 || "true".equals(version)) {
+        if (version == null || version.trim().isEmpty() || "true".equals(version)) {
             Properties props = new Properties();
             try (InputStream is = clazz.getResourceAsStream("/META-INF/maven/" + path + "/pom.properties")) {
                 if (is != null) {

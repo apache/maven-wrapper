@@ -29,13 +29,13 @@ def props = new Properties()
 propertiesFile.withInputStream {
     props.load( it )
 }
-
-def (_, mavenVersion1, mavenVersion2) = (props.distributionUrl =~ /\/org\/apache\/maven\/apache-maven\/(.+)\/apache-maven-(.+)-bin.zip/)[0]
-
-assert mavenVersion1 == mavenVersion2
+assert props.wrapperVersion == wrapperCurrentVersion
+assert props.wrapperUrl == null
+assert props.distributionUrl.endsWith("/org/apache/maven/apache-maven/$mavenVersion/apache-maven-$mavenVersion-bin.zip")
 
 log = new File( basedir, 'build.log' ).text
 // check "mvn wrapper:wrapper" output
-assert log.contains( '[INFO] Unpacked only-script type wrapper distribution org.apache.maven.wrapper:maven-wrapper-distribution:zip:only-script:' )
+assert log.contains("[INFO] Unpacked only-script type wrapper distribution org.apache.maven.wrapper:maven-wrapper-distribution:zip:only-script:$wrapperCurrentVersion")
 // check "mvnw -v" output
-assert log.contains( 'Apache Maven ' + mavenVersion1 )
+assert log.contains("Apache Maven $mavenVersion")
+assert !log.contains("[INFO] Apache Maven ")

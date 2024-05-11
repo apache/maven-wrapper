@@ -26,12 +26,15 @@ assert new File(basedir,'.mvn/wrapper/maven-wrapper.properties').exists()
 
 log = new File(basedir, 'build.log').text
 // check "mvn wrapper:wrapper" output
-assert log.contains('[INFO] Unpacked only-script type wrapper distribution org.apache.maven.wrapper:maven-wrapper-distribution:zip:only-script:')
+assert log.contains("[INFO] Unpacked only-script type wrapper distribution org.apache.maven.wrapper:maven-wrapper-distribution:zip:only-script:$wrapperCurrentVersion")
+assert log.contains("\nApache Maven $mavenVersion ")
 // check "mvnw -v" output
-assert log.contains('Apache Maven ')
+assert !log.contains("[INFO] Apache Maven $mavenVersion")
 
 Properties props = new Properties()
 new File(basedir,'.mvn/wrapper/maven-wrapper.properties').withInputStream {
     props.load(it)
 }
-assert props.wrapperVersion.equals(wrapperCurrentVersion)
+assert props.wrapperVersion == wrapperCurrentVersion
+assert props.wrapperUrl == null
+assert props.distributionUrl.endsWith("/org/apache/maven/apache-maven/$mavenVersion/apache-maven-$mavenVersion-bin.zip")

@@ -21,6 +21,8 @@
 log = new File(basedir, 'build.log').text
 boolean isWindows = System.getProperty('os.name', 'unknown').startsWith('Windows')
 
+assert log.contains("[INFO] Unpacked only-script type wrapper distribution org.apache.maven.wrapper:maven-wrapper-distribution:zip:only-script:$wrapperCurrentVersion")
+assert !log.contains("Apache Maven")
 if (isWindows) {
     // on Windows: just the fact it failed is enough
     assert log.contains('Exception calling "DownloadFile"')
@@ -29,3 +31,13 @@ if (isWindows) {
     // cover all methods: point is, there is no Maven version 0.0.0
     assert log.contains('wget: Failed to fetch') || log.contains('curl: Failed to fetch') || log.contains('- Error downloading:')
 }
+
+properties = new File(basedir,'.mvn/wrapper/maven-wrapper.properties')
+assert properties.exists()
+def props = new Properties()
+properties.withInputStream {
+    props.load( it )
+}
+assert props.wrapperVersion == wrapperCurrentVersion
+assert props.wrapperUrl == null
+assert props.distributionUrl.endsWith("/org/apache/maven/apache-maven/0.0.0/apache-maven-0.0.0-bin.zip")
