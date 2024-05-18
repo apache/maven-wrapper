@@ -36,7 +36,6 @@ import org.apache.maven.Maven;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -84,7 +83,10 @@ public class WrapperMojo extends AbstractMojo {
     private String mvndVersion;
 
     /**
+     * The Maven Wrapper distribution type.
+     * <p>
      * Options are:
+     *
      * <dl>
      *   <dt>script</dt>
      *   <dd>only mvnw scripts</dd>
@@ -95,11 +97,16 @@ public class WrapperMojo extends AbstractMojo {
      *   <dt>only-script (default)</dt>
      *   <dd>the new lite implementation of mvnw/mvnw.cmd scripts downloads the maven directly and skips maven-wrapper.jar - since 3.2.0</dd>
      * </dl>
-     * Value will be used as classifier of the downloaded file
+     *
+     * If {@code -Dtype={type}} is not explicitly provided, then {@code distributionType} from
+     * {@code .mvn/wrapper/maven-wrapper.properties} is used, if it exists.
+     * Otherwise, {@code only-script} is used as the default distribution type.
+     * <p>
+     * This value will be used as the classifier of the downloaded file.
      *
      * @since 3.0.0
      */
-    @Parameter(defaultValue = "only-script", property = "type")
+    @Parameter(property = "type")
     private String distributionType;
 
     /**
@@ -159,6 +166,16 @@ public class WrapperMojo extends AbstractMojo {
 
     private static final String WRAPPER_DISTRIBUTION_EXTENSION = "zip";
 
+    private static final String WRAPPER_DIR = ".mvn/wrapper";
+
+    private static final String WRAPPER_PROPERTIES_FILENAME = "maven-wrapper.properties";
+
+    private static final String DISTRIBUTION_TYPE_PROPERTY_NAME = "distributionType";
+
+    private static final String TYPE_ONLY_SCRIPT = "only-script";
+
+    private static final String DEFAULT_DISTRIBUTION_TYPE = TYPE_ONLY_SCRIPT;
+
     // COMPONENTS
 
     @Inject
@@ -168,27 +185,53 @@ public class WrapperMojo extends AbstractMojo {
     private Map<String, UnArchiver> unarchivers;
 
     @Override
-    public void execute() throws MojoExecutionException, MojoFailureException {
-        if (mvndVersion != null && mvndVersion.length() > 0 && !"only-script".equals(distributionType)) {
-            throw new MojoExecutionException("maven-wrapper with type=" + distributionType
-                    + " cannot work with mvnd, please set type to 'only-script'.");
+    public void execute() throws MojoExecutionException {
+        final Path baseDir = Paths.get(session.getRequest().getBaseDirectory());
+        final Path wrapperDir = baseDir.resolve(WRAPPER_DIR);
+
+        if (distributionType == null) {
+            distributionType = determineDistributionType(wrapperDir);
         }
 
-        Path baseDir = Paths.get(session.getRequest().getBaseDirectory());
+        if (mvndVersion != null && mvndVersion.length() > 0 && !TYPE_ONLY_SCRIPT.equals(distributionType)) {
+            throw new MojoExecutionException("maven-wrapper with type=" + distributionType
+                    + " cannot work with mvnd, please set type to '" + TYPE_ONLY_SCRIPT + "'.");
+        }
+
         mavenVersion = getVersion(mavenVersion, Maven.class, "org.apache.maven/maven-core");
         String wrapperVersion = getVersion(null, this.getClass(), "org.apache.maven.plugins/maven-wrapper-plugin");
 
         final Artifact artifact = downloadWrapperDistribution(wrapperVersion);
-        final Path wrapperDir = createDirectories(baseDir.resolve(".mvn/wrapper"));
 
+        createDirectories(wrapperDir);
         cleanup(wrapperDir);
         unpack(artifact, baseDir);
         replaceProperties(wrapperVersion, wrapperDir);
     }
 
-    private Path createDirectories(Path dir) throws MojoExecutionException {
+    private String determineDistributionType(final Path wrapperDir) {
+        final String typeFromMavenWrapperProperties = distributionTypeFromExistingMavenWrapperProperties(wrapperDir);
+        if (typeFromMavenWrapperProperties != null) {
+            return typeFromMavenWrapperProperties;
+        }
+
+        return DEFAULT_DISTRIBUTION_TYPE;
+    }
+
+    private String distributionTypeFromExistingMavenWrapperProperties(final Path wrapperDir) {
+        final Path mavenWrapperProperties = wrapperDir.resolve(WRAPPER_PROPERTIES_FILENAME);
+        try (InputStream inputStream = Files.newInputStream(mavenWrapperProperties)) {
+            Properties properties = new Properties();
+            properties.load(inputStream);
+            return properties.getProperty(DISTRIBUTION_TYPE_PROPERTY_NAME);
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    private void createDirectories(Path dir) throws MojoExecutionException {
         try {
-            return Files.createDirectories(dir);
+            Files.createDirectories(dir);
         } catch (IOException ioe) {
             throw new MojoExecutionException(ioe.getMessage(), ioe);
         }
@@ -288,12 +331,12 @@ public class WrapperMojo extends AbstractMojo {
         try (BufferedWriter out = Files.newBufferedWriter(wrapperPropertiesFile, StandardCharsets.UTF_8)) {
             out.append(String.format(Locale.ROOT, license));
             out.append("wrapperVersion=" + wrapperVersion + System.lineSeparator());
-            out.append("distributionType=" + distributionType + System.lineSeparator());
+            out.append(DISTRIBUTION_TYPE_PROPERTY_NAME + "=" + distributionType + System.lineSeparator());
             out.append("distributionUrl=" + distributionUrl + System.lineSeparator());
             if (distributionSha256Sum != null) {
                 out.append("distributionSha256Sum=" + distributionSha256Sum + System.lineSeparator());
             }
-            if (!distributionType.equals("only-script")) {
+            if (!distributionType.equals(TYPE_ONLY_SCRIPT)) {
                 out.append("wrapperUrl=" + wrapperUrl + System.lineSeparator());
             }
             if (wrapperSha256Sum != null) {
