@@ -32,9 +32,9 @@ The scripts work like this:
 Apache Maven Wrapper Distribution Types
 -----
 
-There are 4 types available:
+There are 4 distribution types available:
 
-- **only-script** _(default)_: the lite implementation of `mvnw`/`mvnw.cmd` scripts will download the maven directly via wget or curl on *nix, or PowerShell on Windows,
+- **only-script** _(default for new installations)_: the lite implementation of `mvnw`/`mvnw.cmd` scripts will download the maven directly via wget or curl on *nix, or PowerShell on Windows,
 then exec/call the original `mvn`/`mvn.cmd` scripts of the downloaded maven distribution. This type does not use `maven-wrapper.jar` nor `MavenWrapperDownloader.java`,
 only the wrapper scripts are required.
 
@@ -46,13 +46,17 @@ The downside is that the project will contain a binary file in the source contro
 - **source**: Since Maven already requires Java to run, why not compile and run a classfile to download the maven-wrapper jar? 
 This type comes with a `.mvn/wrapper/MavenWrapperDownloader.java` which will be compiled and executed on the fly.
 
-The type can be specified with `mvn wrapper:wrapper -Dtype=x`, where x is any of the types listed above.
+The type can be specified with `mvn wrapper:wrapper -Dtype={type}`, where `{type}` is any of the types listed above.
+
+When `wrapper:wrapper` is run in a Maven module which contains a `.mvn/wrapper/maven-wrapper.properties` file, then the distribution type of the existing Maven Wrapper is used for the execution of the goal.
+This allows updating Maven Wrapper, without unintentionally changing the distribution type for an existing project.
+You can still use `-Dtype={type}` to change the distribution type for an existing installation. 
 
 Maven Version
 -------------
 By default the plugin will assume the same version as the Maven runtime (calling `mvn -v`). But you can pick a different version.
-Either call `mvn wrapper:wrapper -Dmaven=x`, where x is any valid Apache Maven Release, see https://search.maven.org/artifact/org.apache.maven/apache-maven
-Another option is adjust the `distributionUrl` in `.mvn/wrapper/maven-wrapper.properties`
+You can call `mvn wrapper:wrapper -Dmaven=x`, where `x` is any valid Apache Maven Release (see [Maven Central](https://central.sonatype.com/artifact/org.apache.maven/apache-maven/versions)).
+Another option is to adjust the `distributionUrl` in `.mvn/wrapper/maven-wrapper.properties`.
 
 Debugging
 ---------
