@@ -201,6 +201,14 @@ MAVEN_PROJECTBASEDIR=${MAVEN_BASEDIR:-"$BASE_DIR"}
 export MAVEN_PROJECTBASEDIR
 log "$MAVEN_PROJECTBASEDIR"
 
+trim() {
+  # MWRAPPER-139:
+  #   Trims trailing and leading whitespace, carriage returns, tabs, and linefeeds.
+  #   Needed for removing poorly interpreted newline sequences when running in more
+  #   exotic environments such as mingw bash on Windows.
+  printf "%s" "${1}" | tr -d '[:space:]'
+}
+
 ##########################################################################################
 # Extension to allow automatically downloading the maven-wrapper.jar from Maven-central
 # This allows using the maven wrapper in projects that prohibit checking in binary data.
@@ -217,10 +225,8 @@ else
     wrapperUrl="https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper/@@project.version@@/maven-wrapper-@@project.version@@.jar"
   fi
   while IFS="=" read -r key value; do
-    # Remove '\r' from value to allow usage on windows as IFS does not consider '\r' as a separator ( considers space, tab, new line ('\n'), and custom '=' )
-    safeValue=$(echo "$value" | tr -d '\r')
     case "$key" in wrapperUrl)
-      wrapperUrl="$safeValue"
+      wrapperUrl=$(trim "${value-}")
       break
       ;;
     esac
@@ -276,7 +282,7 @@ fi
 wrapperSha256Sum=""
 while IFS="=" read -r key value; do
   case "$key" in wrapperSha256Sum)
-    wrapperSha256Sum=$value
+    wrapperSha256Sum=$(trim "${value-}")
     break
     ;;
   esac
