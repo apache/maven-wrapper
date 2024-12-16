@@ -105,6 +105,17 @@ public class PathAssemblerTest {
         assertThat(dist.getParent().getParent(), equalTo(file(currentDirPath() + "/somePath/maven-1.0")));
     }
 
+    @Test
+    void distZipWithLocalWindowsPath() throws Exception {
+        configuration.setZipBase(PathAssembler.PROJECT_STRING);
+        configuration.setDistribution(new URI("file:///C:/maven-1.0.zip"));
+
+        Path dist = pathAssembler.getDistribution(configuration).getZipFile();
+        assertThat(dist.getFileName().toString(), equalTo("maven-1.0.zip"));
+        assertThat(dist.getParent().getFileName().toString(), matchesRegexp("[a-z0-9]+"));
+        assertThat(dist.getParent().getParent(), equalTo(file(currentDirPath() + "/somePath/maven-1.0")));
+    }
+
     private Path file(String path) {
         return Paths.get(path);
     }
