@@ -330,7 +330,6 @@ public class WrapperMojo extends AbstractMojo {
 
         try (BufferedWriter out = Files.newBufferedWriter(wrapperPropertiesFile, StandardCharsets.UTF_8)) {
             out.append(String.format(Locale.ROOT, license));
-            out.append("wrapperVersion=" + wrapperVersion + System.lineSeparator());
             out.append(DISTRIBUTION_TYPE_PROPERTY_NAME + "=" + distributionType + System.lineSeparator());
             out.append("distributionUrl=" + distributionUrl + System.lineSeparator());
             if (distributionSha256Sum != null) {
@@ -338,6 +337,7 @@ public class WrapperMojo extends AbstractMojo {
             }
             if (!distributionType.equals(TYPE_ONLY_SCRIPT)) {
                 out.append("wrapperUrl=" + wrapperUrl + System.lineSeparator());
+                out.append("wrapperVersion=" + wrapperVersion + System.lineSeparator());
             }
             if (wrapperSha256Sum != null) {
                 out.append("wrapperSha256Sum=" + wrapperSha256Sum + System.lineSeparator());
