@@ -30,9 +30,10 @@ Properties props = new Properties()
 propertiesFile.withInputStream {
     props.load(it)
 }
-assert props.wrapperVersion.equals(wrapperCurrentVersion)
 assert props.distributionUrl.endsWith('/org/apache/maven/apache-maven/3.6.3/apache-maven-3.6.3-bin.zip')
 assert props.distributionType.equals("only-script")
+assert !props.containsKey('wrapperUrl')
+assert !props.containsKey("wrapperVersion")
 
 log = new File(basedir, 'build.log').text
 // check "mvn wrapper:wrapper" output
