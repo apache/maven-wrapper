@@ -153,6 +153,26 @@ public class WrapperMojo extends AbstractMojo {
     @Parameter(defaultValue = "false", property = "alwaysUnpack")
     private boolean alwaysUnpack;
 
+    /**
+     * The JDK version to use for Maven execution.
+     * Can be any valid JDK release.
+     */
+    @Parameter(property = "jdk")
+    private String jdkVersion;
+
+    /**
+     * The JDK version to use for toolchains.
+     * Can be any valid JDK release.
+     */
+    @Parameter(property = "toolchainJdk")
+    private String toolchainJdkVersion;
+
+    /**
+     * SHA-256 checksum for the JDK distribution
+     */
+    @Parameter(property = "jdkSha256Sum")
+    private String jdkSha256Sum;
+
     // READONLY PARAMETERS
 
     @Component
@@ -347,6 +367,15 @@ public class WrapperMojo extends AbstractMojo {
             }
             if (alwaysUnpack) {
                 out.append("alwaysUnpack=" + Boolean.TRUE + System.lineSeparator());
+            }
+            if (jdkVersion != null) {
+                out.append("jdkVersion=" + jdkVersion + System.lineSeparator());
+            }
+            if (toolchainJdkVersion != null) {
+                out.append("toolchainJdkVersion=" + toolchainJdkVersion + System.lineSeparator());
+            }
+            if (jdkSha256Sum != null) {
+                out.append("jdkSha256Sum=" + jdkSha256Sum + System.lineSeparator());
             }
         } catch (IOException ioe) {
             throw new MojoExecutionException("Can't create maven-wrapper.properties", ioe);

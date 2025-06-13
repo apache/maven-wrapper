@@ -54,10 +54,13 @@ public class Installer {
 
     private final PathAssembler pathAssembler;
 
+    private final JdkDownloader jdkDownloader;
+
     public Installer(Downloader download, Verifier verifier, PathAssembler pathAssembler) {
         this.download = download;
         this.verifier = verifier;
         this.pathAssembler = pathAssembler;
+        this.jdkDownloader = new JdkDownloader(download, pathAssembler, verifier);
     }
 
     public Path createDist(WrapperConfiguration configuration) throws Exception {
@@ -198,5 +201,26 @@ public class Installer {
                 }
             }
         }
+    }
+
+    public Path createJdkDist(WrapperConfiguration configuration) throws Exception {
+        if (configuration.getJdkDistributionUrl() == null) {
+            return null;
+        }
+
+        URI jdkDistribution = new URI(configuration.getJdkDistributionUrl());
+        return jdkDownloader.download(
+                jdkDistribution, configuration.getJdkVersion(), false, configuration.getJdkSha256Sum());
+    }
+
+    public Path createToolchainJdkDist(WrapperConfiguration configuration) throws Exception {
+        if (configuration.getToolchainJdkDistributionUrl() == null) {
+            return null;
+        }
+        return jdkDownloader.download(
+                new URI(configuration.getToolchainJdkDistributionUrl()),
+                configuration.getToolchainJdkVersion(),
+                true,
+                null);
     }
 }
