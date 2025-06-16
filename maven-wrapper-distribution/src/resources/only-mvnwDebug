@@ -21,4 +21,4 @@
 # Apache Maven Wrapper debug script, version @@project.version@@
 # -----------------------------------------------------------------------------
 
-. "${0%/*}"/mvnw
+. "$(basedir "$0")"/mvnw
