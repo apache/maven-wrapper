@@ -28,9 +28,11 @@ import java.util.Locale;
 
 /**
  * Resolves JDK versions and vendors to download URLs and checksums.
- * Supports multiple JDK vendors and platforms similar to SDKMAN.
+ * Supports multiple JDK vendors and platforms using SDKMAN API with Maven-style caching.
  */
 class JdkResolver {
+
+    private final JdkVersionCache versionCache;
     
     /**
      * Represents JDK metadata including download URL and checksum.
@@ -65,6 +67,20 @@ class JdkResolver {
         }
     }
     
+    /**
+     * Creates a JdkResolver with the specified cache directory and update policy.
+     */
+    JdkResolver(Path cacheDir, String updatePolicy) {
+        this.versionCache = new JdkVersionCache(cacheDir, updatePolicy);
+    }
+
+    /**
+     * Creates a JdkResolver with default caching (daily updates).
+     */
+    JdkResolver() {
+        this(null, "daily");
+    }
+
     /**
      * Resolves JDK metadata for the given version and vendor using SDKMAN API.
      *
@@ -331,13 +347,21 @@ class JdkResolver {
     }
     
     /**
-     * Gets the latest version for a major version and vendor by querying SDKMAN API.
+     * Gets the latest version for a major version and vendor by querying SDKMAN API with caching.
      */
     private String getLatestVersionFromSdkman(String majorVersion, String vendor) throws IOException {
+        // Check cache first
+        String cachedVersion = versionCache.getCachedVersion(majorVersion, vendor);
+        if (cachedVersion != null) {
+            Logger.info("Using cached JDK version: " + majorVersion + " -> " + cachedVersion);
+            return cachedVersion;
+        }
+
         String platform = detectSdkmanPlatform();
         if ("exotic".equals(platform)) {
-            // Fallback to reasonable defaults for unsupported platforms
-            return getDefaultVersionForMajor(majorVersion);
+            throw new IOException("Unsupported platform for JDK resolution. " +
+                "SDKMAN API is not available for this platform. " +
+                "Please specify an exact JDK version with jdkDistributionUrl instead of using major version resolution.");
         }
 
         try {
@@ -346,7 +370,8 @@ class JdkResolver {
             String allVersions = makeHttpRequest(versionsApiUrl);
 
             if (allVersions == null || allVersions.trim().isEmpty()) {
-                return getDefaultVersionForMajor(majorVersion);
+                throw new IOException("SDKMAN API returned empty version list. " +
+                    "Please check your internet connection or specify an exact JDK version with jdkDistributionUrl.");
             }
 
             // Parse versions and find the latest for the major version and vendor
@@ -354,15 +379,20 @@ class JdkResolver {
             String latestVersion = findLatestVersionForMajor(allVersions, majorVersion, vendorSuffix);
 
             if (latestVersion != null) {
+                // Cache the resolved version
+                versionCache.cacheVersion(majorVersion, vendor, latestVersion);
+                Logger.info("Resolved JDK version from SDKMAN: " + majorVersion + " -> " + latestVersion);
                 return latestVersion;
             }
 
-            // Fallback to defaults if no version found
-            return getDefaultVersionForMajor(majorVersion);
+            throw new IOException("No JDK version found for " + majorVersion + " with vendor " + vendor + ". " +
+                "Available vendors: temurin, corretto, zulu, liberica, oracle, microsoft, semeru, graalvm");
 
+        } catch (IOException e) {
+            throw e; // Re-throw IOException as-is
         } catch (Exception e) {
-            Logger.warn("Failed to query SDKMAN API for latest version, using defaults: " + e.getMessage());
-            return getDefaultVersionForMajor(majorVersion);
+            throw new IOException("Failed to resolve JDK version from SDKMAN API: " + e.getMessage() + ". " +
+                "Please check your internet connection or specify an exact JDK version with jdkDistributionUrl.", e);
         }
     }
 
@@ -389,23 +419,5 @@ class JdkResolver {
         return latestVersion;
     }
 
-    /**
-     * Fallback version defaults when SDKMAN API is not available.
-     */
-    private String getDefaultVersionForMajor(String majorVersion) {
-        switch (majorVersion) {
-            case "8":
-                return "8.0.452";
-            case "11":
-                return "11.0.27";
-            case "17":
-                return "17.0.15";
-            case "21":
-                return "21.0.7";
-            case "22":
-                return "22.0.2";
-            default:
-                return majorVersion + ".0.1";
-        }
-    }
+
 }

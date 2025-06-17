@@ -58,6 +58,7 @@ public class WrapperConfiguration {
     private String jdkSha256Sum;
     private boolean alwaysDownloadJdk = Boolean.parseBoolean(System.getenv(JDK_DOWNLOAD_ENV));
     private boolean updateToolchains = true;
+    private String jdkUpdatePolicy = "daily"; // Maven-style update policy: never, daily, always, interval:X
 
     // Toolchain JDK properties
     private String toolchainJdkVersion;
@@ -211,5 +212,13 @@ public class WrapperConfiguration {
 
     public void setToolchainJdkSha256Sum(String toolchainJdkSha256Sum) {
         this.toolchainJdkSha256Sum = toolchainJdkSha256Sum;
+    }
+
+    public String getJdkUpdatePolicy() {
+        return jdkUpdatePolicy;
+    }
+
+    public void setJdkUpdatePolicy(String jdkUpdatePolicy) {
+        this.jdkUpdatePolicy = jdkUpdatePolicy;
     }
 }

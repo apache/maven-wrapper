@@ -207,15 +207,7 @@ get_sdkman_version() {
     if [ -n "$latest_version" ]; then
       version="$latest_version"
     else
-      # Fallback to defaults if API call fails
-      case "$version" in
-      8) version="8.0.452" ;;
-      11) version="11.0.27" ;;
-      17) version="17.0.15" ;;
-      21) version="21.0.7" ;;
-      22) version="22.0.2" ;;
-      *) version="${version}.0.1" ;;
-      esac
+      die "Failed to resolve JDK version $version from SDKMAN API. Please check your internet connection or specify an exact JDK version with jdkDistributionUrl."
     fi
   fi
 
@@ -228,22 +220,59 @@ get_latest_version_from_sdkman() {
   local platform="$(detect_sdkman_platform)"
 
   if [ "$platform" = "exotic" ]; then
+    verbose "Unsupported platform for JDK resolution: $platform"
     return 1  # Cannot query SDKMAN for exotic platforms
+  fi
+
+  # Simple caching: check if we have a cached version from today
+  local cache_file="${MAVEN_USER_HOME}/wrapper/cache/jdk-${major_version}${vendor_suffix}.cache"
+  local cache_dir="$(dirname "$cache_file")"
+
+  # Check cache if it exists and is less than 24 hours old
+  if [ -f "$cache_file" ]; then
+    local cache_age
+    if command -v stat >/dev/null; then
+      # Linux/macOS stat command
+      if stat -c %Y "$cache_file" >/dev/null 2>&1; then
+        cache_age="$(stat -c %Y "$cache_file")"
+      elif stat -f %m "$cache_file" >/dev/null 2>&1; then
+        cache_age="$(stat -f %m "$cache_file")"
+      fi
+    fi
+
+    if [ -n "$cache_age" ]; then
+      local current_time="$(date +%s)"
+      local age_hours=$(( (current_time - cache_age) / 3600 ))
+
+      if [ "$age_hours" -lt 24 ]; then
+        local cached_version
+        cached_version="$(cat "$cache_file" 2>/dev/null)"
+        if [ -n "$cached_version" ]; then
+          verbose "Using cached JDK version: ${major_version} -> ${cached_version}"
+          echo "$cached_version"
+          return 0
+        fi
+      fi
+    fi
   fi
 
   # Query SDKMAN API for all available versions
   local versions_api_url="https://api.sdkman.io/2/candidates/java/${platform}/versions/all"
   local all_versions
 
+  verbose "Querying SDKMAN API for JDK versions: $versions_api_url"
+
   if command -v curl >/dev/null; then
     all_versions="$(curl -s -f "$versions_api_url" 2>/dev/null)"
   elif command -v wget >/dev/null; then
     all_versions="$(wget -q -O - "$versions_api_url" 2>/dev/null)"
   else
+    verbose "No HTTP client (curl/wget) available for SDKMAN API"
     return 1  # No HTTP client available
   fi
 
   if [ -z "$all_versions" ]; then
+    verbose "SDKMAN API returned empty response"
     return 1  # API call failed
   fi
 
@@ -253,9 +282,14 @@ get_latest_version_from_sdkman() {
   latest_version="$(echo "$all_versions" | tr ',' '\n' | grep "^${major_version}\." | grep -- "${vendor_suffix}\$" | head -1 | sed "s/${vendor_suffix}\$//")"
 
   if [ -n "$latest_version" ]; then
+    # Cache the result
+    mkdir -p "$cache_dir"
+    echo "$latest_version" > "$cache_file" 2>/dev/null || true
+    verbose "Resolved JDK version from SDKMAN: ${major_version} -> ${latest_version}"
     echo "$latest_version"
     return 0
   else
+    verbose "No matching JDK version found for ${major_version} with vendor suffix ${vendor_suffix}"
     return 1  # No matching version found
   fi
 }

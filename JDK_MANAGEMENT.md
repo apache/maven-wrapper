@@ -22,8 +22,11 @@ Add JDK configuration to your `.mvn/wrapper/maven-wrapper.properties` file:
 
 ```properties
 # JDK Management
-jdkVersion=17
+jdkVersion=17          # Resolves to latest 17.x (e.g., 17.0.14)
 jdkVendor=temurin
+
+# Optional: Update policy (Maven-style)
+jdkUpdatePolicy=daily  # never, daily, always, interval:X
 
 # Optional: Direct URL (overrides version/vendor resolution)
 jdkDistributionUrl=https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.7%2B7/OpenJDK17U-jdk_x64_linux_hotspot_17.0.7_7.tar.gz
@@ -66,9 +69,26 @@ The following JDK vendors are supported:
 
 You can specify JDK versions in several formats:
 
-- **Major version**: `17`, `21`, `11` (resolves to latest patch version)
-- **Specific version**: `17.0.7`, `21.0.1`, `11.0.19`
+- **Major version**: `17`, `21`, `11` (resolves to latest patch version via SDKMAN API)
+- **Specific version**: `17.0.7`, `21.0.1`, `11.0.19` (used exactly as specified)
 - **Full version**: `17.0.7+7`, `21.0.1+12` (includes build number)
+
+## Update Policies (Maven-Style)
+
+Control how often major versions are resolved to latest patch versions:
+
+- **`never`**: Resolve once, cache forever (good for CI/production)
+- **`daily`**: Check for updates once per day (default, like Maven)
+- **`always`**: Check on every run (for development/testing)
+- **`interval:X`**: Check every X minutes (e.g., `interval:60` for hourly)
+
+```properties
+# Examples
+jdkUpdatePolicy=never     # Resolve 17 -> 17.0.14 once, never update
+jdkUpdatePolicy=daily     # Check daily for newer 17.x versions
+jdkUpdatePolicy=always    # Always get latest 17.x (slower)
+jdkUpdatePolicy=interval:60  # Check every hour
+```
 
 ## Environment Variables
 

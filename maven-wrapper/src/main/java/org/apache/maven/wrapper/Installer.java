@@ -130,7 +130,8 @@ public class Installer {
      * @throws Exception if JDK installation fails
      */
     public Path createJdkDist(WrapperConfiguration configuration) throws Exception {
-        JdkDownloader jdkDownloader = new JdkDownloader(download, verifier, pathAssembler);
+        String updatePolicy = configuration.getJdkUpdatePolicy();
+        JdkDownloader jdkDownloader = new JdkDownloader(download, verifier, pathAssembler, updatePolicy);
         return jdkDownloader.downloadAndInstallJdk(configuration);
     }
 
@@ -142,7 +143,8 @@ public class Installer {
      * @throws Exception if toolchain JDK installation fails
      */
     public Path createToolchainJdkDist(WrapperConfiguration configuration) throws Exception {
-        JdkDownloader jdkDownloader = new JdkDownloader(download, verifier, pathAssembler);
+        String updatePolicy = configuration.getJdkUpdatePolicy();
+        JdkDownloader jdkDownloader = new JdkDownloader(download, verifier, pathAssembler, updatePolicy);
         return jdkDownloader.downloadAndInstallToolchainJdk(configuration);
     }
 

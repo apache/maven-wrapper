@@ -179,16 +179,8 @@ function Install-JDK {
           Write-Verbose "Using fallback version: $normalizedVersion"
         }
       } catch {
-        # Fallback to defaults if API call fails
-        $normalizedVersion = switch ($Version) {
-          "8" { "8.0.452" }
-          "11" { "11.0.27" }
-          "17" { "17.0.15" }
-          "21" { "21.0.7" }
-          "22" { "22.0.2" }
-          default { "$Version.0.1" }
-        }
-        Write-Verbose "SDKMAN API call failed, using fallback version: $normalizedVersion"
+        # Fail fast instead of using fallbacks
+        Write-Error "Failed to resolve JDK version $Version from SDKMAN API: $($_.Exception.Message). Please check your internet connection or specify an exact JDK version with jdkDistributionUrl."
       }
     }
 

@@ -60,6 +60,7 @@ public class WrapperExecutor {
     public static final String JDK_SHA_256_SUM = "jdkSha256Sum";
     public static final String ALWAYS_DOWNLOAD_JDK = "alwaysDownloadJdk";
     public static final String UPDATE_TOOLCHAINS = "updateToolchains";
+    public static final String JDK_UPDATE_POLICY = "jdkUpdatePolicy";
 
     // Toolchain JDK property constants
     public static final String TOOLCHAIN_JDK_VERSION_PROPERTY = "toolchainJdkVersion";
@@ -232,6 +233,14 @@ public class WrapperExecutor {
 
         config.setUpdateToolchains(Boolean.parseBoolean(
             getProperty(UPDATE_TOOLCHAINS, "true")));
+
+        String jdkUpdatePolicy = getProperty(JDK_UPDATE_POLICY, "daily");
+        if (JdkVersionCache.isValidUpdatePolicy(jdkUpdatePolicy)) {
+            config.setJdkUpdatePolicy(jdkUpdatePolicy);
+        } else {
+            Logger.warn("Invalid JDK update policy: " + jdkUpdatePolicy + ". Using default 'daily'.");
+            config.setJdkUpdatePolicy("daily");
+        }
 
         // Load toolchain JDK properties
         loadToolchainJdkProperties();

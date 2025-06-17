@@ -230,6 +230,16 @@ public class WrapperMojo extends AbstractMojo {
     @Parameter(defaultValue = "false", property = "alwaysDownloadJdk")
     private boolean alwaysDownloadJdk;
 
+    /**
+     * JDK version update policy for major version resolution.
+     * Supported values: never, daily, always, interval:X (where X is minutes).
+     * Default is "daily" which checks for updates once per day.
+     *
+     * @since 3.3.0
+     */
+    @Parameter(defaultValue = "daily", property = "jdkUpdatePolicy")
+    private String jdkUpdatePolicy;
+
     // READONLY PARAMETERS
 
     @Component
@@ -455,6 +465,9 @@ public class WrapperMojo extends AbstractMojo {
             }
             if (toolchainJdkSha256Sum != null && !toolchainJdkSha256Sum.trim().isEmpty()) {
                 out.append("toolchainJdkSha256Sum=" + toolchainJdkSha256Sum.trim() + System.lineSeparator());
+            }
+            if (jdkUpdatePolicy != null && !jdkUpdatePolicy.trim().isEmpty() && !"daily".equals(jdkUpdatePolicy.trim())) {
+                out.append("jdkUpdatePolicy=" + jdkUpdatePolicy.trim() + System.lineSeparator());
             }
         } catch (IOException ioe) {
             throw new MojoExecutionException("Can't create maven-wrapper.properties", ioe);

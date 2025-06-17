@@ -36,7 +36,13 @@ class JdkDownloader {
     private final PathAssembler pathAssembler;
     
     JdkDownloader(Downloader downloader, Verifier verifier, PathAssembler pathAssembler) {
-        this.jdkResolver = new JdkResolver();
+        this(downloader, verifier, pathAssembler, "daily");
+    }
+
+    JdkDownloader(Downloader downloader, Verifier verifier, PathAssembler pathAssembler, String updatePolicy) {
+        // Use pathAssembler base directory for JDK version cache
+        Path cacheDir = pathAssembler.getBaseDir().resolve("wrapper").resolve("cache");
+        this.jdkResolver = new JdkResolver(cacheDir, updatePolicy);
         this.binaryDownloader = new DefaultBinaryDownloader(downloader, verifier);
         this.toolchainManager = new ToolchainManager();
         this.pathAssembler = pathAssembler;
