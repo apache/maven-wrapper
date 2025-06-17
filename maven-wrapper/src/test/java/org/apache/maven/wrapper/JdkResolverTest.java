@@ -69,9 +69,31 @@ class JdkResolverTest {
     @Test
     void testResolveJdkWithUnsupportedVendor() {
         JdkResolver resolver = new JdkResolver();
-        
+
         assertThrows(IOException.class, () -> {
             resolver.resolveJdk("17", "unsupported-vendor");
         });
+    }
+
+    @Test
+    void testResolveMajorVersionQueriesApi() throws IOException {
+        JdkResolver resolver = new JdkResolver();
+
+        // Test that major version resolution actually queries SDKMAN API
+        // This test will make a real API call - in a production test suite,
+        // you might want to mock this
+        JdkResolver.JdkMetadata metadata = resolver.resolveJdk("17", "temurin");
+
+        assertNotNull(metadata);
+        assertEquals("temurin", metadata.getVendor());
+        assertNotNull(metadata.getDownloadUrl());
+
+        // The version should be a specific version, not just "17"
+        assertFalse("17".equals(metadata.getVersion()));
+        assertTrue(metadata.getVersion().startsWith("17."));
+
+        // The download URL should be a real GitHub URL for Temurin
+        assertTrue(metadata.getDownloadUrl().toString().contains("github.com"));
+        assertTrue(metadata.getDownloadUrl().toString().contains("adoptium"));
     }
 }

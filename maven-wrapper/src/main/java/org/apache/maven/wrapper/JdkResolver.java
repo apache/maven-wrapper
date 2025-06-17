@@ -184,11 +184,9 @@ class JdkResolver {
         // Map vendor to SDKMAN suffix
         String suffix = getSdkmanVendorSuffix(vendor);
 
-        // Handle major version resolution
+        // Handle major version resolution by querying SDKMAN API
         if (version.matches("\\d+")) {
-            // For major versions, we need to find the latest available version
-            // For now, use some reasonable defaults - in production this would query SDKMAN API
-            String latestVersion = getLatestVersionForMajor(version, vendor);
+            String latestVersion = getLatestVersionFromSdkman(version, vendor);
             return latestVersion + suffix;
         }
 
@@ -257,8 +255,9 @@ class JdkResolver {
     }
 
     /**
-     * Makes an HTTP GET request to SDKMAN API and returns the redirect location.
-     * SDKMAN API returns a 302 redirect with the actual download URL.
+     * Makes an HTTP GET request to SDKMAN API.
+     * For download URLs: returns the redirect location (302 redirect).
+     * For version lists: returns the response body content.
      */
     private String makeHttpRequest(String urlString) throws IOException {
         URL url = new URL(urlString);
@@ -278,7 +277,7 @@ class JdkResolver {
                 responseCode == HttpURLConnection.HTTP_MOVED_PERM ||
                 responseCode == HttpURLConnection.HTTP_SEE_OTHER) {
 
-                // Get the redirect location
+                // Get the redirect location (for download URLs)
                 String location = connection.getHeaderField("Location");
                 if (location != null && !location.trim().isEmpty()) {
                     return location.trim();
@@ -286,7 +285,7 @@ class JdkResolver {
                     throw new IOException("SDKMAN API returned redirect without location header");
                 }
             } else if (responseCode == HttpURLConnection.HTTP_OK) {
-                // Some APIs might return the URL directly in the response body
+                // Read response body (for version lists and direct responses)
                 try (BufferedReader reader = new BufferedReader(
                         new InputStreamReader(connection.getInputStream()))) {
                     StringBuilder response = new StringBuilder();
@@ -332,11 +331,68 @@ class JdkResolver {
     }
     
     /**
-     * Gets the latest version for a major version and vendor.
-     * In production, this would query the SDKMAN API.
+     * Gets the latest version for a major version and vendor by querying SDKMAN API.
      */
-    private String getLatestVersionForMajor(String majorVersion, String vendor) {
-        // These are reasonable defaults - in production this would query SDKMAN API
+    private String getLatestVersionFromSdkman(String majorVersion, String vendor) throws IOException {
+        String platform = detectSdkmanPlatform();
+        if ("exotic".equals(platform)) {
+            // Fallback to reasonable defaults for unsupported platforms
+            return getDefaultVersionForMajor(majorVersion);
+        }
+
+        try {
+            // Get all available versions for the platform
+            String versionsApiUrl = "https://api.sdkman.io/2/candidates/java/" + platform + "/versions/all";
+            String allVersions = makeHttpRequest(versionsApiUrl);
+
+            if (allVersions == null || allVersions.trim().isEmpty()) {
+                return getDefaultVersionForMajor(majorVersion);
+            }
+
+            // Parse versions and find the latest for the major version and vendor
+            String vendorSuffix = getSdkmanVendorSuffix(vendor);
+            String latestVersion = findLatestVersionForMajor(allVersions, majorVersion, vendorSuffix);
+
+            if (latestVersion != null) {
+                return latestVersion;
+            }
+
+            // Fallback to defaults if no version found
+            return getDefaultVersionForMajor(majorVersion);
+
+        } catch (Exception e) {
+            Logger.warn("Failed to query SDKMAN API for latest version, using defaults: " + e.getMessage());
+            return getDefaultVersionForMajor(majorVersion);
+        }
+    }
+
+    /**
+     * Parses SDKMAN versions response and finds the latest version for major version and vendor.
+     */
+    private String findLatestVersionForMajor(String allVersions, String majorVersion, String vendorSuffix) {
+        String[] versions = allVersions.split(",");
+        String latestVersion = null;
+
+        for (String version : versions) {
+            version = version.trim();
+            if (version.endsWith(vendorSuffix) && version.startsWith(majorVersion + ".")) {
+                // Remove vendor suffix to get just the version
+                String versionOnly = version.substring(0, version.length() - vendorSuffix.length());
+
+                // Simple version comparison - take the first match as SDKMAN usually returns them in order
+                if (latestVersion == null) {
+                    latestVersion = versionOnly;
+                }
+            }
+        }
+
+        return latestVersion;
+    }
+
+    /**
+     * Fallback version defaults when SDKMAN API is not available.
+     */
+    private String getDefaultVersionForMajor(String majorVersion) {
         switch (majorVersion) {
             case "8":
                 return "8.0.452";

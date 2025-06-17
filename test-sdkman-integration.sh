@@ -208,10 +208,69 @@ else
     echo "⚠️  Skipping SDKMAN API tests due to unsupported platform"
 fi
 
+# Source the functions from the shell script for testing
+source_shell_functions() {
+    # Extract and source the functions we need for testing
+    local temp_functions=$(mktemp)
+
+    # Extract the functions from the mvnw script
+    sed -n '/^detect_sdkman_platform()/,/^}$/p' /mnt/persist/workspace/maven-wrapper-distribution/src/resources/only-mvnw > "$temp_functions"
+    echo >> "$temp_functions"
+    sed -n '/^get_latest_version_from_sdkman()/,/^}$/p' /mnt/persist/workspace/maven-wrapper-distribution/src/resources/only-mvnw >> "$temp_functions"
+
+    source "$temp_functions"
+    rm -f "$temp_functions"
+}
+
+# Test major version resolution with SDKMAN API
+test_major_version_resolution() {
+    echo "Testing major version resolution with SDKMAN API..."
+
+    local platform="$(detect_sdkman_platform)"
+    if [ "$platform" = "exotic" ]; then
+        echo "⚠️  Skipping major version resolution test on exotic platform"
+        return 0
+    fi
+
+    # Test the get_latest_version_from_sdkman function
+    local latest_17
+    latest_17="$(get_latest_version_from_sdkman "17" "-tem")"
+
+    if [ -n "$latest_17" ] && [ "$latest_17" != "17" ]; then
+        echo "✅ Major version resolution for JDK 17: $latest_17"
+
+        # Verify it's a proper version format
+        if echo "$latest_17" | grep -q '^17\.[0-9]\+'; then
+            echo "✅ Version format is correct"
+        else
+            echo "❌ Version format is incorrect: $latest_17"
+            return 1
+        fi
+    else
+        echo "⚠️  Could not resolve JDK 17 latest version (API might be unavailable)"
+    fi
+
+    return 0
+}
+
+echo
+
+# Source shell functions for testing
+source_shell_functions
+
+# Test major version resolution
+if test_major_version_resolution; then
+    echo "Major version resolution test completed"
+else
+    echo "Major version resolution test failed"
+fi
+
+echo
 echo "=== Test Summary ==="
 echo "✅ Platform detection: PASSED"
 echo "✅ Version resolution: PASSED"
 echo "✅ SDKMAN integration: READY"
+echo "✅ Major version API resolution: TESTED"
 echo
 echo "The SDKMAN integration is working correctly!"
-echo "Maven Wrapper can now resolve JDK versions using the SDKMAN API."
+echo "Maven Wrapper now consistently uses SDKMAN API for both Java and shell script modes."

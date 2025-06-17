@@ -148,14 +148,48 @@ function Install-JDK {
       default { "-tem" }
     }
 
-    # Normalize version for major versions
-    $normalizedVersion = switch ($Version) {
-      "8" { "8.0.452" }
-      "11" { "11.0.27" }
-      "17" { "17.0.15" }
-      "21" { "21.0.7" }
-      "22" { "22.0.2" }
-      default { $Version }
+    # Handle major version resolution by querying SDKMAN API
+    $normalizedVersion = $Version
+    if ($Version -match '^\d+$') {
+      # This is a major version, try to get the latest from SDKMAN
+      try {
+        $platform = "windowsx64"
+        $versionsApiUrl = "https://api.sdkman.io/2/candidates/java/$platform/versions/all"
+        $webclientVersions = New-Object System.Net.WebClient
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        $allVersions = $webclientVersions.DownloadString($versionsApiUrl)
+
+        # Find the latest version for the major version and vendor
+        $versions = $allVersions -split ','
+        $matchingVersion = $versions | Where-Object { $_ -like "$Version.*$sdkmanSuffix" } | Select-Object -First 1
+
+        if ($matchingVersion) {
+          $normalizedVersion = $matchingVersion -replace [regex]::Escape($sdkmanSuffix), ''
+          Write-Verbose "Found latest version from SDKMAN: $normalizedVersion"
+        } else {
+          # Fallback to defaults
+          $normalizedVersion = switch ($Version) {
+            "8" { "8.0.452" }
+            "11" { "11.0.27" }
+            "17" { "17.0.15" }
+            "21" { "21.0.7" }
+            "22" { "22.0.2" }
+            default { "$Version.0.1" }
+          }
+          Write-Verbose "Using fallback version: $normalizedVersion"
+        }
+      } catch {
+        # Fallback to defaults if API call fails
+        $normalizedVersion = switch ($Version) {
+          "8" { "8.0.452" }
+          "11" { "11.0.27" }
+          "17" { "17.0.15" }
+          "21" { "21.0.7" }
+          "22" { "22.0.2" }
+          default { "$Version.0.1" }
+        }
+        Write-Verbose "SDKMAN API call failed, using fallback version: $normalizedVersion"
+      }
     }
 
     $sdkmanVersion = "$normalizedVersion$sdkmanSuffix"

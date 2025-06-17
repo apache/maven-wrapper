@@ -199,16 +199,65 @@ get_sdkman_version() {
   *) suffix="-tem" ;;  # Default to Temurin
   esac
 
-  # Handle major version resolution
-  case "$version" in
-  8) version="8.0.452" ;;
-  11) version="11.0.27" ;;
-  17) version="17.0.15" ;;
-  21) version="21.0.7" ;;
-  22) version="22.0.2" ;;
-  esac
+  # Handle major version resolution by querying SDKMAN API
+  if echo "$version" | grep -q '^[0-9]\+$'; then
+    # This is a major version, get the latest from SDKMAN
+    local latest_version
+    latest_version="$(get_latest_version_from_sdkman "$version" "$suffix")"
+    if [ -n "$latest_version" ]; then
+      version="$latest_version"
+    else
+      # Fallback to defaults if API call fails
+      case "$version" in
+      8) version="8.0.452" ;;
+      11) version="11.0.27" ;;
+      17) version="17.0.15" ;;
+      21) version="21.0.7" ;;
+      22) version="22.0.2" ;;
+      *) version="${version}.0.1" ;;
+      esac
+    fi
+  fi
 
   echo "${version}${suffix}"
+}
+
+get_latest_version_from_sdkman() {
+  local major_version="$1"
+  local vendor_suffix="$2"
+  local platform="$(detect_sdkman_platform)"
+
+  if [ "$platform" = "exotic" ]; then
+    return 1  # Cannot query SDKMAN for exotic platforms
+  fi
+
+  # Query SDKMAN API for all available versions
+  local versions_api_url="https://api.sdkman.io/2/candidates/java/${platform}/versions/all"
+  local all_versions
+
+  if command -v curl >/dev/null; then
+    all_versions="$(curl -s -f "$versions_api_url" 2>/dev/null)"
+  elif command -v wget >/dev/null; then
+    all_versions="$(wget -q -O - "$versions_api_url" 2>/dev/null)"
+  else
+    return 1  # No HTTP client available
+  fi
+
+  if [ -z "$all_versions" ]; then
+    return 1  # API call failed
+  fi
+
+  # Find the latest version for the major version and vendor
+  # SDKMAN returns versions in a comma-separated list
+  local latest_version
+  latest_version="$(echo "$all_versions" | tr ',' '\n' | grep "^${major_version}\." | grep -- "${vendor_suffix}\$" | head -1 | sed "s/${vendor_suffix}\$//")"
+
+  if [ -n "$latest_version" ]; then
+    echo "$latest_version"
+    return 0
+  else
+    return 1  # No matching version found
+  fi
 }
 
 die() {
