@@ -153,6 +153,83 @@ public class WrapperMojo extends AbstractMojo {
     @Parameter(defaultValue = "false", property = "alwaysUnpack")
     private boolean alwaysUnpack;
 
+    /**
+     * The JDK version to use for Maven execution.
+     * Can be a major version like "17" or "21", or a specific version like "17.0.7".
+     * If specified, the wrapper will automatically download and install the JDK.
+     *
+     * @since 3.3.0
+     */
+    @Parameter(property = "jdk")
+    private String jdkVersion;
+
+    /**
+     * The JDK vendor to use (e.g., "temurin", "corretto", "zulu", "liberica").
+     * Defaults to "temurin" if not specified.
+     *
+     * @since 3.3.0
+     */
+    @Parameter(property = "jdkVendor")
+    private String jdkVendor;
+
+    /**
+     * Direct URL to download the JDK from.
+     * If specified, takes precedence over jdkVersion and jdkVendor.
+     *
+     * @since 3.3.0
+     */
+    @Parameter(property = "jdkUrl")
+    private String jdkDistributionUrl;
+
+    /**
+     * The expected SHA-256 checksum of the JDK distribution.
+     *
+     * @since 3.3.0
+     */
+    @Parameter(property = "jdkSha256Sum")
+    private String jdkSha256Sum;
+
+    /**
+     * The toolchain JDK version for multi-JDK builds.
+     * This JDK will be added to toolchains.xml for use by Maven toolchain-aware plugins.
+     *
+     * @since 3.3.0
+     */
+    @Parameter(property = "toolchainJdk")
+    private String toolchainJdkVersion;
+
+    /**
+     * The toolchain JDK vendor (e.g., "temurin", "corretto", "zulu", "liberica").
+     *
+     * @since 3.3.0
+     */
+    @Parameter(property = "toolchainJdkVendor")
+    private String toolchainJdkVendor;
+
+    /**
+     * Direct URL to download the toolchain JDK from.
+     *
+     * @since 3.3.0
+     */
+    @Parameter(property = "toolchainJdkUrl")
+    private String toolchainJdkDistributionUrl;
+
+    /**
+     * The expected SHA-256 checksum of the toolchain JDK distribution.
+     *
+     * @since 3.3.0
+     */
+    @Parameter(property = "toolchainJdkSha256Sum")
+    private String toolchainJdkSha256Sum;
+
+    /**
+     * Whether to always download JDKs even if they already exist.
+     *
+     * @since 3.3.0
+     */
+    @Parameter(defaultValue = "false", property = "alwaysDownloadJdk")
+    private boolean alwaysDownloadJdk;
+
     // READONLY PARAMETERS
 
     @Component
@@ -343,10 +420,41 @@ public class WrapperMojo extends AbstractMojo {
                 out.append("wrapperSha256Sum=" + wrapperSha256Sum + System.lineSeparator());
             }
             if (alwaysDownload) {
-                out.append("alwaysDownload=" + Boolean.TRUE + System.lineSeparator());
+                out.append("alwaysDownload=true" + System.lineSeparator());
             }
             if (alwaysUnpack) {
-                out.append("alwaysUnpack=" + Boolean.TRUE + System.lineSeparator());
+                out.append("alwaysUnpack=true" + System.lineSeparator());
+            }
+
+            // Add JDK-related properties
+            if (jdkVersion != null && !jdkVersion.trim().isEmpty()) {
+                out.append("jdkVersion=" + jdkVersion.trim() + System.lineSeparator());
+            }
+            if (jdkVendor != null && !jdkVendor.trim().isEmpty()) {
+                out.append("jdkVendor=" + jdkVendor.trim() + System.lineSeparator());
+            }
+            if (jdkDistributionUrl != null && !jdkDistributionUrl.trim().isEmpty()) {
+                out.append("jdkDistributionUrl=" + jdkDistributionUrl.trim() + System.lineSeparator());
+            }
+            if (jdkSha256Sum != null && !jdkSha256Sum.trim().isEmpty()) {
+                out.append("jdkSha256Sum=" + jdkSha256Sum.trim() + System.lineSeparator());
+            }
+            if (alwaysDownloadJdk) {
+                out.append("alwaysDownloadJdk=true" + System.lineSeparator());
+            }
+
+            // Add toolchain JDK properties
+            if (toolchainJdkVersion != null && !toolchainJdkVersion.trim().isEmpty()) {
+                out.append("toolchainJdkVersion=" + toolchainJdkVersion.trim() + System.lineSeparator());
+            }
+            if (toolchainJdkVendor != null && !toolchainJdkVendor.trim().isEmpty()) {
+                out.append("toolchainJdkVendor=" + toolchainJdkVendor.trim() + System.lineSeparator());
+            }
+            if (toolchainJdkDistributionUrl != null && !toolchainJdkDistributionUrl.trim().isEmpty()) {
+                out.append("toolchainJdkDistributionUrl=" + toolchainJdkDistributionUrl.trim() + System.lineSeparator());
+            }
+            if (toolchainJdkSha256Sum != null && !toolchainJdkSha256Sum.trim().isEmpty()) {
+                out.append("toolchainJdkSha256Sum=" + toolchainJdkSha256Sum.trim() + System.lineSeparator());
             }
         } catch (IOException ioe) {
             throw new MojoExecutionException("Can't create maven-wrapper.properties", ioe);

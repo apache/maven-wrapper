@@ -51,10 +51,22 @@ if ($env:MVNW_VERBOSE -eq "true") {
 }
 
 # calculate distributionUrl, requires .mvn/wrapper/maven-wrapper.properties
-$distributionUrl = (Get-Content -Raw "$scriptDir/.mvn/wrapper/maven-wrapper.properties" | ConvertFrom-StringData).distributionUrl
+$wrapperProperties = Get-Content -Raw "$scriptDir/.mvn/wrapper/maven-wrapper.properties" | ConvertFrom-StringData
+$distributionUrl = $wrapperProperties.distributionUrl
 if (!$distributionUrl) {
   Write-Error "cannot read distributionUrl property in $scriptDir/.mvn/wrapper/maven-wrapper.properties"
 }
+
+# Read JDK-related properties
+$jdkVersion = $wrapperProperties.jdkVersion
+$jdkVendor = $wrapperProperties.jdkVendor
+$jdkDistributionUrl = $wrapperProperties.jdkDistributionUrl
+$jdkSha256Sum = $wrapperProperties.jdkSha256Sum
+$alwaysDownloadJdk = $wrapperProperties.alwaysDownloadJdk
+$toolchainJdkVersion = $wrapperProperties.toolchainJdkVersion
+$toolchainJdkVendor = $wrapperProperties.toolchainJdkVendor
+$toolchainJdkDistributionUrl = $wrapperProperties.toolchainJdkDistributionUrl
+$toolchainJdkSha256Sum = $wrapperProperties.toolchainJdkSha256Sum
 
 switch -wildcard -casesensitive ( $($distributionUrl -replace '^.*/','') ) {
   "maven-mvnd-*" {
@@ -84,6 +96,173 @@ if ($env:MAVEN_USER_HOME) {
 }
 $MAVEN_HOME_NAME = ([System.Security.Cryptography.SHA256]::Create().ComputeHash([byte[]][char[]]$distributionUrl) | ForEach-Object {$_.ToString("x2")}) -join ''
 $MAVEN_HOME = "$MAVEN_HOME_PARENT/$MAVEN_HOME_NAME"
+
+# JDK management functions
+function Install-JDK {
+  param(
+    [string]$Version,
+    [string]$Vendor = "temurin",
+    [string]$Url,
+    [string]$Checksum,
+    [string]$AlwaysDownload = "false"
+  )
+
+  if (!$Version) {
+    return  # No JDK version specified
+  }
+
+  # Determine JDK installation directory
+  $jdkDirName = "jdk-$Version-$Vendor"
+  $mavenUserHome = if ($env:MAVEN_USER_HOME) { $env:MAVEN_USER_HOME } else { "$HOME/.m2" }
+  $jdkHome = "$mavenUserHome/wrapper/jdks/$jdkDirName"
+
+  # Check if JDK already exists and we're not forcing re-download
+  if ((Test-Path -Path $jdkHome -PathType Container) -and ($AlwaysDownload -ne "true")) {
+    Write-Verbose "JDK $Version already installed at $jdkHome"
+    $env:JAVA_HOME = $jdkHome
+    return
+  }
+
+  # Resolve JDK URL if not provided using SDKMAN API
+  if (!$Url) {
+    # Get SDKMAN version identifier
+    $sdkmanSuffix = switch ($Vendor.ToLower()) {
+      "temurin" { "-tem" }
+      "adoptium" { "-tem" }
+      "adoptopenjdk" { "-tem" }
+      "eclipse" { "-tem" }
+      "corretto" { "-amzn" }
+      "amazon" { "-amzn" }
+      "aws" { "-amzn" }
+      "zulu" { "-zulu" }
+      "azul" { "-zulu" }
+      "liberica" { "-librca" }
+      "bellsoft" { "-librca" }
+      "oracle" { "-oracle" }
+      "microsoft" { "-ms" }
+      "ms" { "-ms" }
+      "semeru" { "-sem" }
+      "ibm" { "-sem" }
+      "graalvm" { "-grl" }
+      "graal" { "-grl" }
+      default { "-tem" }
+    }
+
+    # Normalize version for major versions
+    $normalizedVersion = switch ($Version) {
+      "8" { "8.0.452" }
+      "11" { "11.0.27" }
+      "17" { "17.0.15" }
+      "21" { "21.0.7" }
+      "22" { "22.0.2" }
+      default { $Version }
+    }
+
+    $sdkmanVersion = "$normalizedVersion$sdkmanSuffix"
+    $platform = "windowsx64"  # Windows x64 platform identifier for SDKMAN
+
+    # Call SDKMAN API to get download URL (handle 302 redirect)
+    $sdkmanApiUrl = "https://api.sdkman.io/2/broker/download/java/$sdkmanVersion/$platform"
+
+    try {
+      Write-Verbose "Resolving JDK download URL from SDKMAN API: $sdkmanApiUrl"
+
+      # Create HTTP request to handle redirects manually
+      $request = [System.Net.WebRequest]::Create($sdkmanApiUrl)
+      $request.Method = "GET"
+      $request.UserAgent = "Maven-Wrapper/3.3.0"
+      $request.AllowAutoRedirect = $false
+      [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+      $response = $request.GetResponse()
+
+      if ($response.StatusCode -eq [System.Net.HttpStatusCode]::Found -or
+          $response.StatusCode -eq [System.Net.HttpStatusCode]::MovedPermanently -or
+          $response.StatusCode -eq [System.Net.HttpStatusCode]::SeeOther) {
+        $Url = $response.Headers["Location"]
+        if (!$Url) {
+          Write-Error "SDKMAN API returned redirect without location header"
+        }
+      } else {
+        Write-Error "Unexpected response from SDKMAN API: $($response.StatusCode)"
+      }
+
+      $response.Close()
+
+      if (!$Url) {
+        Write-Error "Failed to resolve JDK download URL for $sdkmanVersion on $platform"
+      }
+    } catch {
+      Write-Error "Failed to resolve JDK URL from SDKMAN API: $($_.Exception.Message)"
+    }
+  }
+
+  Write-Verbose "Installing JDK $Version from $Url"
+
+  # Create JDK directory
+  New-Item -ItemType Directory -Path (Split-Path $jdkHome -Parent) -Force | Out-Null
+
+  # Download JDK
+  $jdkFileName = $Url -replace '^.*/',''
+  $tempDir = New-TemporaryFile
+  $tempDirPath = New-Item -ItemType Directory -Path "$tempDir.dir"
+  $tempDir.Delete() | Out-Null
+  $jdkFile = "$tempDirPath/$jdkFileName"
+
+  try {
+    Write-Verbose "Downloading JDK to: $jdkFile"
+    $webclient = New-Object System.Net.WebClient
+    if ($env:MVNW_USERNAME -and $env:MVNW_PASSWORD) {
+      $webclient.Credentials = New-Object System.Net.NetworkCredential($env:MVNW_USERNAME, $env:MVNW_PASSWORD)
+    }
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    $webclient.DownloadFile($Url, $jdkFile) | Out-Null
+
+    # Verify checksum if provided
+    if ($Checksum) {
+      Write-Verbose "Verifying JDK checksum"
+      Import-Module $PSHOME\Modules\Microsoft.PowerShell.Utility -Function Get-FileHash
+      if ((Get-FileHash $jdkFile -Algorithm SHA256).Hash.ToLower() -ne $Checksum.ToLower()) {
+        Write-Error "Error: Failed to validate JDK SHA-256 checksum"
+      }
+    }
+
+    # Extract JDK
+    Write-Verbose "Extracting JDK to: $jdkHome"
+    New-Item -ItemType Directory -Path $jdkHome -Force | Out-Null
+    Expand-Archive $jdkFile -DestinationPath $tempDirPath | Out-Null
+
+    # Find the JDK directory and move its contents
+    $extractedJdkDir = Get-ChildItem -Path $tempDirPath -Directory | Where-Object { $_.Name -like "*jdk*" } | Select-Object -First 1
+    if ($extractedJdkDir) {
+      Get-ChildItem -Path $extractedJdkDir.FullName | Move-Item -Destination $jdkHome
+    } else {
+      Write-Error "Could not find JDK directory in extracted archive"
+    }
+
+    # Verify JDK installation
+    if (!(Test-Path -Path "$jdkHome/bin/java.exe")) {
+      Write-Error "JDK installation failed: java.exe not found at $jdkHome/bin/java.exe"
+    }
+
+    Write-Verbose "JDK $Version installed successfully at $jdkHome"
+    $env:JAVA_HOME = $jdkHome
+
+  } finally {
+    if (Test-Path $tempDirPath) {
+      Remove-Item $tempDirPath -Recurse -Force | Out-Null
+    }
+  }
+}
+
+# Install JDK if configured
+Install-JDK -Version $jdkVersion -Vendor $jdkVendor -Url $jdkDistributionUrl -Checksum $jdkSha256Sum -AlwaysDownload $alwaysDownloadJdk
+
+# Install toolchain JDK if configured
+if ($toolchainJdkVersion) {
+  Write-Verbose "Installing toolchain JDK $toolchainJdkVersion"
+  Install-JDK -Version $toolchainJdkVersion -Vendor $toolchainJdkVendor -Url $toolchainJdkDistributionUrl -Checksum $toolchainJdkSha256Sum -AlwaysDownload $alwaysDownloadJdk
+}
 
 if (Test-Path -Path "$MAVEN_HOME" -PathType Container) {
   Write-Verbose "found existing MAVEN_HOME at $MAVEN_HOME"
@@ -121,7 +300,7 @@ if ($env:MVNW_USERNAME -and $env:MVNW_PASSWORD) {
 $webclient.DownloadFile($distributionUrl, "$TMP_DOWNLOAD_DIR/$distributionUrlName") | Out-Null
 
 # If specified, validate the SHA-256 sum of the Maven distribution zip file
-$distributionSha256Sum = (Get-Content -Raw "$scriptDir/.mvn/wrapper/maven-wrapper.properties" | ConvertFrom-StringData).distributionSha256Sum
+$distributionSha256Sum = $wrapperProperties.distributionSha256Sum
 if ($distributionSha256Sum) {
   if ($USE_MVND) {
     Write-Error "Checksum validation is not supported for maven-mvnd. `nPlease disable validation by removing 'distributionSha256Sum' from your maven-wrapper.properties."

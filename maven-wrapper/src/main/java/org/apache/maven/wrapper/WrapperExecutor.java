@@ -53,6 +53,20 @@ public class WrapperExecutor {
 
     public static final String ALWAYS_UNPACK = "alwaysUnpack";
 
+    // JDK-related property constants
+    public static final String JDK_VERSION_PROPERTY = "jdkVersion";
+    public static final String JDK_VENDOR_PROPERTY = "jdkVendor";
+    public static final String JDK_DISTRIBUTION_URL_PROPERTY = "jdkDistributionUrl";
+    public static final String JDK_SHA_256_SUM = "jdkSha256Sum";
+    public static final String ALWAYS_DOWNLOAD_JDK = "alwaysDownloadJdk";
+    public static final String UPDATE_TOOLCHAINS = "updateToolchains";
+
+    // Toolchain JDK property constants
+    public static final String TOOLCHAIN_JDK_VERSION_PROPERTY = "toolchainJdkVersion";
+    public static final String TOOLCHAIN_JDK_VENDOR_PROPERTY = "toolchainJdkVendor";
+    public static final String TOOLCHAIN_JDK_DISTRIBUTION_URL_PROPERTY = "toolchainJdkDistributionUrl";
+    public static final String TOOLCHAIN_JDK_SHA_256_SUM = "toolchainJdkSha256Sum";
+
     private final Properties properties;
 
     private final Path propertiesFile;
@@ -87,6 +101,9 @@ public class WrapperExecutor {
                 config.setDistributionSha256Sum(getProperty(DISTRIBUTION_SHA_256_SUM, ""));
                 config.setAlwaysUnpack(Boolean.parseBoolean(getProperty(ALWAYS_UNPACK, Boolean.FALSE.toString())));
                 config.setAlwaysDownload(Boolean.parseBoolean(getProperty(ALWAYS_DOWNLOAD, Boolean.FALSE.toString())));
+
+                // Load JDK-related properties
+                loadJdkProperties();
             } catch (Exception e) {
                 throw new RuntimeException(
                         String.format(Locale.ROOT, "Could not load wrapper properties from '%s'.", propertiesFile), e);
@@ -179,5 +196,74 @@ public class WrapperExecutor {
                 "No value with key '%s' specified in wrapper properties file '%s'.",
                 propertyName,
                 propertiesFile));
+    }
+
+    /**
+     * Loads JDK-related properties from the wrapper properties file.
+     */
+    private void loadJdkProperties() {
+        // Load JDK properties with environment variable fallbacks
+        String jdkVersion = getProperty(JDK_VERSION_PROPERTY, getEnv(WrapperConfiguration.JDK_VERSION_ENV));
+        if (jdkVersion != null && !jdkVersion.trim().isEmpty()) {
+            config.setJdkVersion(jdkVersion.trim());
+        }
+
+        String jdkVendor = getProperty(JDK_VENDOR_PROPERTY, getEnv(WrapperConfiguration.JDK_VENDOR_ENV));
+        if (jdkVendor != null && !jdkVendor.trim().isEmpty()) {
+            config.setJdkVendor(jdkVendor.trim());
+        }
+
+        String jdkDistributionUrl = getProperty(JDK_DISTRIBUTION_URL_PROPERTY, null);
+        if (jdkDistributionUrl != null && !jdkDistributionUrl.trim().isEmpty()) {
+            try {
+                config.setJdkDistributionUrl(new URI(jdkDistributionUrl.trim()));
+            } catch (URISyntaxException e) {
+                throw new RuntimeException("Invalid JDK distribution URL: " + jdkDistributionUrl, e);
+            }
+        }
+
+        String jdkSha256Sum = getProperty(JDK_SHA_256_SUM, null);
+        if (jdkSha256Sum != null && !jdkSha256Sum.trim().isEmpty()) {
+            config.setJdkSha256Sum(jdkSha256Sum.trim());
+        }
+
+        config.setAlwaysDownloadJdk(Boolean.parseBoolean(
+            getProperty(ALWAYS_DOWNLOAD_JDK, getEnv(WrapperConfiguration.JDK_DOWNLOAD_ENV))));
+
+        config.setUpdateToolchains(Boolean.parseBoolean(
+            getProperty(UPDATE_TOOLCHAINS, "true")));
+
+        // Load toolchain JDK properties
+        loadToolchainJdkProperties();
+    }
+
+    /**
+     * Loads toolchain JDK properties from the wrapper properties file.
+     */
+    private void loadToolchainJdkProperties() {
+        String toolchainJdkVersion = getProperty(TOOLCHAIN_JDK_VERSION_PROPERTY,
+            getEnv(WrapperConfiguration.TOOLCHAIN_JDK_ENV));
+        if (toolchainJdkVersion != null && !toolchainJdkVersion.trim().isEmpty()) {
+            config.setToolchainJdkVersion(toolchainJdkVersion.trim());
+        }
+
+        String toolchainJdkVendor = getProperty(TOOLCHAIN_JDK_VENDOR_PROPERTY, null);
+        if (toolchainJdkVendor != null && !toolchainJdkVendor.trim().isEmpty()) {
+            config.setToolchainJdkVendor(toolchainJdkVendor.trim());
+        }
+
+        String toolchainJdkDistributionUrl = getProperty(TOOLCHAIN_JDK_DISTRIBUTION_URL_PROPERTY, null);
+        if (toolchainJdkDistributionUrl != null && !toolchainJdkDistributionUrl.trim().isEmpty()) {
+            try {
+                config.setToolchainJdkDistributionUrl(new URI(toolchainJdkDistributionUrl.trim()));
+            } catch (URISyntaxException e) {
+                throw new RuntimeException("Invalid toolchain JDK distribution URL: " + toolchainJdkDistributionUrl, e);
+            }
+        }
+
+        String toolchainJdkSha256Sum = getProperty(TOOLCHAIN_JDK_SHA_256_SUM, null);
+        if (toolchainJdkSha256Sum != null && !toolchainJdkSha256Sum.trim().isEmpty()) {
+            config.setToolchainJdkSha256Sum(toolchainJdkSha256Sum.trim());
+        }
     }
 }

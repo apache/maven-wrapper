@@ -92,6 +92,125 @@ hash_string() {
 verbose() { :; }
 [ "${MVNW_VERBOSE-}" != true ] || verbose() { printf %s\\n "${1-}"; }
 
+# JDK management functions
+detect_platform() {
+  case "$(uname)" in
+  Darwin*) echo "macos" ;;
+  CYGWIN* | MINGW*) echo "windows" ;;
+  *) echo "linux" ;;
+  esac
+}
+
+detect_architecture() {
+  case "$(uname -m)" in
+  x86_64 | amd64) echo "x64" ;;
+  aarch64 | arm64) echo "aarch64" ;;
+  i386 | i686) echo "x86" ;;
+  *) echo "x64" ;;  # default fallback
+  esac
+}
+
+resolve_jdk_url() {
+  local version="$1"
+  local vendor="${2:-temurin}"
+
+  # Detect SDKMAN platform
+  local platform="$(detect_sdkman_platform)"
+
+  if [ "$platform" = "exotic" ]; then
+    die "Unsupported platform for JDK download. Please use a direct JDK URL instead."
+  fi
+
+  # Normalize vendor and get SDKMAN version
+  local sdkman_version="$(get_sdkman_version "$version" "$vendor")"
+
+  # Use SDKMAN API to get download URL
+  local sdkman_api_url="https://api.sdkman.io/2/broker/download/java/${sdkman_version}/${platform}"
+
+  verbose "Resolving JDK download URL from SDKMAN API: $sdkman_api_url"
+
+  # Make HTTP request to SDKMAN API (handle 302 redirect)
+  local download_url
+  if command -v curl >/dev/null; then
+    # Get the redirect location from SDKMAN API
+    download_url="$(curl -s -I "$sdkman_api_url" 2>/dev/null | grep -i '^location:' | cut -d' ' -f2- | tr -d '\r\n')"
+  elif command -v wget >/dev/null; then
+    # wget can also handle redirects, but we need to extract the location
+    download_url="$(wget -q -S -O /dev/null "$sdkman_api_url" 2>&1 | grep -i '^  location:' | cut -d' ' -f4- | tr -d '\r\n')"
+  else
+    die "Cannot resolve JDK URL: curl or wget required"
+  fi
+
+  if [ -z "$download_url" ]; then
+    die "Failed to resolve JDK download URL for $sdkman_version on $platform"
+  fi
+
+  echo "$download_url"
+}
+
+detect_sdkman_platform() {
+  local kernel="$(uname -s)"
+  local machine="$(uname -m)"
+
+  case "$kernel" in
+  Linux)
+    case "$machine" in
+    i686) echo "linuxx32" ;;
+    x86_64) echo "linuxx64" ;;
+    armv6l|armv7l|armv8l) echo "linuxarm32hf" ;;
+    aarch64) echo "linuxarm64" ;;
+    *) echo "exotic" ;;
+    esac
+    ;;
+  Darwin)
+    case "$machine" in
+    x86_64) echo "darwinx64" ;;
+    arm64) echo "darwinarm64" ;;
+    *) echo "darwinx64" ;;
+    esac
+    ;;
+  CYGWIN*|MINGW*|MSYS*)
+    case "$machine" in
+    x86_64) echo "windowsx64" ;;
+    *) echo "exotic" ;;
+    esac
+    ;;
+  *)
+    echo "exotic"
+    ;;
+  esac
+}
+
+get_sdkman_version() {
+  local version="$1"
+  local vendor="$2"
+
+  # Normalize vendor to SDKMAN suffix
+  local suffix
+  case "$vendor" in
+  temurin|adoptium|adoptopenjdk|eclipse) suffix="-tem" ;;
+  corretto|amazon|aws) suffix="-amzn" ;;
+  zulu|azul) suffix="-zulu" ;;
+  liberica|bellsoft) suffix="-librca" ;;
+  oracle) suffix="-oracle" ;;
+  microsoft|ms) suffix="-ms" ;;
+  semeru|ibm) suffix="-sem" ;;
+  graalvm|graal) suffix="-grl" ;;
+  *) suffix="-tem" ;;  # Default to Temurin
+  esac
+
+  # Handle major version resolution
+  case "$version" in
+  8) version="8.0.452" ;;
+  11) version="11.0.27" ;;
+  17) version="17.0.15" ;;
+  21) version="21.0.7" ;;
+  22) version="22.0.2" ;;
+  esac
+
+  echo "${version}${suffix}"
+}
+
 die() {
   printf %s\\n "$1" >&2
   exit 1
@@ -106,10 +225,20 @@ trim() {
 }
 
 # parse distributionUrl and optional distributionSha256Sum, requires .mvn/wrapper/maven-wrapper.properties
+# also parse JDK-related properties
 while IFS="=" read -r key value; do
   case "${key-}" in
   distributionUrl) distributionUrl=$(trim "${value-}") ;;
   distributionSha256Sum) distributionSha256Sum=$(trim "${value-}") ;;
+  jdkVersion) jdkVersion=$(trim "${value-}") ;;
+  jdkVendor) jdkVendor=$(trim "${value-}") ;;
+  jdkDistributionUrl) jdkDistributionUrl=$(trim "${value-}") ;;
+  jdkSha256Sum) jdkSha256Sum=$(trim "${value-}") ;;
+  alwaysDownloadJdk) alwaysDownloadJdk=$(trim "${value-}") ;;
+  toolchainJdkVersion) toolchainJdkVersion=$(trim "${value-}") ;;
+  toolchainJdkVendor) toolchainJdkVendor=$(trim "${value-}") ;;
+  toolchainJdkDistributionUrl) toolchainJdkDistributionUrl=$(trim "${value-}") ;;
+  toolchainJdkSha256Sum) toolchainJdkSha256Sum=$(trim "${value-}") ;;
   esac
 done <"${0%/*}/.mvn/wrapper/maven-wrapper.properties"
 [ -n "${distributionUrl-}" ] || die "cannot read distributionUrl property in ${0%/*}/.mvn/wrapper/maven-wrapper.properties"
@@ -142,10 +271,136 @@ distributionUrlNameMain="${distributionUrlNameMain%-bin}"
 MAVEN_USER_HOME="${MAVEN_USER_HOME:-${HOME}/.m2}"
 MAVEN_HOME="${MAVEN_USER_HOME}/wrapper/dists/${distributionUrlNameMain-}/$(hash_string "$distributionUrl")"
 
+# JDK management
+install_jdk() {
+  local version="$1"
+  local vendor="${2:-temurin}"
+  local url="$3"
+  local checksum="$4"
+  local always_download="${5:-false}"
+
+  if [ -z "$version" ]; then
+    return 0  # No JDK version specified
+  fi
+
+  # Determine JDK installation directory
+  local jdk_dir_name="jdk-${version}-${vendor}"
+  local jdk_home="${MAVEN_USER_HOME}/wrapper/jdks/${jdk_dir_name}"
+
+  # Check if JDK already exists and we're not forcing re-download
+  if [ -d "$jdk_home" ] && [ "$always_download" != "true" ]; then
+    verbose "JDK $version already installed at $jdk_home"
+    export JAVA_HOME="$jdk_home"
+    return 0
+  fi
+
+  # Resolve JDK URL if not provided
+  if [ -z "$url" ]; then
+    url="$(resolve_jdk_url "$version" "$vendor")"
+  fi
+
+  verbose "Installing JDK $version from $url"
+
+  # Create JDK directory
+  mkdir -p "${jdk_home%/*}"
+
+  # Prepare temp dir for JDK download
+  local jdk_tmp_dir
+  if jdk_tmp_dir="$(mktemp -d)" && [ -d "$jdk_tmp_dir" ]; then
+    local jdk_clean() { rm -rf -- "$jdk_tmp_dir"; }
+    trap jdk_clean HUP INT TERM EXIT
+  else
+    die "cannot create temp dir for JDK"
+  fi
+
+  # Download JDK
+  local jdk_filename="${url##*/}"
+  local jdk_file="$jdk_tmp_dir/$jdk_filename"
+
+  verbose "Downloading JDK to: $jdk_file"
+
+  # Download using available tools
+  if [ -z "${MVNW_USERNAME-}" ] && command -v wget >/dev/null; then
+    wget ${__MVNW_QUIET_WGET:+"$__MVNW_QUIET_WGET"} "$url" -O "$jdk_file" || die "wget: Failed to fetch JDK from $url"
+  elif [ -z "${MVNW_USERNAME-}" ] && command -v curl >/dev/null; then
+    curl ${__MVNW_QUIET_CURL:+"$__MVNW_QUIET_CURL"} -f -L -o "$jdk_file" "$url" || die "curl: Failed to fetch JDK from $url"
+  else
+    die "Cannot download JDK: wget or curl required"
+  fi
+
+  # Verify checksum if provided
+  if [ -n "$checksum" ]; then
+    verbose "Verifying JDK checksum"
+    local checksum_result=false
+    if command -v sha256sum >/dev/null; then
+      if echo "$checksum  $jdk_file" | sha256sum -c - >/dev/null 2>&1; then
+        checksum_result=true
+      fi
+    elif command -v shasum >/dev/null; then
+      if echo "$checksum  $jdk_file" | shasum -a 256 -c >/dev/null 2>&1; then
+        checksum_result=true
+      fi
+    else
+      echo "Warning: Checksum validation requested but neither 'sha256sum' or 'shasum' are available." >&2
+    fi
+    if [ "$checksum_result" = false ]; then
+      die "Error: Failed to validate JDK SHA-256 checksum"
+    fi
+  fi
+
+  # Extract JDK
+  verbose "Extracting JDK to: $jdk_home"
+  mkdir -p "$jdk_home"
+
+  case "$jdk_filename" in
+  *.tar.gz | *.tgz)
+    tar xzf${__MVNW_QUIET_TAR:+"$__MVNW_QUIET_TAR"} "$jdk_file" -C "$jdk_home" --strip-components=1 || die "failed to extract JDK tar.gz"
+    ;;
+  *.zip)
+    if command -v unzip >/dev/null; then
+      # Extract and find the JDK directory
+      unzip ${__MVNW_QUIET_UNZIP:+"$__MVNW_QUIET_UNZIP"} "$jdk_file" -d "$jdk_tmp_dir" || die "failed to extract JDK zip"
+      # Find the JDK directory and move its contents
+      local jdk_extracted_dir
+      jdk_extracted_dir="$(find "$jdk_tmp_dir" -maxdepth 1 -type d -name "*jdk*" | head -1)"
+      if [ -n "$jdk_extracted_dir" ] && [ -d "$jdk_extracted_dir" ]; then
+        mv "$jdk_extracted_dir"/* "$jdk_home"/ || die "failed to move JDK contents"
+      else
+        die "Could not find JDK directory in extracted zip"
+      fi
+    else
+      die "Cannot extract JDK zip: unzip command not available"
+    fi
+    ;;
+  *)
+    die "Unsupported JDK archive format: $jdk_filename"
+    ;;
+  esac
+
+  # Verify JDK installation
+  if [ ! -f "$jdk_home/bin/java" ]; then
+    die "JDK installation failed: java executable not found at $jdk_home/bin/java"
+  fi
+
+  verbose "JDK $version installed successfully at $jdk_home"
+  export JAVA_HOME="$jdk_home"
+
+  jdk_clean || :
+}
+
 exec_maven() {
   unset MVNW_VERBOSE MVNW_USERNAME MVNW_PASSWORD MVNW_REPOURL || :
   exec "$MAVEN_HOME/bin/$MVN_CMD" "$@" || die "cannot exec $MAVEN_HOME/bin/$MVN_CMD"
 }
+
+# Install JDK if configured
+install_jdk "$jdkVersion" "$jdkVendor" "$jdkDistributionUrl" "$jdkSha256Sum" "$alwaysDownloadJdk"
+
+# Install toolchain JDK if configured (basic support - just download, no toolchains.xml update in script mode)
+if [ -n "$toolchainJdkVersion" ]; then
+  verbose "Installing toolchain JDK $toolchainJdkVersion"
+  install_jdk "$toolchainJdkVersion" "$toolchainJdkVendor" "$toolchainJdkDistributionUrl" "$toolchainJdkSha256Sum" "$alwaysDownloadJdk"
+fi
 
 if [ -d "$MAVEN_HOME" ]; then
   verbose "found existing MAVEN_HOME at $MAVEN_HOME"

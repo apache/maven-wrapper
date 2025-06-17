@@ -122,6 +122,30 @@ public class Installer {
         return dirs.get(0);
     }
 
+    /**
+     * Creates and installs JDK distributions if configured.
+     *
+     * @param configuration the wrapper configuration
+     * @return path to the main JDK home directory, or null if no JDK is configured
+     * @throws Exception if JDK installation fails
+     */
+    public Path createJdkDist(WrapperConfiguration configuration) throws Exception {
+        JdkDownloader jdkDownloader = new JdkDownloader(download, verifier, pathAssembler);
+        return jdkDownloader.downloadAndInstallJdk(configuration);
+    }
+
+    /**
+     * Creates and installs toolchain JDK distributions if configured.
+     *
+     * @param configuration the wrapper configuration
+     * @return path to the toolchain JDK home directory, or null if no toolchain JDK is configured
+     * @throws Exception if toolchain JDK installation fails
+     */
+    public Path createToolchainJdkDist(WrapperConfiguration configuration) throws Exception {
+        JdkDownloader jdkDownloader = new JdkDownloader(download, verifier, pathAssembler);
+        return jdkDownloader.downloadAndInstallToolchainJdk(configuration);
+    }
+
     private List<Path> listDirs(Path distDir) throws IOException {
         List<Path> dirs = new ArrayList<>();
         if (Files.exists(distDir)) {
