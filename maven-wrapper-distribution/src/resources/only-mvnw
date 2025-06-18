@@ -442,26 +442,18 @@ install_jdk() {
     fi
   fi
 
-  # Extract JDK
-  verbose "Extracting JDK to: $jdk_home"
-  mkdir -p "$jdk_home"
+  # Extract JDK to temporary location first
+  local jdk_extract_dir="$jdk_tmp_dir/extract"
+  mkdir -p "$jdk_extract_dir"
+  verbose "Extracting JDK archive to temporary location"
 
   case "$jdk_filename" in
   *.tar.gz | *.tgz)
-    tar xzf${__MVNW_QUIET_TAR:+"$__MVNW_QUIET_TAR"} "$jdk_file" -C "$jdk_home" --strip-components=1 || die "failed to extract JDK tar.gz"
+    tar xzf${__MVNW_QUIET_TAR:+"$__MVNW_QUIET_TAR"} "$jdk_file" -C "$jdk_extract_dir" || die "failed to extract JDK tar.gz"
     ;;
   *.zip)
     if command -v unzip >/dev/null; then
-      # Extract and find the JDK directory
-      unzip ${__MVNW_QUIET_UNZIP:+"$__MVNW_QUIET_UNZIP"} "$jdk_file" -d "$jdk_tmp_dir" || die "failed to extract JDK zip"
-      # Find the JDK directory and move its contents
-      local jdk_extracted_dir
-      jdk_extracted_dir="$(find "$jdk_tmp_dir" -maxdepth 1 -type d -name "*jdk*" | head -1)"
-      if [ -n "$jdk_extracted_dir" ] && [ -d "$jdk_extracted_dir" ]; then
-        mv "$jdk_extracted_dir"/* "$jdk_home"/ || die "failed to move JDK contents"
-      else
-        die "Could not find JDK directory in extracted zip"
-      fi
+      unzip ${__MVNW_QUIET_UNZIP:+"$__MVNW_QUIET_UNZIP"} "$jdk_file" -d "$jdk_extract_dir" || die "failed to extract JDK zip"
     else
       die "Cannot extract JDK zip: unzip command not available"
     fi
@@ -470,6 +462,28 @@ install_jdk() {
     die "Unsupported JDK archive format: $jdk_filename"
     ;;
   esac
+
+  # Find the actual JDK root directory (where bin/java exists)
+  verbose "Locating JDK root directory"
+  local jdk_root_dir=""
+
+  # Search for bin/java in the extracted content (up to 3 levels deep to handle various archive structures)
+  for candidate in "$jdk_extract_dir" "$jdk_extract_dir"/* "$jdk_extract_dir"/*/* "$jdk_extract_dir"/*/*/*; do
+    if [ -f "$candidate/bin/java" ]; then
+      jdk_root_dir="$candidate"
+      verbose "Found JDK root at: $jdk_root_dir"
+      break
+    fi
+  done
+
+  if [ -z "$jdk_root_dir" ]; then
+    die "Could not locate JDK root directory with bin/java in extracted archive"
+  fi
+
+  # Move the JDK root to the final location
+  verbose "Installing JDK to: $jdk_home"
+  mkdir -p "${jdk_home%/*}"
+  mv "$jdk_root_dir" "$jdk_home" || die "failed to move JDK to final location"
 
   # Verify JDK installation
   if [ ! -f "$jdk_home/bin/java" ]; then
