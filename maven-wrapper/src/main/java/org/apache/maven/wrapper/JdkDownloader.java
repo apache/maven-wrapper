@@ -169,28 +169,51 @@ class JdkDownloader {
 
     /**
      * Finds the JDK home directory within the extracted directory.
-     * Looks for common JDK directory structures.
+     * Looks for common JDK directory structures up to 3 levels deep to handle
+     * various archive formats (e.g., macOS Contents/Home structure).
      */
     private Path findJdkHome(Path extractedDir) throws IOException {
         if (!Files.exists(extractedDir)) {
             throw new IOException("Extracted directory does not exist: " + extractedDir);
         }
 
-        // Check if the extracted directory itself is the JDK home
-        if (isJdkHome(extractedDir)) {
-            return extractedDir;
+        // Search for JDK home up to 3 levels deep to handle various archive structures
+        Path jdkHome = findJdkHomeRecursive(extractedDir, 0, 3);
+        if (jdkHome != null) {
+            return jdkHome;
         }
 
-        // Look for JDK home in subdirectories
-        try (java.nio.file.DirectoryStream<Path> stream = Files.newDirectoryStream(extractedDir)) {
-            for (Path entry : stream) {
-                if (Files.isDirectory(entry) && isJdkHome(entry)) {
-                    return entry;
+        throw new IOException("Could not find JDK home directory in " + extractedDir);
+    }
+
+    /**
+     * Recursively searches for JDK home directory up to the specified depth.
+     */
+    private Path findJdkHomeRecursive(Path dir, int currentDepth, int maxDepth) throws IOException {
+        if (currentDepth > maxDepth || !Files.isDirectory(dir)) {
+            return null;
+        }
+
+        // Check if current directory is JDK home
+        if (isJdkHome(dir)) {
+            return dir;
+        }
+
+        // If we haven't reached max depth, search subdirectories
+        if (currentDepth < maxDepth) {
+            try (java.nio.file.DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
+                for (Path entry : stream) {
+                    if (Files.isDirectory(entry)) {
+                        Path result = findJdkHomeRecursive(entry, currentDepth + 1, maxDepth);
+                        if (result != null) {
+                            return result;
+                        }
+                    }
                 }
             }
         }
 
-        throw new IOException("Could not find JDK home directory in " + extractedDir);
+        return null;
     }
 
     /**
