@@ -31,9 +31,11 @@ import java.util.Locale;
  * Supports multiple JDK vendors and platforms using SDKMAN API with Maven-style caching.
  */
 class JdkResolver {
+    private static final int CONNECTION_TIMEOUT_MS = 10000; // 10 seconds
+    private static final int READ_TIMEOUT_MS = 30000; // 30 seconds
 
     private final JdkVersionCache versionCache;
-    
+
     /**
      * Represents JDK metadata including download URL and checksum.
      */
@@ -42,31 +44,31 @@ class JdkResolver {
         private final String sha256Sum;
         private final String version;
         private final String vendor;
-        
+
         JdkMetadata(URI downloadUrl, String sha256Sum, String version, String vendor) {
             this.downloadUrl = downloadUrl;
             this.sha256Sum = sha256Sum;
             this.version = version;
             this.vendor = vendor;
         }
-        
+
         public URI getDownloadUrl() {
             return downloadUrl;
         }
-        
+
         public String getSha256Sum() {
             return sha256Sum;
         }
-        
+
         public String getVersion() {
             return version;
         }
-        
+
         public String getVendor() {
             return vendor;
         }
     }
-    
+
     /**
      * Creates a JdkResolver with the specified cache directory and update policy.
      */
@@ -100,21 +102,21 @@ class JdkResolver {
 
         return resolveJdkFromSdkman(sdkmanVersion, platform);
     }
-    
+
     /**
      * Resolves JDK metadata using default vendor (Temurin).
      */
     JdkMetadata resolveJdk(String version) throws IOException {
         return resolveJdk(version, "temurin");
     }
-    
+
     private String normalizeVendor(String vendor) {
         if (vendor == null || vendor.trim().isEmpty()) {
             return "temurin"; // Default to Eclipse Temurin
         }
-        
+
         String normalized = vendor.toLowerCase(Locale.ROOT).trim();
-        
+
         // Handle common aliases
         switch (normalized) {
             case "adoptium":
@@ -143,7 +145,7 @@ class JdkResolver {
                 return normalized;
         }
     }
-    
+
     /**
      * Detects the SDKMAN platform identifier for the current system.
      * Uses the same logic as SDKMAN's infer_platform() function.
@@ -192,7 +194,7 @@ class JdkResolver {
             return "exotic";
         }
     }
-    
+
     /**
      * Resolves SDKMAN version identifier from user-friendly version and vendor.
      */
@@ -241,20 +243,20 @@ class JdkResolver {
      */
     private JdkMetadata resolveJdkFromSdkman(String sdkmanVersion, String platform) throws IOException {
         if ("exotic".equals(platform)) {
-            throw new IOException("Unsupported platform: " + platform +
-                ". SDKMAN JDK resolution is not available for this platform.");
+            throw new IOException("Unsupported platform: " + platform
+                    + ". SDKMAN JDK resolution is not available for this platform.");
         }
 
         // Build SDKMAN download URL
-        String sdkmanApiUrl = "https://api.sdkman.io/2/broker/download/java/" +
-                             sdkmanVersion + "/" + platform;
+        String sdkmanApiUrl = "https://api.sdkman.io/2/broker/download/java/" + sdkmanVersion + "/" + platform;
 
         try {
             // Make HTTP request to SDKMAN API to get the actual download URL
             String actualDownloadUrl = makeHttpRequest(sdkmanApiUrl);
 
             if (actualDownloadUrl == null || actualDownloadUrl.trim().isEmpty()) {
-                throw new IOException("SDKMAN API returned empty download URL for " + sdkmanVersion + " on " + platform);
+                throw new IOException(
+                        "SDKMAN API returned empty download URL for " + sdkmanVersion + " on " + platform);
             }
 
             // Extract version and vendor from sdkmanVersion
@@ -282,16 +284,16 @@ class JdkResolver {
         try {
             connection.setRequestMethod("GET");
             connection.setConnectTimeout(10000); // 10 seconds
-            connection.setReadTimeout(30000);    // 30 seconds
+            connection.setReadTimeout(30000); // 30 seconds
             connection.setInstanceFollowRedirects(false); // Don't follow redirects automatically
 
             // Set User-Agent to identify as Maven Wrapper
             connection.setRequestProperty("User-Agent", "Maven-Wrapper/3.3.0");
 
             int responseCode = connection.getResponseCode();
-            if (responseCode == HttpURLConnection.HTTP_MOVED_TEMP ||
-                responseCode == HttpURLConnection.HTTP_MOVED_PERM ||
-                responseCode == HttpURLConnection.HTTP_SEE_OTHER) {
+            if (responseCode == HttpURLConnection.HTTP_MOVED_TEMP
+                    || responseCode == HttpURLConnection.HTTP_MOVED_PERM
+                    || responseCode == HttpURLConnection.HTTP_SEE_OTHER) {
 
                 // Get the redirect location (for download URLs)
                 String location = connection.getHeaderField("Location");
@@ -302,8 +304,7 @@ class JdkResolver {
                 }
             } else if (responseCode == HttpURLConnection.HTTP_OK) {
                 // Read response body (for version lists and direct responses)
-                try (BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(connection.getInputStream()))) {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
                     StringBuilder response = new StringBuilder();
                     String line;
                     while ((line = reader.readLine()) != null) {
@@ -312,8 +313,8 @@ class JdkResolver {
                     return response.toString().trim();
                 }
             } else {
-                throw new IOException("SDKMAN API request failed with response code: " + responseCode +
-                                    " for URL: " + urlString);
+                throw new IOException(
+                        "SDKMAN API request failed with response code: " + responseCode + " for URL: " + urlString);
             }
         } finally {
             connection.disconnect();
@@ -345,7 +346,7 @@ class JdkResolver {
                 return "temurin";
         }
     }
-    
+
     /**
      * Gets the latest version for a major version and vendor by querying SDKMAN API with caching.
      */
@@ -359,9 +360,9 @@ class JdkResolver {
 
         String platform = detectSdkmanPlatform();
         if ("exotic".equals(platform)) {
-            throw new IOException("Unsupported platform for JDK resolution. " +
-                "SDKMAN API is not available for this platform. " +
-                "Please specify an exact JDK version with jdkDistributionUrl instead of using major version resolution.");
+            throw new IOException(
+                    "Unsupported platform for JDK resolution. " + "SDKMAN API is not available for this platform. "
+                            + "Please specify an exact JDK version with jdkDistributionUrl instead of using major version resolution.");
         }
 
         try {
@@ -370,8 +371,9 @@ class JdkResolver {
             String allVersions = makeHttpRequest(versionsApiUrl);
 
             if (allVersions == null || allVersions.trim().isEmpty()) {
-                throw new IOException("SDKMAN API returned empty version list. " +
-                    "Please check your internet connection or specify an exact JDK version with jdkDistributionUrl.");
+                throw new IOException(
+                        "SDKMAN API returned empty version list. "
+                                + "Please check your internet connection or specify an exact JDK version with jdkDistributionUrl.");
             }
 
             // Parse versions and find the latest for the major version and vendor
@@ -385,14 +387,16 @@ class JdkResolver {
                 return latestVersion;
             }
 
-            throw new IOException("No JDK version found for " + majorVersion + " with vendor " + vendor + ". " +
-                "Available vendors: temurin, corretto, zulu, liberica, oracle, microsoft, semeru, graalvm");
+            throw new IOException("No JDK version found for " + majorVersion + " with vendor " + vendor + ". "
+                    + "Available vendors: temurin, corretto, zulu, liberica, oracle, microsoft, semeru, graalvm");
 
         } catch (IOException e) {
             throw e; // Re-throw IOException as-is
         } catch (Exception e) {
-            throw new IOException("Failed to resolve JDK version from SDKMAN API: " + e.getMessage() + ". " +
-                "Please check your internet connection or specify an exact JDK version with jdkDistributionUrl.", e);
+            throw new IOException(
+                    "Failed to resolve JDK version from SDKMAN API: " + e.getMessage() + ". "
+                            + "Please check your internet connection or specify an exact JDK version with jdkDistributionUrl.",
+                    e);
         }
     }
 
@@ -418,6 +422,4 @@ class JdkResolver {
 
         return latestVersion;
     }
-
-
 }

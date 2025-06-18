@@ -31,18 +31,18 @@ import java.util.Properties;
  * Supports update policies: never, daily, always, interval:X
  */
 class JdkVersionCache {
-    
+
     private final Path cacheDir;
     private final String updatePolicy;
-    
+
     JdkVersionCache(Path cacheDir, String updatePolicy) {
         this.cacheDir = cacheDir;
         this.updatePolicy = updatePolicy != null ? updatePolicy : "daily";
     }
-    
+
     /**
      * Gets cached version resolution if available and not expired.
-     * 
+     *
      * @param majorVersion the major version (e.g., "17")
      * @param vendor the vendor (e.g., "temurin")
      * @return cached resolved version or null if not cached or expired
@@ -51,39 +51,39 @@ class JdkVersionCache {
         if ("always".equals(updatePolicy)) {
             return null; // Never use cache
         }
-        
+
         try {
             Path cacheFile = getCacheFile(majorVersion, vendor);
             if (!Files.exists(cacheFile)) {
                 return null;
             }
-            
+
             Properties props = new Properties();
             props.load(Files.newBufferedReader(cacheFile));
-            
+
             String cachedVersion = props.getProperty("version");
             String timestampStr = props.getProperty("timestamp");
-            
+
             if (cachedVersion == null || timestampStr == null) {
                 return null;
             }
-            
+
             // Check if cache is expired
             if (isCacheExpired(timestampStr)) {
                 return null;
             }
-            
+
             return cachedVersion;
-            
+
         } catch (Exception e) {
             Logger.warn("Failed to read JDK version cache: " + e.getMessage());
             return null;
         }
     }
-    
+
     /**
      * Caches a version resolution result.
-     * 
+     *
      * @param majorVersion the major version
      * @param vendor the vendor
      * @param resolvedVersion the resolved specific version
@@ -92,24 +92,25 @@ class JdkVersionCache {
         if ("never".equals(updatePolicy)) {
             return; // Don't cache if policy is never
         }
-        
+
         try {
             Files.createDirectories(cacheDir);
-            
+
             Path cacheFile = getCacheFile(majorVersion, vendor);
             Properties props = new Properties();
             props.setProperty("version", resolvedVersion);
             props.setProperty("timestamp", String.valueOf(Instant.now().toEpochMilli()));
             props.setProperty("updatePolicy", updatePolicy);
-            
-            props.store(Files.newBufferedWriter(cacheFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING),
-                       "JDK version cache for " + majorVersion + " " + vendor);
-            
+
+            props.store(
+                    Files.newBufferedWriter(cacheFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING),
+                    "JDK version cache for " + majorVersion + " " + vendor);
+
         } catch (Exception e) {
             Logger.warn("Failed to cache JDK version: " + e.getMessage());
         }
     }
-    
+
     /**
      * Checks if the cache entry is expired based on the update policy.
      */
@@ -117,28 +118,28 @@ class JdkVersionCache {
         if ("never".equals(updatePolicy)) {
             return false; // Never expires
         }
-        
+
         try {
             long timestamp = Long.parseLong(timestampStr);
             Instant cacheTime = Instant.ofEpochMilli(timestamp);
             Instant now = Instant.now();
-            
+
             if ("daily".equals(updatePolicy)) {
-                return ChronoUnit.HOURS.between(cacheTime, now) >= 24;
+                return ChronoUnit.HOURS.between(cacheTime, now) >= HOURS_PER_DAY;
             } else if (updatePolicy.startsWith("interval:")) {
                 String intervalStr = updatePolicy.substring("interval:".length());
                 int intervalMinutes = Integer.parseInt(intervalStr);
                 return ChronoUnit.MINUTES.between(cacheTime, now) >= intervalMinutes;
             }
-            
+
             return false; // Unknown policy, don't expire
-            
+
         } catch (Exception e) {
             Logger.warn("Failed to parse cache timestamp: " + e.getMessage());
             return true; // Expire on error
         }
     }
-    
+
     /**
      * Gets the cache file path for a specific major version and vendor.
      */
@@ -146,7 +147,7 @@ class JdkVersionCache {
         String fileName = "jdk-" + majorVersion + "-" + vendor + ".properties";
         return cacheDir.resolve(fileName);
     }
-    
+
     /**
      * Clears all cached version resolutions.
      */
@@ -154,21 +155,21 @@ class JdkVersionCache {
         try {
             if (Files.exists(cacheDir)) {
                 Files.walk(cacheDir)
-                    .filter(path -> path.getFileName().toString().startsWith("jdk-") && 
-                                   path.getFileName().toString().endsWith(".properties"))
-                    .forEach(path -> {
-                        try {
-                            Files.deleteIfExists(path);
-                        } catch (IOException e) {
-                            Logger.warn("Failed to delete cache file: " + path);
-                        }
-                    });
+                        .filter(path -> path.getFileName().toString().startsWith("jdk-")
+                                && path.getFileName().toString().endsWith(".properties"))
+                        .forEach(path -> {
+                            try {
+                                Files.deleteIfExists(path);
+                            } catch (IOException e) {
+                                Logger.warn("Failed to delete cache file: " + path);
+                            }
+                        });
             }
         } catch (Exception e) {
             Logger.warn("Failed to clear JDK version cache: " + e.getMessage());
         }
     }
-    
+
     /**
      * Validates the update policy format.
      */
@@ -176,7 +177,7 @@ class JdkVersionCache {
         if (policy == null) {
             return false;
         }
-        
+
         switch (policy) {
             case "never":
             case "daily":

@@ -460,13 +460,17 @@ public class WrapperMojo extends AbstractMojo {
             if (toolchainJdkVendor != null && !toolchainJdkVendor.trim().isEmpty()) {
                 out.append("toolchainJdkVendor=" + toolchainJdkVendor.trim() + System.lineSeparator());
             }
-            if (toolchainJdkDistributionUrl != null && !toolchainJdkDistributionUrl.trim().isEmpty()) {
-                out.append("toolchainJdkDistributionUrl=" + toolchainJdkDistributionUrl.trim() + System.lineSeparator());
+            if (toolchainJdkDistributionUrl != null
+                    && !toolchainJdkDistributionUrl.trim().isEmpty()) {
+                out.append(
+                        "toolchainJdkDistributionUrl=" + toolchainJdkDistributionUrl.trim() + System.lineSeparator());
             }
             if (toolchainJdkSha256Sum != null && !toolchainJdkSha256Sum.trim().isEmpty()) {
                 out.append("toolchainJdkSha256Sum=" + toolchainJdkSha256Sum.trim() + System.lineSeparator());
             }
-            if (jdkUpdatePolicy != null && !jdkUpdatePolicy.trim().isEmpty() && !"daily".equals(jdkUpdatePolicy.trim())) {
+            if (jdkUpdatePolicy != null
+                    && !jdkUpdatePolicy.trim().isEmpty()
+                    && !"daily".equals(jdkUpdatePolicy.trim())) {
                 out.append("jdkUpdatePolicy=" + jdkUpdatePolicy.trim() + System.lineSeparator());
             }
         } catch (IOException ioe) {

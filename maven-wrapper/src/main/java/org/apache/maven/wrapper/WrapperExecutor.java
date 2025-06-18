@@ -228,11 +228,10 @@ public class WrapperExecutor {
             config.setJdkSha256Sum(jdkSha256Sum.trim());
         }
 
-        config.setAlwaysDownloadJdk(Boolean.parseBoolean(
-            getProperty(ALWAYS_DOWNLOAD_JDK, getEnv(WrapperConfiguration.JDK_DOWNLOAD_ENV))));
+        config.setAlwaysDownloadJdk(
+                Boolean.parseBoolean(getProperty(ALWAYS_DOWNLOAD_JDK, getEnv(WrapperConfiguration.JDK_DOWNLOAD_ENV))));
 
-        config.setUpdateToolchains(Boolean.parseBoolean(
-            getProperty(UPDATE_TOOLCHAINS, "true")));
+        config.setUpdateToolchains(Boolean.parseBoolean(getProperty(UPDATE_TOOLCHAINS, "true")));
 
         String jdkUpdatePolicy = getProperty(JDK_UPDATE_POLICY, "daily");
         if (JdkVersionCache.isValidUpdatePolicy(jdkUpdatePolicy)) {
@@ -250,8 +249,8 @@ public class WrapperExecutor {
      * Loads toolchain JDK properties from the wrapper properties file.
      */
     private void loadToolchainJdkProperties() {
-        String toolchainJdkVersion = getProperty(TOOLCHAIN_JDK_VERSION_PROPERTY,
-            getEnv(WrapperConfiguration.TOOLCHAIN_JDK_ENV));
+        String toolchainJdkVersion =
+                getProperty(TOOLCHAIN_JDK_VERSION_PROPERTY, getEnv(WrapperConfiguration.TOOLCHAIN_JDK_ENV));
         if (toolchainJdkVersion != null && !toolchainJdkVersion.trim().isEmpty()) {
             config.setToolchainJdkVersion(toolchainJdkVersion.trim());
         }
@@ -262,7 +261,8 @@ public class WrapperExecutor {
         }
 
         String toolchainJdkDistributionUrl = getProperty(TOOLCHAIN_JDK_DISTRIBUTION_URL_PROPERTY, null);
-        if (toolchainJdkDistributionUrl != null && !toolchainJdkDistributionUrl.trim().isEmpty()) {
+        if (toolchainJdkDistributionUrl != null
+                && !toolchainJdkDistributionUrl.trim().isEmpty()) {
             try {
                 config.setToolchainJdkDistributionUrl(new URI(toolchainJdkDistributionUrl.trim()));
             } catch (URISyntaxException e) {

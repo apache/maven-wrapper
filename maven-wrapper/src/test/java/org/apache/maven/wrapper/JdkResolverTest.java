@@ -18,9 +18,9 @@
  */
 package org.apache.maven.wrapper;
 
-import org.junit.jupiter.api.Test;
-
 import java.io.IOException;
+
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -32,9 +32,9 @@ class JdkResolverTest {
     @Test
     void testResolveTemurinJdk() throws IOException {
         JdkResolver resolver = new JdkResolver();
-        
+
         JdkResolver.JdkMetadata metadata = resolver.resolveJdk("17", "temurin");
-        
+
         assertNotNull(metadata);
         assertEquals("temurin", metadata.getVendor());
         assertNotNull(metadata.getDownloadUrl());
@@ -45,9 +45,9 @@ class JdkResolverTest {
     @Test
     void testResolveJdkWithDefaultVendor() throws IOException {
         JdkResolver resolver = new JdkResolver();
-        
+
         JdkResolver.JdkMetadata metadata = resolver.resolveJdk("21");
-        
+
         assertNotNull(metadata);
         assertEquals("temurin", metadata.getVendor());
         assertNotNull(metadata.getDownloadUrl());
@@ -56,11 +56,11 @@ class JdkResolverTest {
     @Test
     void testResolveJdkWithInvalidVersion() {
         JdkResolver resolver = new JdkResolver();
-        
+
         assertThrows(IllegalArgumentException.class, () -> {
             resolver.resolveJdk(null, "temurin");
         });
-        
+
         assertThrows(IllegalArgumentException.class, () -> {
             resolver.resolveJdk("", "temurin");
         });
