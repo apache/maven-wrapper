@@ -467,17 +467,41 @@ install_jdk() {
   verbose "Locating JDK root directory"
   local jdk_root_dir=""
 
-  # Search for bin/java in the extracted content (up to 3 levels deep to handle various archive structures)
-  for candidate in "$jdk_extract_dir" "$jdk_extract_dir"/* "$jdk_extract_dir"/*/* "$jdk_extract_dir"/*/*/*; do
-    if [ -f "$candidate/bin/java" ]; then
-      jdk_root_dir="$candidate"
-      verbose "Found JDK root at: $jdk_root_dir"
-      break
-    fi
-  done
+  # Debug: Show what was extracted
+  verbose "Contents of extraction directory:"
+  if [ "$__MVNW_VERBOSE" = true ]; then
+    find "$jdk_extract_dir" -type f -name "java" 2>/dev/null | head -10 || true
+    echo "Directory structure (first 3 levels):"
+    find "$jdk_extract_dir" -maxdepth 3 -type d 2>/dev/null | head -20 || true
+  fi
+
+  # Search for bin/java in the extracted content (up to 4 levels deep to handle various archive structures)
+  # Use find to be more thorough than shell globbing
+  local java_executable
+  java_executable=$(find "$jdk_extract_dir" -name "java" -type f -path "*/bin/java" | head -1)
+
+  if [ -n "$java_executable" ]; then
+    # Get the JDK root directory (parent of bin directory)
+    jdk_root_dir=$(dirname "$(dirname "$java_executable")")
+    verbose "Found JDK root at: $jdk_root_dir"
+  else
+    # Fallback to original method for compatibility
+    for candidate in "$jdk_extract_dir" "$jdk_extract_dir"/* "$jdk_extract_dir"/*/* "$jdk_extract_dir"/*/*/* "$jdk_extract_dir"/*/*/*/*; do
+      if [ -f "$candidate/bin/java" ]; then
+        jdk_root_dir="$candidate"
+        verbose "Found JDK root at: $jdk_root_dir (fallback method)"
+        break
+      fi
+    done
+  fi
 
   if [ -z "$jdk_root_dir" ]; then
-    die "Could not locate JDK root directory with bin/java in extracted archive"
+    echo "ERROR: Could not locate JDK root directory with bin/java in extracted archive"
+    echo "Extraction directory contents:"
+    find "$jdk_extract_dir" -type f -name "*java*" 2>/dev/null | head -10 || true
+    echo "Directory structure:"
+    find "$jdk_extract_dir" -maxdepth 4 -type d 2>/dev/null | head -30 || true
+    die "JDK extraction failed - no bin/java found"
   fi
 
   # Move the JDK root to the final location
