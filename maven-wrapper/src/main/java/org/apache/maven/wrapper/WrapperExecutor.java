@@ -204,17 +204,19 @@ public class WrapperExecutor {
      */
     private void loadJdkProperties() {
         // Load JDK properties with environment variable fallbacks
-        String jdkVersion = getProperty(JDK_VERSION_PROPERTY, getEnv(WrapperConfiguration.JDK_VERSION_ENV));
+        String jdkVersionDefault = getEnv(WrapperConfiguration.JDK_VERSION_ENV);
+        String jdkVersion = properties.getProperty(JDK_VERSION_PROPERTY, jdkVersionDefault);
         if (jdkVersion != null && !jdkVersion.trim().isEmpty()) {
             config.setJdkVersion(jdkVersion.trim());
         }
 
-        String jdkVendor = getProperty(JDK_VENDOR_PROPERTY, getEnv(WrapperConfiguration.JDK_VENDOR_ENV));
+        String jdkVendorDefault = getEnv(WrapperConfiguration.JDK_VENDOR_ENV);
+        String jdkVendor = properties.getProperty(JDK_VENDOR_PROPERTY, jdkVendorDefault);
         if (jdkVendor != null && !jdkVendor.trim().isEmpty()) {
             config.setJdkVendor(jdkVendor.trim());
         }
 
-        String jdkDistributionUrl = getProperty(JDK_DISTRIBUTION_URL_PROPERTY, null);
+        String jdkDistributionUrl = properties.getProperty(JDK_DISTRIBUTION_URL_PROPERTY, null);
         if (jdkDistributionUrl != null && !jdkDistributionUrl.trim().isEmpty()) {
             try {
                 config.setJdkDistributionUrl(new URI(jdkDistributionUrl.trim()));
@@ -223,17 +225,18 @@ public class WrapperExecutor {
             }
         }
 
-        String jdkSha256Sum = getProperty(JDK_SHA_256_SUM, null);
+        String jdkSha256Sum = properties.getProperty(JDK_SHA_256_SUM, null);
         if (jdkSha256Sum != null && !jdkSha256Sum.trim().isEmpty()) {
             config.setJdkSha256Sum(jdkSha256Sum.trim());
         }
 
-        config.setAlwaysDownloadJdk(
-                Boolean.parseBoolean(getProperty(ALWAYS_DOWNLOAD_JDK, getEnv(WrapperConfiguration.JDK_DOWNLOAD_ENV))));
+        String alwaysDownloadJdkDefault = getEnv(WrapperConfiguration.JDK_DOWNLOAD_ENV);
+        String alwaysDownloadJdk = properties.getProperty(ALWAYS_DOWNLOAD_JDK, alwaysDownloadJdkDefault);
+        config.setAlwaysDownloadJdk(Boolean.parseBoolean(alwaysDownloadJdk));
 
-        config.setUpdateToolchains(Boolean.parseBoolean(getProperty(UPDATE_TOOLCHAINS, "true")));
+        config.setUpdateToolchains(Boolean.parseBoolean(properties.getProperty(UPDATE_TOOLCHAINS, "true")));
 
-        String jdkUpdatePolicy = getProperty(JDK_UPDATE_POLICY, "daily");
+        String jdkUpdatePolicy = properties.getProperty(JDK_UPDATE_POLICY, "daily");
         if (JdkVersionCache.isValidUpdatePolicy(jdkUpdatePolicy)) {
             config.setJdkUpdatePolicy(jdkUpdatePolicy);
         } else {
@@ -249,18 +252,18 @@ public class WrapperExecutor {
      * Loads toolchain JDK properties from the wrapper properties file.
      */
     private void loadToolchainJdkProperties() {
-        String toolchainJdkVersion =
-                getProperty(TOOLCHAIN_JDK_VERSION_PROPERTY, getEnv(WrapperConfiguration.TOOLCHAIN_JDK_ENV));
+        String toolchainJdkVersionDefault = getEnv(WrapperConfiguration.TOOLCHAIN_JDK_ENV);
+        String toolchainJdkVersion = properties.getProperty(TOOLCHAIN_JDK_VERSION_PROPERTY, toolchainJdkVersionDefault);
         if (toolchainJdkVersion != null && !toolchainJdkVersion.trim().isEmpty()) {
             config.setToolchainJdkVersion(toolchainJdkVersion.trim());
         }
 
-        String toolchainJdkVendor = getProperty(TOOLCHAIN_JDK_VENDOR_PROPERTY, null);
+        String toolchainJdkVendor = properties.getProperty(TOOLCHAIN_JDK_VENDOR_PROPERTY, null);
         if (toolchainJdkVendor != null && !toolchainJdkVendor.trim().isEmpty()) {
             config.setToolchainJdkVendor(toolchainJdkVendor.trim());
         }
 
-        String toolchainJdkDistributionUrl = getProperty(TOOLCHAIN_JDK_DISTRIBUTION_URL_PROPERTY, null);
+        String toolchainJdkDistributionUrl = properties.getProperty(TOOLCHAIN_JDK_DISTRIBUTION_URL_PROPERTY, null);
         if (toolchainJdkDistributionUrl != null
                 && !toolchainJdkDistributionUrl.trim().isEmpty()) {
             try {
@@ -270,7 +273,7 @@ public class WrapperExecutor {
             }
         }
 
-        String toolchainJdkSha256Sum = getProperty(TOOLCHAIN_JDK_SHA_256_SUM, null);
+        String toolchainJdkSha256Sum = properties.getProperty(TOOLCHAIN_JDK_SHA_256_SUM, null);
         if (toolchainJdkSha256Sum != null && !toolchainJdkSha256Sum.trim().isEmpty()) {
             config.setToolchainJdkSha256Sum(toolchainJdkSha256Sum.trim());
         }

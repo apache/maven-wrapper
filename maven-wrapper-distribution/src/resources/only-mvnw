@@ -106,7 +106,7 @@ detect_architecture() {
   x86_64 | amd64) echo "x64" ;;
   aarch64 | arm64) echo "aarch64" ;;
   i386 | i686) echo "x86" ;;
-  *) echo "x64" ;;  # default fallback
+  *) echo "x64" ;; # default fallback
   esac
 }
 
@@ -157,7 +157,7 @@ detect_sdkman_platform() {
     case "$machine" in
     i686) echo "linuxx32" ;;
     x86_64) echo "linuxx64" ;;
-    armv6l|armv7l|armv8l) echo "linuxarm32hf" ;;
+    armv6l | armv7l | armv8l) echo "linuxarm32hf" ;;
     aarch64) echo "linuxarm64" ;;
     *) echo "exotic" ;;
     esac
@@ -169,7 +169,7 @@ detect_sdkman_platform() {
     *) echo "darwinx64" ;;
     esac
     ;;
-  CYGWIN*|MINGW*|MSYS*)
+  CYGWIN* | MINGW* | MSYS*)
     case "$machine" in
     x86_64) echo "windowsx64" ;;
     *) echo "exotic" ;;
@@ -188,15 +188,15 @@ get_sdkman_version() {
   # Normalize vendor to SDKMAN suffix
   local suffix
   case "$vendor" in
-  temurin|adoptium|adoptopenjdk|eclipse) suffix="-tem" ;;
-  corretto|amazon|aws) suffix="-amzn" ;;
-  zulu|azul) suffix="-zulu" ;;
-  liberica|bellsoft) suffix="-librca" ;;
+  temurin | adoptium | adoptopenjdk | eclipse) suffix="-tem" ;;
+  corretto | amazon | aws) suffix="-amzn" ;;
+  zulu | azul) suffix="-zulu" ;;
+  liberica | bellsoft) suffix="-librca" ;;
   oracle) suffix="-oracle" ;;
-  microsoft|ms) suffix="-ms" ;;
-  semeru|ibm) suffix="-sem" ;;
-  graalvm|graal) suffix="-grl" ;;
-  *) suffix="-tem" ;;  # Default to Temurin
+  microsoft | ms) suffix="-ms" ;;
+  semeru | ibm) suffix="-sem" ;;
+  graalvm | graal) suffix="-grl" ;;
+  *) suffix="-tem" ;; # Default to Temurin
   esac
 
   # Handle major version resolution by querying SDKMAN API
@@ -221,7 +221,7 @@ get_latest_version_from_sdkman() {
 
   if [ "$platform" = "exotic" ]; then
     verbose "Unsupported platform for JDK resolution: $platform"
-    return 1  # Cannot query SDKMAN for exotic platforms
+    return 1 # Cannot query SDKMAN for exotic platforms
   fi
 
   # Simple caching: check if we have a cached version from today
@@ -242,7 +242,7 @@ get_latest_version_from_sdkman() {
 
     if [ -n "$cache_age" ]; then
       local current_time="$(date +%s)"
-      local age_hours=$(( (current_time - cache_age) / 3600 ))
+      local age_hours=$(((current_time - cache_age) / 3600))
 
       if [ "$age_hours" -lt 24 ]; then
         local cached_version
@@ -268,12 +268,12 @@ get_latest_version_from_sdkman() {
     all_versions="$(wget -q -O - "$versions_api_url" 2>/dev/null)"
   else
     verbose "No HTTP client (curl/wget) available for SDKMAN API"
-    return 1  # No HTTP client available
+    return 1 # No HTTP client available
   fi
 
   if [ -z "$all_versions" ]; then
     verbose "SDKMAN API returned empty response"
-    return 1  # API call failed
+    return 1 # API call failed
   fi
 
   # Find the latest version for the major version and vendor
@@ -284,13 +284,13 @@ get_latest_version_from_sdkman() {
   if [ -n "$latest_version" ]; then
     # Cache the result
     mkdir -p "$cache_dir"
-    echo "$latest_version" > "$cache_file" 2>/dev/null || true
+    echo "$latest_version" >"$cache_file" 2>/dev/null || true
     verbose "Resolved JDK version from SDKMAN: ${major_version} -> ${latest_version}"
     echo "$latest_version"
     return 0
   else
     verbose "No matching JDK version found for ${major_version} with vendor suffix ${vendor_suffix}"
-    return 1  # No matching version found
+    return 1 # No matching version found
   fi
 }
 
@@ -363,7 +363,7 @@ install_jdk() {
   local always_download="${5:-false}"
 
   if [ -z "$version" ]; then
-    return 0  # No JDK version specified
+    return 0 # No JDK version specified
   fi
 
   # Determine JDK installation directory
@@ -390,7 +390,7 @@ install_jdk() {
   # Prepare temp dir for JDK download
   local jdk_tmp_dir
   if jdk_tmp_dir="$(mktemp -d)" && [ -d "$jdk_tmp_dir" ]; then
-    local jdk_clean() { rm -rf -- "$jdk_tmp_dir"; }
+    jdk_clean() { rm -rf -- "$jdk_tmp_dir"; }
     trap jdk_clean HUP INT TERM EXIT
   else
     die "cannot create temp dir for JDK"

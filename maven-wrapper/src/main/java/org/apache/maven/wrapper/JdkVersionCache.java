@@ -31,6 +31,7 @@ import java.util.Properties;
  * Supports update policies: never, daily, always, interval:X
  */
 class JdkVersionCache {
+    private static final int HOURS_PER_DAY = 24;
 
     private final Path cacheDir;
     private final String updatePolicy;

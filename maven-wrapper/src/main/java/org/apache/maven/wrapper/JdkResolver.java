@@ -24,6 +24,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.Locale;
 
 /**
@@ -283,8 +284,8 @@ class JdkResolver {
 
         try {
             connection.setRequestMethod("GET");
-            connection.setConnectTimeout(10000); // 10 seconds
-            connection.setReadTimeout(30000); // 30 seconds
+            connection.setConnectTimeout(CONNECTION_TIMEOUT_MS); // 10 seconds
+            connection.setReadTimeout(READ_TIMEOUT_MS); // 30 seconds
             connection.setInstanceFollowRedirects(false); // Don't follow redirects automatically
 
             // Set User-Agent to identify as Maven Wrapper
