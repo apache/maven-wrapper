@@ -307,6 +307,17 @@ trim() {
   printf "%s" "${1}" | tr -d '[:space:]'
 }
 
+# Initialize JDK-related variables with empty defaults
+jdkVersion=""
+jdkVendor=""
+jdkDistributionUrl=""
+jdkSha256Sum=""
+alwaysDownloadJdk=""
+toolchainJdkVersion=""
+toolchainJdkVendor=""
+toolchainJdkDistributionUrl=""
+toolchainJdkSha256Sum=""
+
 # parse distributionUrl and optional distributionSha256Sum, requires .mvn/wrapper/maven-wrapper.properties
 # also parse JDK-related properties
 while IFS="=" read -r key value; do
