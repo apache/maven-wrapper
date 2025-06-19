@@ -202,7 +202,6 @@ get_sdkman_version() {
   # Handle major version resolution by querying SDKMAN API
   if echo "$version" | grep -q '^[0-9]\+$'; then
     # This is a major version, get the latest from SDKMAN
-    latest_version
     latest_version="$(get_latest_version_from_sdkman "$version" "$suffix")"
     if [ -n "$latest_version" ]; then
       version="$latest_version"
@@ -230,7 +229,6 @@ get_latest_version_from_sdkman() {
 
   # Check cache if it exists and is less than 24 hours old
   if [ -f "$cache_file" ]; then
-    cache_age
     if command -v stat >/dev/null; then
       # Linux/macOS stat command
       if stat -c %Y "$cache_file" >/dev/null 2>&1; then
@@ -245,7 +243,6 @@ get_latest_version_from_sdkman() {
       age_hours=$(((current_time - cache_age) / 3600))
 
       if [ "$age_hours" -lt 24 ]; then
-        cached_version
         cached_version="$(cat "$cache_file" 2>/dev/null)"
         if [ -n "$cached_version" ]; then
           verbose "Using cached JDK version: ${major_version} -> ${cached_version}"
@@ -258,7 +255,6 @@ get_latest_version_from_sdkman() {
 
   # Query SDKMAN API for all available versions
   versions_api_url="https://api.sdkman.io/2/candidates/java/${platform}/versions/all"
-  all_versions
 
   verbose "Querying SDKMAN API for JDK versions: $versions_api_url"
 
@@ -278,7 +274,6 @@ get_latest_version_from_sdkman() {
 
   # Find the latest version for the major version and vendor
   # SDKMAN returns versions in a comma-separated list
-  latest_version
   latest_version="$(echo "$all_versions" | tr ',' '\n' | grep "^${major_version}\." | grep -- "${vendor_suffix}\$" | head -1 | sed "s/${vendor_suffix}\$//")"
 
   if [ -n "$latest_version" ]; then
@@ -399,7 +394,6 @@ install_jdk() {
   mkdir -p "${jdk_home%/*}"
 
   # Prepare temp dir for JDK download
-  jdk_tmp_dir
   if jdk_tmp_dir="$(mktemp -d)" && [ -d "$jdk_tmp_dir" ]; then
     jdk_clean() { rm -rf -- "$jdk_tmp_dir"; }
     trap jdk_clean HUP INT TERM EXIT
@@ -477,7 +471,6 @@ install_jdk() {
 
   # Search for bin/java in the extracted content (up to 4 levels deep to handle various archive structures)
   # Use find to be more thorough than shell globbing
-  java_executable
   java_executable=$(find "$jdk_extract_dir" -name "java" -type f -path "*/bin/java" | head -1)
 
   if [ -n "$java_executable" ]; then
