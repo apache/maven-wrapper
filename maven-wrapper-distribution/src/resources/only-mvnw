@@ -111,50 +111,50 @@ detect_architecture() {
 }
 
 resolve_jdk_url() {
-  local version="$1"
-  local vendor="${2:-temurin}"
+  _resolve_version="$1"
+  _resolve_vendor="${2:-temurin}"
 
   # Detect SDKMAN platform
-  local platform="$(detect_sdkman_platform)"
+  _resolve_platform="$(detect_sdkman_platform)"
 
-  if [ "$platform" = "exotic" ]; then
+  if [ "$_resolve_platform" = "exotic" ]; then
     die "Unsupported platform for JDK download. Please use a direct JDK URL instead."
   fi
 
   # Normalize vendor and get SDKMAN version
-  local sdkman_version="$(get_sdkman_version "$version" "$vendor")"
+  _resolve_sdkman_version="$(get_sdkman_version "$_resolve_version" "$_resolve_vendor")"
 
   # Use SDKMAN API to get download URL
-  local sdkman_api_url="https://api.sdkman.io/2/broker/download/java/${sdkman_version}/${platform}"
+  _resolve_sdkman_api_url="https://api.sdkman.io/2/broker/download/java/${_resolve_sdkman_version}/${_resolve_platform}"
 
-  verbose "Resolving JDK download URL from SDKMAN API: $sdkman_api_url"
+  verbose "Resolving JDK download URL from SDKMAN API: $_resolve_sdkman_api_url"
 
   # Make HTTP request to SDKMAN API (handle 302 redirect)
-  local download_url
+  _resolve_download_url
   if command -v curl >/dev/null; then
     # Get the redirect location from SDKMAN API
-    download_url="$(curl -s -I "$sdkman_api_url" 2>/dev/null | grep -i '^location:' | cut -d' ' -f2- | tr -d '\r\n')"
+    _resolve_download_url="$(curl -s -I "$_resolve_sdkman_api_url" 2>/dev/null | grep -i '^location:' | cut -d' ' -f2- | tr -d '\r\n')"
   elif command -v wget >/dev/null; then
     # wget can also handle redirects, but we need to extract the location
-    download_url="$(wget -q -S -O /dev/null "$sdkman_api_url" 2>&1 | grep -i '^  location:' | cut -d' ' -f4- | tr -d '\r\n')"
+    _resolve_download_url="$(wget -q -S -O /dev/null "$_resolve_sdkman_api_url" 2>&1 | grep -i '^  location:' | cut -d' ' -f4- | tr -d '\r\n')"
   else
     die "Cannot resolve JDK URL: curl or wget required"
   fi
 
-  if [ -z "$download_url" ]; then
-    die "Failed to resolve JDK download URL for $sdkman_version on $platform"
+  if [ -z "$_resolve_download_url" ]; then
+    die "Failed to resolve JDK download URL for $_resolve_sdkman_version on $_resolve_platform"
   fi
 
-  echo "$download_url"
+  echo "$_resolve_download_url"
 }
 
 detect_sdkman_platform() {
-  local kernel="$(uname -s)"
-  local machine="$(uname -m)"
+  _detect_kernel="$(uname -s)"
+  _detect_machine="$(uname -m)"
 
-  case "$kernel" in
+  case "$_detect_kernel" in
   Linux)
-    case "$machine" in
+    case "$_detect_machine" in
     i686) echo "linuxx32" ;;
     x86_64) echo "linuxx64" ;;
     armv6l | armv7l | armv8l) echo "linuxarm32hf" ;;
@@ -163,14 +163,14 @@ detect_sdkman_platform() {
     esac
     ;;
   Darwin)
-    case "$machine" in
+    case "$_detect_machine" in
     x86_64) echo "darwinx64" ;;
     arm64) echo "darwinarm64" ;;
     *) echo "darwinx64" ;;
     esac
     ;;
   CYGWIN* | MINGW* | MSYS*)
-    case "$machine" in
+    case "$_detect_machine" in
     x86_64) echo "windowsx64" ;;
     *) echo "exotic" ;;
     esac
@@ -182,11 +182,11 @@ detect_sdkman_platform() {
 }
 
 get_sdkman_version() {
-  local version="$1"
-  local vendor="$2"
+  version="$1"
+  vendor="$2"
 
   # Normalize vendor to SDKMAN suffix
-  local suffix
+  suffix
   case "$vendor" in
   temurin | adoptium | adoptopenjdk | eclipse) suffix="-tem" ;;
   corretto | amazon | aws) suffix="-amzn" ;;
@@ -202,7 +202,7 @@ get_sdkman_version() {
   # Handle major version resolution by querying SDKMAN API
   if echo "$version" | grep -q '^[0-9]\+$'; then
     # This is a major version, get the latest from SDKMAN
-    local latest_version
+    latest_version
     latest_version="$(get_latest_version_from_sdkman "$version" "$suffix")"
     if [ -n "$latest_version" ]; then
       version="$latest_version"
@@ -215,9 +215,9 @@ get_sdkman_version() {
 }
 
 get_latest_version_from_sdkman() {
-  local major_version="$1"
-  local vendor_suffix="$2"
-  local platform="$(detect_sdkman_platform)"
+  major_version="$1"
+  vendor_suffix="$2"
+  platform="$(detect_sdkman_platform)"
 
   if [ "$platform" = "exotic" ]; then
     verbose "Unsupported platform for JDK resolution: $platform"
@@ -225,12 +225,12 @@ get_latest_version_from_sdkman() {
   fi
 
   # Simple caching: check if we have a cached version from today
-  local cache_file="${MAVEN_USER_HOME}/wrapper/cache/jdk-${major_version}${vendor_suffix}.cache"
-  local cache_dir="$(dirname "$cache_file")"
+  cache_file="${MAVEN_USER_HOME}/wrapper/cache/jdk-${major_version}${vendor_suffix}.cache"
+  cache_dir="$(dirname "$cache_file")"
 
   # Check cache if it exists and is less than 24 hours old
   if [ -f "$cache_file" ]; then
-    local cache_age
+    cache_age
     if command -v stat >/dev/null; then
       # Linux/macOS stat command
       if stat -c %Y "$cache_file" >/dev/null 2>&1; then
@@ -241,11 +241,11 @@ get_latest_version_from_sdkman() {
     fi
 
     if [ -n "$cache_age" ]; then
-      local current_time="$(date +%s)"
-      local age_hours=$(((current_time - cache_age) / 3600))
+      current_time="$(date +%s)"
+      age_hours=$(((current_time - cache_age) / 3600))
 
       if [ "$age_hours" -lt 24 ]; then
-        local cached_version
+        cached_version
         cached_version="$(cat "$cache_file" 2>/dev/null)"
         if [ -n "$cached_version" ]; then
           verbose "Using cached JDK version: ${major_version} -> ${cached_version}"
@@ -257,8 +257,8 @@ get_latest_version_from_sdkman() {
   fi
 
   # Query SDKMAN API for all available versions
-  local versions_api_url="https://api.sdkman.io/2/candidates/java/${platform}/versions/all"
-  local all_versions
+  versions_api_url="https://api.sdkman.io/2/candidates/java/${platform}/versions/all"
+  all_versions
 
   verbose "Querying SDKMAN API for JDK versions: $versions_api_url"
 
@@ -278,7 +278,7 @@ get_latest_version_from_sdkman() {
 
   # Find the latest version for the major version and vendor
   # SDKMAN returns versions in a comma-separated list
-  local latest_version
+  latest_version
   latest_version="$(echo "$all_versions" | tr ',' '\n' | grep "^${major_version}\." | grep -- "${vendor_suffix}\$" | head -1 | sed "s/${vendor_suffix}\$//")"
 
   if [ -n "$latest_version" ]; then
@@ -367,19 +367,19 @@ MAVEN_HOME="${MAVEN_USER_HOME}/wrapper/dists/${distributionUrlNameMain-}/$(hash_
 
 # JDK management
 install_jdk() {
-  local version="$1"
-  local vendor="${2:-temurin}"
-  local url="$3"
-  local checksum="$4"
-  local always_download="${5:-false}"
+  version="$1"
+  vendor="${2:-temurin}"
+  url="$3"
+  checksum="$4"
+  always_download="${5:-false}"
 
   if [ -z "$version" ]; then
     return 0 # No JDK version specified
   fi
 
   # Determine JDK installation directory
-  local jdk_dir_name="jdk-${version}-${vendor}"
-  local jdk_home="${MAVEN_USER_HOME}/wrapper/jdks/${jdk_dir_name}"
+  jdk_dir_name="jdk-${version}-${vendor}"
+  jdk_home="${MAVEN_USER_HOME}/wrapper/jdks/${jdk_dir_name}"
 
   # Check if JDK already exists and we're not forcing re-download
   if [ -d "$jdk_home" ] && [ "$always_download" != "true" ]; then
@@ -399,7 +399,7 @@ install_jdk() {
   mkdir -p "${jdk_home%/*}"
 
   # Prepare temp dir for JDK download
-  local jdk_tmp_dir
+  jdk_tmp_dir
   if jdk_tmp_dir="$(mktemp -d)" && [ -d "$jdk_tmp_dir" ]; then
     jdk_clean() { rm -rf -- "$jdk_tmp_dir"; }
     trap jdk_clean HUP INT TERM EXIT
@@ -408,8 +408,8 @@ install_jdk() {
   fi
 
   # Download JDK
-  local jdk_filename="${url##*/}"
-  local jdk_file="$jdk_tmp_dir/$jdk_filename"
+  jdk_filename="${url##*/}"
+  jdk_file="$jdk_tmp_dir/$jdk_filename"
 
   verbose "Downloading JDK to: $jdk_file"
 
@@ -425,7 +425,7 @@ install_jdk() {
   # Verify checksum if provided
   if [ -n "$checksum" ]; then
     verbose "Verifying JDK checksum"
-    local checksum_result=false
+    checksum_result=false
     if command -v sha256sum >/dev/null; then
       if echo "$checksum  $jdk_file" | sha256sum -c - >/dev/null 2>&1; then
         checksum_result=true
@@ -443,7 +443,7 @@ install_jdk() {
   fi
 
   # Extract JDK to temporary location first
-  local jdk_extract_dir="$jdk_tmp_dir/extract"
+  jdk_extract_dir="$jdk_tmp_dir/extract"
   mkdir -p "$jdk_extract_dir"
   verbose "Extracting JDK archive to temporary location"
 
@@ -465,7 +465,7 @@ install_jdk() {
 
   # Find the actual JDK root directory (where bin/java exists)
   verbose "Locating JDK root directory"
-  local jdk_root_dir=""
+  jdk_root_dir=""
 
   # Debug: Show what was extracted
   verbose "Contents of extraction directory:"
@@ -477,7 +477,7 @@ install_jdk() {
 
   # Search for bin/java in the extracted content (up to 4 levels deep to handle various archive structures)
   # Use find to be more thorough than shell globbing
-  local java_executable
+  java_executable
   java_executable=$(find "$jdk_extract_dir" -name "java" -type f -path "*/bin/java" | head -1)
 
   if [ -n "$java_executable" ]; then
