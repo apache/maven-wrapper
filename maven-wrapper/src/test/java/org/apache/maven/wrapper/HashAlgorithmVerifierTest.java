@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class HashAlgorithmVerifierTest {
 
     @TempDir
-    public File temporaryFolder;
+    private File temporaryFolder;
 
     private Verifier verifier = new HashAlgorithmVerifier();
 
