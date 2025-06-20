@@ -19,8 +19,11 @@
 package org.apache.maven.wrapper;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIf;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -29,7 +32,32 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class JdkResolverTest {
 
+    /**
+     * Checks if SDKMAN API is available for network-dependent tests.
+     * This prevents test failures in CI environments where the API might be unavailable.
+     */
+    static boolean isSdkmanApiAvailable() {
+        try {
+            URL url = new URL("https://api.sdkman.io/2/candidates/java/linuxx64/versions/all");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("HEAD");
+            connection.setConnectTimeout(5000); // 5 second timeout
+            connection.setReadTimeout(5000);
+            connection.setRequestProperty("User-Agent", "Maven-Wrapper-Test/3.3.0");
+
+            int responseCode = connection.getResponseCode();
+            connection.disconnect();
+
+            // Consider API available if we get any response (200, 302, etc.) but not 503/502/504
+            return responseCode != 503 && responseCode != 502 && responseCode != 504;
+        } catch (Exception e) {
+            // API is not available
+            return false;
+        }
+    }
+
     @Test
+    @EnabledIf("isSdkmanApiAvailable")
     void testResolveTemurinJdk() throws IOException {
         JdkResolver resolver = new JdkResolver();
 
@@ -43,6 +71,7 @@ class JdkResolverTest {
     }
 
     @Test
+    @EnabledIf("isSdkmanApiAvailable")
     void testResolveJdkWithDefaultVendor() throws IOException {
         JdkResolver resolver = new JdkResolver();
 
@@ -67,6 +96,7 @@ class JdkResolverTest {
     }
 
     @Test
+    @EnabledIf("isSdkmanApiAvailable")
     void testResolveJdkWithUnsupportedVendor() {
         JdkResolver resolver = new JdkResolver();
 
@@ -80,12 +110,13 @@ class JdkResolverTest {
     }
 
     @Test
+    @EnabledIf("isSdkmanApiAvailable")
     void testResolveMajorVersionQueriesApi() throws IOException {
         JdkResolver resolver = new JdkResolver();
 
         // Test that major version resolution actually queries SDKMAN API
-        // This test will make a real API call - in a production test suite,
-        // you might want to mock this
+        // This test makes a real API call but is conditional on API availability
+        // to prevent flaky failures in CI environments
         JdkResolver.JdkMetadata metadata = resolver.resolveJdk("17", "temurin");
 
         assertNotNull(metadata);

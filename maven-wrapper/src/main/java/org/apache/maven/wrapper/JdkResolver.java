@@ -274,11 +274,50 @@ class JdkResolver {
     }
 
     /**
-     * Makes an HTTP GET request to SDKMAN API.
-     * For download URLs: returns the redirect location (302 redirect).
-     * For version lists: returns the response body content.
+     * Makes an HTTP request with retry logic for transient failures.
+     * Returns either the redirect location (for download URLs) or response body (for version lists).
      */
     private String makeHttpRequest(String urlString) throws IOException {
+        return makeHttpRequestWithRetry(urlString, 3, 1000); // 3 retries with 1 second initial delay
+    }
+
+    /**
+     * Makes an HTTP request with configurable retry logic and exponential backoff.
+     */
+    private String makeHttpRequestWithRetry(String urlString, int maxRetries, long initialDelayMs) throws IOException {
+        IOException lastException = null;
+
+        for (int attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                return performHttpRequest(urlString);
+            } catch (IOException e) {
+                lastException = e;
+
+                // Check if this is a retryable error
+                if (attempt < maxRetries && isRetryableError(e)) {
+                    long delayMs = initialDelayMs * (1L << attempt); // Exponential backoff
+                    Logger.info("SDKMAN API request failed (attempt " + (attempt + 1) + "/" + (maxRetries + 1)
+                            + "), retrying in " + delayMs + "ms: " + e.getMessage());
+
+                    try {
+                        Thread.sleep(delayMs);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw new IOException("Request interrupted during retry delay", ie);
+                    }
+                } else {
+                    break; // Non-retryable error or max retries reached
+                }
+            }
+        }
+
+        throw lastException;
+    }
+
+    /**
+     * Performs the actual HTTP request without retry logic.
+     */
+    private String performHttpRequest(String urlString) throws IOException {
         URL url = new URL(urlString);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
@@ -320,6 +359,31 @@ class JdkResolver {
         } finally {
             connection.disconnect();
         }
+    }
+
+    /**
+     * Determines if an error is retryable (transient network issues, rate limiting, etc.).
+     */
+    private boolean isRetryableError(IOException e) {
+        String message = e.getMessage();
+        if (message != null) {
+            String lowerMessage = message.toLowerCase();
+            // Retry on common transient errors
+            return lowerMessage.contains("503")
+                    || // Service Unavailable
+                    lowerMessage.contains("502")
+                    || // Bad Gateway
+                    lowerMessage.contains("504")
+                    || // Gateway Timeout
+                    lowerMessage.contains("429")
+                    || // Too Many Requests
+                    lowerMessage.contains("timeout")
+                    || // Various timeout errors
+                    lowerMessage.contains("connection reset")
+                    || lowerMessage.contains("connection refused")
+                    || lowerMessage.contains("temporary failure");
+        }
+        return false;
     }
 
     /**
