@@ -87,6 +87,15 @@ public class PathAssembler {
     }
 
     /**
+     * Returns the base directory for this path assembler.
+     *
+     * @return the base directory
+     */
+    public Path getBaseDir() {
+        return mavenUserHome;
+    }
+
+    /**
      * Local distribution
      */
     public static class LocalDistribution {

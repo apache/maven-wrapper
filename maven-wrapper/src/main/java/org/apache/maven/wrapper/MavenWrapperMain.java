@@ -70,13 +70,32 @@ public class MavenWrapperMain {
         addSystemProperties(rootDir);
 
         WrapperExecutor wrapperExecutor = WrapperExecutor.forWrapperPropertiesFile(propertiesFile);
-        wrapperExecutor.execute(
-                args,
-                new Installer(
-                        new DefaultDownloader("mvnw", wrapperVersion),
-                        new HashAlgorithmVerifier(),
-                        new PathAssembler(mavenUserHome())),
-                new BootstrapMainStarter());
+
+        Installer installer = new Installer(
+                new DefaultDownloader("mvnw", wrapperVersion),
+                new HashAlgorithmVerifier(),
+                new PathAssembler(mavenUserHome()));
+
+        // Install JDKs if configured
+        try {
+            Path jdkHome = installer.createJdkDist(wrapperExecutor.getConfiguration());
+            if (jdkHome != null) {
+                Logger.info("Using JDK at " + jdkHome);
+                System.setProperty("java.home", jdkHome.toString());
+                // Set JAVA_HOME environment variable for child processes
+                // Note: This won't affect the current process's environment, but can be used by Maven
+            }
+
+            Path toolchainJdkHome = installer.createToolchainJdkDist(wrapperExecutor.getConfiguration());
+            if (toolchainJdkHome != null) {
+                Logger.info("Toolchain JDK available at " + toolchainJdkHome);
+            }
+        } catch (Exception e) {
+            Logger.warn("Failed to install JDK: " + e.getMessage());
+            // Continue with Maven execution even if JDK installation fails
+        }
+
+        wrapperExecutor.execute(args, installer, new BootstrapMainStarter());
     }
 
     private static Map<String, String> parseSystemPropertiesFromArgs(String[] args) {
