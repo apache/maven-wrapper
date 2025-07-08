@@ -21,4 +21,4 @@
 # Apache Maven Wrapper debug script, version @@project.version@@
 # -----------------------------------------------------------------------------
 
-. "$(basedir "$0")"/mvnw
+. "$(dirname "$0")"/mvnw
