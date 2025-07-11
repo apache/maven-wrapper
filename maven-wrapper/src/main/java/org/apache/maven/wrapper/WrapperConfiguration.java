@@ -29,6 +29,12 @@ public class WrapperConfiguration {
 
     public static final String ALWAYS_DOWNLOAD_ENV = "MAVEN_WRAPPER_ALWAYS_DOWNLOAD";
 
+    public static final String JDK_VERSION_ENV = "MAVEN_WRAPPER_JDK_VERSION";
+
+    public static final String JDK_DOWNLOAD_ENV = "MAVEN_WRAPPER_JDK_DOWNLOAD";
+
+    public static final String TOOLCHAIN_JDK_ENV = "MAVEN_WRAPPER_TOOLCHAIN_JDK";
+
     private boolean alwaysUnpack = Boolean.parseBoolean(System.getenv(ALWAYS_UNPACK_ENV));
 
     private boolean alwaysDownload = Boolean.parseBoolean(System.getenv(ALWAYS_DOWNLOAD_ENV));
@@ -39,9 +45,23 @@ public class WrapperConfiguration {
 
     private Path distributionPath = Installer.DEFAULT_DISTRIBUTION_PATH;
 
+    private String jdkVersion;
+
+    private String jdkDistributionUrl;
+
+    private String jdkSha256Sum;
+
+    private String toolchainJdkVersion;
+
+    private String toolchainJdkDistributionUrl;
+
+    private String toolchainJdkSha256Sum;
+
     private String zipBase = PathAssembler.MAVEN_USER_HOME_STRING;
 
     private Path zipPath = Installer.DEFAULT_DISTRIBUTION_PATH;
+
+    private boolean alwaysDownloadJdk;
 
     private String distributionSha256Sum;
 
@@ -107,5 +127,61 @@ public class WrapperConfiguration {
 
     public void setDistributionSha256Sum(String distributionSha256Sum) {
         this.distributionSha256Sum = distributionSha256Sum;
+    }
+
+    public String getJdkVersion() {
+        return jdkVersion;
+    }
+
+    public void setJdkVersion(String jdkVersion) {
+        this.jdkVersion = jdkVersion;
+    }
+
+    public String getJdkDistributionUrl() {
+        return jdkDistributionUrl;
+    }
+
+    public void setJdkDistributionUrl(String jdkDistributionUrl) {
+        this.jdkDistributionUrl = jdkDistributionUrl;
+    }
+
+    public String getJdkSha256Sum() {
+        return jdkSha256Sum;
+    }
+
+    public void setJdkSha256Sum(String jdkSha256Sum) {
+        this.jdkSha256Sum = jdkSha256Sum;
+    }
+
+    public String getToolchainJdkVersion() {
+        return toolchainJdkVersion;
+    }
+
+    public void setToolchainJdkVersion(String toolchainJdkVersion) {
+        this.toolchainJdkVersion = toolchainJdkVersion;
+    }
+
+    public String getToolchainJdkDistributionUrl() {
+        return toolchainJdkDistributionUrl;
+    }
+
+    public void setToolchainJdkDistributionUrl(String toolchainJdkDistributionUrl) {
+        this.toolchainJdkDistributionUrl = toolchainJdkDistributionUrl;
+    }
+
+    public String getToolchainJdkSha256Sum() {
+        return toolchainJdkSha256Sum;
+    }
+
+    public void setToolchainJdkSha256Sum(String toolchainJdkSha256Sum) {
+        this.toolchainJdkSha256Sum = toolchainJdkSha256Sum;
+    }
+
+    public boolean isAlwaysDownloadJdk() {
+        return alwaysDownloadJdk;
+    }
+
+    public void setAlwaysDownloadJdk(boolean alwaysDownloadJdk) {
+        this.alwaysDownloadJdk = alwaysDownloadJdk;
     }
 }

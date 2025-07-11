@@ -42,6 +42,20 @@ title %0
 @REM set %HOME% to equivalent of $HOME
 if "%HOME%" == "" (set "HOME=%HOMEDRIVE%%HOMEPATH%")
 
+@REM Add JDK environment variables
+if not "%MAVEN_WRAPPER_JDK_VERSION%" == "" (
+  echo Using JDK version: %MAVEN_WRAPPER_JDK_VERSION%
+)
+if not "%MAVEN_WRAPPER_TOOLCHAIN_JDK%" == "" (
+  echo Using toolchain JDK: %MAVEN_WRAPPER_TOOLCHAIN_JDK%
+)
+@REM Add JDK environment variables
+if not "%MAVEN_WRAPPER_JDK_VERSION%" == "" (
+  echo Using JDK version: %MAVEN_WRAPPER_JDK_VERSION%
+)
+if not "%MAVEN_WRAPPER_TOOLCHAIN_JDK%" == "" (
+  echo Using toolchain JDK: %MAVEN_WRAPPER_TOOLCHAIN_JDK%
+)
 @REM Execute a user defined script before this one
 if not "%MAVEN_SKIP_RC%" == "" goto skipRcPre
 @REM check for pre script, once with legacy .bat ending and once with .cmd ending
@@ -79,6 +93,9 @@ goto error
 
 @REM ==== END VALIDATION ====
 
+@REM Check for downloaded JDK from wrapper properties
+if exist "%WDIR%.mvnwrapperjdk" set "JAVA_HOME=%WDIR%.mvnwrapperjdk"
+if defined JAVA_HOME goto endDetectBaseDir
 :init
 
 @REM Find the project base dir, i.e. the directory that contains the folder ".mvn".

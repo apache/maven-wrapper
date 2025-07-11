@@ -128,7 +128,9 @@ public class InstallerTest {
         zipTo(explodedZipDir, zipDestination);
     }
 
+    @Test
     public void testCreateDist() throws Exception {
+        createTestZip(zipDestination);
         Path homeDir = install.createDist(configuration);
 
         assertEquals(mavenHomeDir, homeDir);

@@ -92,6 +92,289 @@ hash_string() {
 verbose() { :; }
 [ "${MVNW_VERBOSE-}" != true ] || verbose() { printf %s\\n "${1-}"; }
 
+# JDK management functions
+detect_platform() {
+  case "$(uname)" in
+  Darwin*) echo "macos" ;;
+  CYGWIN* | MINGW*) echo "windows" ;;
+  *) echo "linux" ;;
+  esac
+}
+
+detect_architecture() {
+  case "$(uname -m)" in
+  x86_64 | amd64) echo "x64" ;;
+  aarch64 | arm64) echo "aarch64" ;;
+  i386 | i686) echo "x86" ;;
+  *) echo "x64" ;; # default fallback
+  esac
+}
+
+# Disco API constants
+DISCO_API_BASE_URL="https://api.foojay.io/disco/v3.0"
+
+# Validate distribution name against known Disco API distributions
+validate_distribution() {
+  distribution="$1"
+  case "$distribution" in
+  aoj | aoj_openj9 | bisheng | corretto | debian | dragonwell | gluon_graalvm | graalvm | graalvm_ce11 | graalvm_ce16 | graalvm_ce17 | graalvm_ce19 | graalvm_ce20 | graalvm_ce8 | graalvm_community | jetbrains | kona | liberica | liberica_native | mandrel | microsoft | ojdk_build | openlogic | oracle | oracle_open_jdk | redhat | sap_machine | semeru | semeru_certified | temurin | trava | zulu | zulu_prime)
+    return 0 # Valid distribution
+    ;;
+  *)
+    return 1 # Invalid distribution
+    ;;
+  esac
+}
+
+# Display available distributions
+
+show_available_distributions() {
+  echo "Available JDK distributions:" >&2
+  echo "  - temurin (Eclipse Adoptium - recommended)" >&2
+  echo "  - corretto (Amazon)" >&2
+  echo "  - zulu (Azul)" >&2
+  echo "  - liberica (BellSoft)" >&2
+  echo "  - oracle_open_jdk (Oracle OpenJDK)" >&2
+  echo "  - microsoft (Microsoft)" >&2
+  echo "  - semeru (IBM)" >&2
+  echo "  - graalvm_ce11 (GraalVM CE 11)" >&2
+  echo "  - graalvm_ce17 (GraalVM CE 17)" >&2
+  echo "  - sap_machine (SAP)" >&2
+  echo "  - dragonwell (Alibaba)" >&2
+  echo "  - jetbrains (JetBrains Runtime)" >&2
+  echo "  - bisheng (Huawei)" >&2
+  echo "  - kona (Tencent)" >&2
+  echo "  - mandrel (Red Hat)" >&2
+  echo "  - openlogic (OpenLogic)" >&2
+  echo "" >&2
+  echo "For a complete list, see: ${DISCO_API_BASE_URL}/distributions" >&2
+}
+
+resolve_jdk_url() {
+  _resolve_version="$1"
+  _resolve_distribution="${2:-temurin}"
+
+  # Validate distribution name
+  if ! validate_distribution "$_resolve_distribution"; then
+    echo "ERROR: Unknown JDK distribution '$_resolve_distribution'." >&2
+    echo "" >&2
+    show_available_distributions
+    echo "" >&2
+    echo "To use a different distribution, set jdkDistribution in maven-wrapper.properties:" >&2
+    echo "  jdkDistribution=temurin" >&2
+    echo "  jdkDistribution=corretto" >&2
+    echo "  jdkDistribution=zulu" >&2
+    echo "" >&2
+    echo "Alternatively, specify an exact JDK URL with jdkDistributionUrl." >&2
+    die "Invalid JDK distribution: $_resolve_distribution"
+  fi
+
+  # Resolve version if it's a major version
+  _resolved_version="$(resolve_jdk_version "$_resolve_version" "$_resolve_distribution")"
+
+  # Detect platform and architecture for Disco API
+  _resolve_platform="$(detect_platform)"
+  _resolve_architecture="$(detect_architecture)"
+
+  # Determine archive type based on platform
+  case "$_resolve_platform" in
+  windows) _resolve_archive_type="zip" ;;
+  *) _resolve_archive_type="tar.gz" ;;
+  esac
+
+  # URL encode the version (replace + with %2B)
+  _resolve_encoded_version="$(echo "$_resolved_version" | sed 's/+/%2B/g')"
+
+  # Build Disco API URL for package information (more reliable than direct URI)
+  _resolve_disco_api_url="${DISCO_API_BASE_URL}/packages?distro=${_resolve_distribution}&javafx_bundled=false&archive_type=${_resolve_archive_type}&operating_system=${_resolve_platform}&package_type=jdk&version=${_resolve_encoded_version}&architecture=${_resolve_architecture}&latest=available&release_status=ga"
+
+  verbose "Resolving JDK download URL from Disco API: $_resolve_disco_api_url"
+
+  # Make HTTP request to Disco API
+  if command -v curl >/dev/null; then
+    _resolve_api_response="$(curl -s -f "$_resolve_disco_api_url" 2>/dev/null)"
+  elif command -v wget >/dev/null; then
+    _resolve_api_response="$(wget -q -O - "$_resolve_disco_api_url" 2>/dev/null)"
+  else
+    die "Cannot resolve JDK URL: curl or wget required"
+  fi
+
+  if [ -z "$_resolve_api_response" ]; then
+    die "Failed to get JDK package information for version $_resolved_version, distribution $_resolve_distribution on $_resolve_platform $_resolve_architecture"
+  fi
+
+  # Extract the download redirect URL from the JSON response
+  _resolve_redirect_url="$(echo "$_resolve_api_response" | sed -n 's/.*"pkg_download_redirect":"\([^"]*\)".*/\1/p' | head -1)"
+
+  if [ -z "$_resolve_redirect_url" ]; then
+    die "Failed to extract JDK download URL for version $_resolved_version, distribution $_resolve_distribution on $_resolve_platform $_resolve_architecture"
+  fi
+
+  # Follow the redirect to get the actual download URL
+  if command -v curl >/dev/null; then
+    _resolve_download_url="$(curl -s -I "$_resolve_redirect_url" 2>/dev/null | grep -i '^location:' | cut -d' ' -f2- | tr -d '\r\n')"
+  elif command -v wget >/dev/null; then
+    _resolve_download_url="$(wget -q -S -O /dev/null "$_resolve_redirect_url" 2>&1 | grep -i '^  location:' | cut -d' ' -f4- | tr -d '\r\n')"
+  else
+    # Fallback to using the redirect URL directly
+    _resolve_download_url="$_resolve_redirect_url"
+  fi
+
+  if [ -z "$_resolve_download_url" ]; then
+    # Fallback to using the redirect URL directly
+    _resolve_download_url="$_resolve_redirect_url"
+  fi
+
+  echo "$_resolve_download_url"
+}
+
+get_cache_max_age_seconds() {
+  update_policy="${1:-daily}"
+  case "$update_policy" in
+  "never") echo "31536000" ;;  # 1 year (effectively never)
+  "daily") echo "86400" ;;     # 24 hours
+  "always") echo "0" ;;        # Always expired
+  "weekly") echo "604800" ;;   # 7 days
+  "monthly") echo "2592000" ;; # 30 days
+  interval:*)
+    # Extract minutes from interval:X format
+    minutes="$(echo "$update_policy" | sed 's/interval://')"
+    if echo "$minutes" | grep -q '^[0-9]\+$'; then
+      echo $((minutes * 60))
+    else
+      verbose "Invalid interval format: $update_policy, using daily"
+      echo "86400"
+    fi
+    ;;
+  *)
+    verbose "Unknown update policy: $update_policy, using daily"
+    echo "86400"
+    ;;
+  esac
+}
+
+resolve_jdk_version() {
+  version="$1"
+  distribution="$2"
+
+  # Handle major version resolution by querying Disco API
+  if echo "$version" | grep -q '^[0-9]\+$'; then
+    # This is a major version, get the latest from Disco API
+    latest_version="$(get_latest_version_from_disco "$version" "$distribution")"
+    if [ -n "$latest_version" ]; then
+      version="$latest_version"
+    else
+      # The detailed error message was already printed by get_latest_version_from_disco
+      die "Failed to resolve JDK version $version with distribution $distribution."
+    fi
+  fi
+
+  echo "$version"
+}
+
+get_latest_version_from_disco() {
+  major_version="$1"
+  distribution="$2"
+
+  # Detect platform and architecture for Disco API
+  platform="$(detect_platform)"
+  architecture="$(detect_architecture)"
+
+  # Get update policy and calculate cache max age
+  update_policy="${jdkUpdatePolicy:-daily}"
+  cache_max_age_seconds="$(get_cache_max_age_seconds "$update_policy")"
+
+  # Cache file location
+  cache_file="${MAVEN_USER_HOME}/wrapper/cache/jdk-${major_version}-${distribution}.cache"
+  cache_dir="$(dirname "$cache_file")"
+
+  # Check cache based on update policy
+  if [ -f "$cache_file" ] && [ "$cache_max_age_seconds" -gt 0 ]; then
+    if command -v stat >/dev/null; then
+      # Linux/macOS stat command
+      if stat -c %Y "$cache_file" >/dev/null 2>&1; then
+        cache_age="$(stat -c %Y "$cache_file")"
+      elif stat -f %m "$cache_file" >/dev/null 2>&1; then
+        cache_age="$(stat -f %m "$cache_file")"
+      fi
+    fi
+
+    if [ -n "$cache_age" ]; then
+      current_time="$(date +%s)"
+      age_seconds=$((current_time - cache_age))
+
+      if [ "$age_seconds" -lt "$cache_max_age_seconds" ]; then
+        cached_version="$(cat "$cache_file" 2>/dev/null)"
+        if [ -n "$cached_version" ]; then
+          verbose "Using cached JDK version (policy: $update_policy): ${major_version} -> ${cached_version}"
+          echo "$cached_version"
+          return 0
+        fi
+      else
+        verbose "Cache expired (policy: $update_policy, age: ${age_seconds}s, max: ${cache_max_age_seconds}s)"
+      fi
+    fi
+  elif [ "$update_policy" = "always" ]; then
+    verbose "Update policy 'always': skipping cache check"
+  fi
+
+  # Determine archive type based on platform
+  case "$platform" in
+  windows) archive_type="zip" ;;
+  *) archive_type="tar.gz" ;;
+  esac
+
+  # Query Disco API for the latest version
+  disco_api_url="${DISCO_API_BASE_URL}/packages?distro=${distribution}&package_type=jdk&version=${major_version}&operating_system=${platform}&architecture=${architecture}&archive_type=${archive_type}&latest=available&release_status=ga"
+
+  verbose "Querying Disco API for JDK versions: $disco_api_url"
+
+  if command -v curl >/dev/null; then
+    api_response="$(curl -s -f "$disco_api_url" 2>/dev/null)"
+  elif command -v wget >/dev/null; then
+    api_response="$(wget -q -O - "$disco_api_url" 2>/dev/null)"
+  else
+    verbose "No HTTP client (curl/wget) available for Disco API"
+    return 1 # No HTTP client available
+  fi
+
+  if [ -z "$api_response" ]; then
+    verbose "Disco API returned empty response"
+    return 1 # API call failed
+  fi
+
+  # Extract the java_version from the JSON response (first result)
+  # Simple JSON parsing - look for "java_version":"..." pattern
+  latest_version="$(echo "$api_response" | sed -n 's/.*"java_version":"\([^"]*\)".*/\1/p' | head -1)"
+
+  if [ -n "$latest_version" ]; then
+    # Cache the result (unless policy is 'always')
+    if [ "$update_policy" != "always" ]; then
+      mkdir -p "$cache_dir"
+      echo "$latest_version" >"$cache_file" 2>/dev/null || true
+    fi
+    verbose "Resolved JDK version from Disco API (policy: $update_policy): ${major_version} -> ${latest_version}"
+    echo "$latest_version"
+    return 0
+  else
+    verbose "No matching JDK version found for ${major_version} with distribution ${distribution}"
+
+    # Show available alternatives for this major version
+    echo "ERROR: JDK ${major_version} is not available from distribution '${distribution}'." >&2
+    echo "" >&2
+    show_available_distributions
+    echo "" >&2
+    echo "To use a different distribution, set jdkDistribution in maven-wrapper.properties:" >&2
+    echo "  jdkDistribution=temurin" >&2
+    echo "  jdkDistribution=corretto" >&2
+    echo "  jdkDistribution=zulu" >&2
+    echo "" >&2
+    echo "Alternatively, specify an exact JDK URL with jdkDistributionUrl." >&2
+
+    return 1 # No matching version found
+  fi
+}
+
 die() {
   printf %s\\n "$1" >&2
   exit 1
@@ -105,14 +388,35 @@ trim() {
   printf "%s" "${1}" | tr -d '[:space:]'
 }
 
+# Initialize JDK-related variables with empty defaults
+jdkVersion=""
+jdkDistribution=""
+jdkDistributionUrl=""
+jdkSha256Sum=""
+alwaysDownloadJdk=""
+toolchainJdkVersion=""
+toolchainJdkDistribution=""
+toolchainJdkDistributionUrl=""
+toolchainJdkSha256Sum=""
+
 scriptDir="$(dirname "$0")"
 scriptName="$(basename "$0")"
 
 # parse distributionUrl and optional distributionSha256Sum, requires .mvn/wrapper/maven-wrapper.properties
+# also parse JDK-related properties
 while IFS="=" read -r key value; do
   case "${key-}" in
   distributionUrl) distributionUrl=$(trim "${value-}") ;;
   distributionSha256Sum) distributionSha256Sum=$(trim "${value-}") ;;
+  jdkVersion) jdkVersion=$(trim "${value-}") ;;
+  jdkDistribution) jdkDistribution=$(trim "${value-}") ;;
+  jdkDistributionUrl) jdkDistributionUrl=$(trim "${value-}") ;;
+  jdkSha256Sum) jdkSha256Sum=$(trim "${value-}") ;;
+  alwaysDownloadJdk) alwaysDownloadJdk=$(trim "${value-}") ;;
+  toolchainJdkVersion) toolchainJdkVersion=$(trim "${value-}") ;;
+  toolchainJdkDistribution) toolchainJdkDistribution=$(trim "${value-}") ;;
+  toolchainJdkDistributionUrl) toolchainJdkDistributionUrl=$(trim "${value-}") ;;
+  toolchainJdkSha256Sum) toolchainJdkSha256Sum=$(trim "${value-}") ;;
   esac
 done <"$scriptDir/.mvn/wrapper/maven-wrapper.properties"
 [ -n "${distributionUrl-}" ] || die "cannot read distributionUrl property in $scriptDir/.mvn/wrapper/maven-wrapper.properties"
@@ -145,10 +449,178 @@ distributionUrlNameMain="${distributionUrlNameMain%-bin}"
 MAVEN_USER_HOME="${MAVEN_USER_HOME:-${HOME}/.m2}"
 MAVEN_HOME="${MAVEN_USER_HOME}/wrapper/dists/${distributionUrlNameMain-}/$(hash_string "$distributionUrl")"
 
+# JDK management
+install_jdk() {
+  version="$1"
+  distribution="${2:-temurin}"
+  url="$3"
+  checksum="$4"
+
+  # Check if JDK selection should be bypassed
+  if [ -n "${MVNW_SKIP_JDK-}" ]; then
+    verbose "Skipping JDK installation due to MVNW_SKIP_JDK environment variable"
+    return 0
+  fi
+  always_download="${5:-false}"
+
+  if [ -z "$version" ]; then
+    return 0 # No JDK version specified
+  fi
+
+  # Determine JDK installation directory
+  jdk_dir_name="jdk-${version}-${distribution}"
+  jdk_home="${MAVEN_USER_HOME}/wrapper/jdks/${jdk_dir_name}"
+
+  # Check if JDK already exists and we're not forcing re-download
+  if [ -d "$jdk_home" ] && [ "$always_download" != "true" ]; then
+    verbose "JDK $version already installed at $jdk_home"
+    export JAVA_HOME="$jdk_home"
+    return 0
+  fi
+
+  # Resolve JDK URL if not provided
+  if [ -z "$url" ]; then
+    url="$(resolve_jdk_url "$version" "$distribution")"
+  fi
+
+  verbose "Installing JDK $version from $url"
+
+  # Create JDK directory
+  mkdir -p "${jdk_home%/*}"
+
+  # Prepare temp dir for JDK download
+  if jdk_tmp_dir="$(mktemp -d)" && [ -d "$jdk_tmp_dir" ]; then
+    jdk_clean() { rm -rf -- "$jdk_tmp_dir"; }
+    trap jdk_clean HUP INT TERM EXIT
+  else
+    die "cannot create temp dir for JDK"
+  fi
+
+  # Download JDK
+  jdk_filename="${url##*/}"
+  jdk_file="$jdk_tmp_dir/$jdk_filename"
+
+  verbose "Downloading JDK to: $jdk_file"
+
+  # Download using available tools
+  if [ -z "${MVNW_USERNAME-}" ] && command -v wget >/dev/null; then
+    wget ${__MVNW_QUIET_WGET:+"$__MVNW_QUIET_WGET"} "$url" -O "$jdk_file" || die "wget: Failed to fetch JDK from $url"
+  elif [ -z "${MVNW_USERNAME-}" ] && command -v curl >/dev/null; then
+    curl ${__MVNW_QUIET_CURL:+"$__MVNW_QUIET_CURL"} -f -L -o "$jdk_file" "$url" || die "curl: Failed to fetch JDK from $url"
+  else
+    die "Cannot download JDK: wget or curl required"
+  fi
+
+  # Verify checksum if provided
+  if [ -n "$checksum" ]; then
+    verbose "Verifying JDK checksum"
+    checksum_result=false
+    if command -v sha256sum >/dev/null; then
+      if echo "$checksum  $jdk_file" | sha256sum -c - >/dev/null 2>&1; then
+        checksum_result=true
+      fi
+    elif command -v shasum >/dev/null; then
+      if echo "$checksum  $jdk_file" | shasum -a 256 -c >/dev/null 2>&1; then
+        checksum_result=true
+      fi
+    else
+      echo "Warning: Checksum validation requested but neither 'sha256sum' or 'shasum' are available." >&2
+    fi
+    if [ "$checksum_result" = false ]; then
+      die "Error: Failed to validate JDK SHA-256 checksum"
+    fi
+  fi
+
+  # Extract JDK to temporary location first
+  jdk_extract_dir="$jdk_tmp_dir/extract"
+  mkdir -p "$jdk_extract_dir"
+  verbose "Extracting JDK archive to temporary location"
+
+  case "$jdk_filename" in
+  *.tar.gz | *.tgz)
+    tar xzf${__MVNW_QUIET_TAR:+"$__MVNW_QUIET_TAR"} "$jdk_file" -C "$jdk_extract_dir" || die "failed to extract JDK tar.gz"
+    ;;
+  *.zip)
+    if command -v unzip >/dev/null; then
+      unzip ${__MVNW_QUIET_UNZIP:+"$__MVNW_QUIET_UNZIP"} "$jdk_file" -d "$jdk_extract_dir" || die "failed to extract JDK zip"
+    else
+      die "Cannot extract JDK zip: unzip command not available"
+    fi
+    ;;
+  *)
+    die "Unsupported JDK archive format: $jdk_filename"
+    ;;
+  esac
+
+  # Find the actual JDK root directory (where bin/java exists)
+  verbose "Locating JDK root directory"
+  jdk_root_dir=""
+
+  # Debug: Show what was extracted
+  verbose "Contents of extraction directory:"
+  if [ "${MVNW_VERBOSE-}" = true ]; then
+    find "$jdk_extract_dir" -type f -name "java" 2>/dev/null | head -10 || true
+    echo "Directory structure (first 3 levels):"
+    find "$jdk_extract_dir" -maxdepth 3 -type d 2>/dev/null | head -20 || true
+  fi
+
+  # Search for bin/java in the extracted content (up to 4 levels deep to handle various archive structures)
+  # Use find to be more thorough than shell globbing
+  java_executable=$(find "$jdk_extract_dir" -name "java" -type f -path "*/bin/java" | head -1)
+
+  if [ -n "$java_executable" ]; then
+    # Get the JDK root directory (parent of bin directory)
+    jdk_root_dir=$(dirname "$(dirname "$java_executable")")
+    verbose "Found JDK root at: $jdk_root_dir"
+  else
+    # Fallback to original method for compatibility
+    for candidate in "$jdk_extract_dir" "$jdk_extract_dir"/* "$jdk_extract_dir"/*/* "$jdk_extract_dir"/*/*/* "$jdk_extract_dir"/*/*/*/*; do
+      if [ -f "$candidate/bin/java" ]; then
+        jdk_root_dir="$candidate"
+        verbose "Found JDK root at: $jdk_root_dir (fallback method)"
+        break
+      fi
+    done
+  fi
+
+  if [ -z "$jdk_root_dir" ]; then
+    echo "ERROR: Could not locate JDK root directory with bin/java in extracted archive"
+    echo "Extraction directory contents:"
+    find "$jdk_extract_dir" -type f -name "*java*" 2>/dev/null | head -10 || true
+    echo "Directory structure:"
+    find "$jdk_extract_dir" -maxdepth 4 -type d 2>/dev/null | head -30 || true
+    die "JDK extraction failed - no bin/java found"
+  fi
+
+  # Move the JDK root to the final location
+  verbose "Installing JDK to: $jdk_home"
+  mkdir -p "${jdk_home%/*}"
+  mv "$jdk_root_dir" "$jdk_home" || die "failed to move JDK to final location"
+
+  # Verify JDK installation
+  if [ ! -f "$jdk_home/bin/java" ]; then
+    die "JDK installation failed: java executable not found at $jdk_home/bin/java"
+  fi
+
+  verbose "JDK $version installed successfully at $jdk_home"
+  export JAVA_HOME="$jdk_home"
+
+  jdk_clean || :
+}
+
 exec_maven() {
   unset MVNW_VERBOSE MVNW_USERNAME MVNW_PASSWORD MVNW_REPOURL || :
   exec "$MAVEN_HOME/bin/$MVN_CMD" "$@" || die "cannot exec $MAVEN_HOME/bin/$MVN_CMD"
 }
+
+# Install JDK if configured
+install_jdk "$jdkVersion" "${jdkDistribution:-temurin}" "$jdkDistributionUrl" "$jdkSha256Sum" "$alwaysDownloadJdk"
+
+# Install toolchain JDK if configured (basic support - just download, no toolchains.xml update in script mode)
+if [ -n "$toolchainJdkVersion" ]; then
+  verbose "Installing toolchain JDK $toolchainJdkVersion"
+  install_jdk "$toolchainJdkVersion" "${toolchainJdkDistribution:-temurin}" "$toolchainJdkDistributionUrl" "$toolchainJdkSha256Sum" "$alwaysDownloadJdk"
+fi
 
 if [ -d "$MAVEN_HOME" ]; then
   verbose "found existing MAVEN_HOME at $MAVEN_HOME"

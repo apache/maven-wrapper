@@ -85,8 +85,21 @@ public class WrapperExecutor {
                 config.setZipPath(Paths.get(
                         getProperty(ZIP_STORE_PATH_PROPERTY, config.getZipPath().toString())));
                 config.setDistributionSha256Sum(getProperty(DISTRIBUTION_SHA_256_SUM, ""));
+
+                // JDK properties
+                config.setJdkVersion(properties.getProperty("jdkVersion"));
+                config.setJdkDistributionUrl(properties.getProperty("jdkDistributionUrl"));
+                config.setJdkSha256Sum(properties.getProperty("jdkSha256Sum"));
+                config.setToolchainJdkVersion(properties.getProperty("toolchainJdkVersion"));
+                config.setToolchainJdkDistributionUrl(properties.getProperty("toolchainJdkDistributionUrl"));
+                config.setToolchainJdkSha256Sum(properties.getProperty("toolchainJdkSha256Sum"));
+
                 config.setAlwaysUnpack(Boolean.parseBoolean(getProperty(ALWAYS_UNPACK, Boolean.FALSE.toString())));
                 config.setAlwaysDownload(Boolean.parseBoolean(getProperty(ALWAYS_DOWNLOAD, Boolean.FALSE.toString())));
+                String alwaysDownloadJdk = properties.getProperty("alwaysDownloadJdk");
+                if (alwaysDownloadJdk != null) {
+                    config.setAlwaysDownloadJdk(Boolean.parseBoolean(alwaysDownloadJdk));
+                }
             } catch (Exception e) {
                 throw new RuntimeException(
                         String.format(Locale.ROOT, "Could not load wrapper properties from '%s'.", propertiesFile), e);
@@ -158,6 +171,9 @@ public class WrapperExecutor {
 
     public void execute(String[] args, Installer install, BootstrapMainStarter bootstrapMainStarter) throws Exception {
         Path mavenHome = install.createDist(config);
+
+        // JDK installation is handled by shell scripts in only-script distribution type
+
         bootstrapMainStarter.start(args, mavenHome);
     }
 

@@ -33,6 +33,14 @@
 #   MAVEN_SKIP_RC - flag to disable loading of mavenrc files
 # ----------------------------------------------------------------------------
 
+# Add JDK environment variables
+if [ -n "$MAVEN_WRAPPER_JDK_VERSION" ]; then
+  echo "Using JDK version: $MAVEN_WRAPPER_JDK_VERSION"
+fi
+
+if [ -n "$MAVEN_WRAPPER_TOOLCHAIN_JDK" ]; then
+  echo "Using toolchain JDK: $MAVEN_WRAPPER_TOOLCHAIN_JDK"
+fi
 if [ -z "$MAVEN_SKIP_RC" ]; then
 
   if [ -f /usr/local/etc/mavenrc ]; then
@@ -73,9 +81,14 @@ Darwin*)
 esac
 
 if [ -z "$JAVA_HOME" ]; then
-  if [ -r /etc/gentoo-release ]; then
-    JAVA_HOME=$(java-config --jre-home)
+  # Check if we have a downloaded JDK from wrapper properties
+  if [ -d "$MAVEN_PROJECTBASEDIR/.mvn/wrapper/jdk" ]; then
+    JAVA_HOME="$MAVEN_PROJECTBASEDIR/.mvn/wrapper/jdk"
+    export JAVA_HOME
   fi
+fi
+if [ -r /etc/gentoo-release ]; then
+  JAVA_HOME=$(java-config --jre-home)
 fi
 
 # For Cygwin, ensure paths are in UNIX format before anything is touched
