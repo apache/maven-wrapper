@@ -130,7 +130,7 @@ validate_distribution() {
 
 show_available_distributions() {
   echo "Available JDK distributions:" >&2
-  echo "  - temurin (Eclipse Adoptium - recommended)" >&2
+  echo "  - temurin (Eclipse Adoptium - default)" >&2
   echo "  - corretto (Amazon)" >&2
   echo "  - zulu (Azul)" >&2
   echo "  - liberica (BellSoft)" >&2

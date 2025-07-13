@@ -130,28 +130,28 @@ The Maven Wrapper supports 34+ JDK distributions through the Foojay Disco API us
 
 ### Popular Distributions
 
-| Distribution | Description | Recommended Use |
-|-------------|-------------|-----------------|
-| `temurin` | Eclipse Adoptium (recommended) | General purpose, excellent support |
-| `corretto` | Amazon Corretto | AWS environments, enterprise |
-| `zulu` | Azul Zulu | Commercial support available |
-| `liberica` | BellSoft Liberica | Lightweight, embedded systems |
-| `oracle_open_jdk` | Oracle OpenJDK | Oracle environments |
-| `microsoft` | Microsoft OpenJDK | Azure, Windows environments |
-| `semeru` | IBM Semeru | IBM environments, OpenJ9 JVM |
+| Distribution      | Description                | Recommended Use                    |
+|-------------------|----------------------------|------------------------------------|
+| `temurin`         | Eclipse Adoptium (default) | General purpose, excellent support |
+| `corretto`        | Amazon Corretto            | AWS environments, enterprise       |
+| `zulu`            | Azul Zulu                  | Commercial support available       |
+| `liberica`        | BellSoft Liberica          | Lightweight, embedded systems      |
+| `oracle_open_jdk` | Oracle OpenJDK             | Oracle environments                |
+| `microsoft`       | Microsoft OpenJDK          | Azure, Windows environments        |
+| `semeru`          | IBM Semeru                 | IBM environments, OpenJ9 JVM       |
 
 ### Specialized Distributions
 
-| Distribution | Description | Use Case |
-|-------------|-------------|----------|
-| `graalvm_ce11` | GraalVM CE 11 | Native compilation, polyglot |
-| `graalvm_ce17` | GraalVM CE 17 | Native compilation, polyglot |
-| `sap_machine` | SAP Machine | SAP environments |
-| `dragonwell` | Alibaba Dragonwell | Cloud-native, Chinese market |
-| `jetbrains` | JetBrains Runtime | IDE development |
-| `bisheng` | Huawei BiSheng | ARM64 optimization |
-| `kona` | Tencent Kona | Tencent cloud environments |
-| `mandrel` | Red Hat Mandrel | Native compilation |
+| Distribution   | Description        | Use Case                     |
+|----------------|--------------------|------------------------------|
+| `graalvm_ce11` | GraalVM CE 11      | Native compilation, polyglot |
+| `graalvm_ce17` | GraalVM CE 17      | Native compilation, polyglot |
+| `sap_machine`  | SAP Machine        | SAP environments             |
+| `dragonwell`   | Alibaba Dragonwell | Cloud-native, Chinese market |
+| `jetbrains`    | JetBrains Runtime  | IDE development              |
+| `bisheng`      | Huawei BiSheng     | ARM64 optimization           |
+| `kona`         | Tencent Kona       | Tencent cloud environments   |
+| `mandrel`      | Red Hat Mandrel    | Native compilation           |
 
 **Complete List**: For all 34+ supported distributions, see: [Foojay Disco API](https://api.foojay.io/disco/v3.0/distributions)
 
