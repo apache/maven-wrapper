@@ -32,6 +32,7 @@ under the License.
   <packaging>pom</packaging>
 
   <name>Apache Maven Wrapper</name>
+  <url>https://maven.apache.org/tools/wrapper/</url>
   <inceptionYear>2013</inceptionYear>
 
   <modules>
@@ -62,7 +63,7 @@ under the License.
   </distributionManagement>
 
   <properties>
-    <maven.site.path>wrapper-archives/wrapper-LATEST</maven.site.path>
+    <maven.site.path>tools-archives/wrapper-LATEST</maven.site.path>
     <mavenVersion>3.9.6</mavenVersion>
     <javaVersion>8</javaVersion>
     <!-- remove later - upgrade to try run tests with Java 23, Doxia 1.x -->

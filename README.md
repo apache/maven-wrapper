@@ -14,7 +14,7 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-Contributing to [Apache Maven Wrapper](https://maven.apache.org/wrapper/)
+Contributing to [Apache Maven Wrapper](https://maven.apache.org/tools/wrapper/)
 ======================
 
 [![Apache License, Version 2.0, January 2004](https://img.shields.io/github/license/apache/maven.svg?label=License)][license]
