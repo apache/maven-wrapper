@@ -167,8 +167,7 @@ This is a feature of Maven itself and the wrapper just happens to take it into
 account. Simply set `MAVEN_USER_HOME` to the desired path and the wrapper uses
 it as the base of the Maven distro installation.
 
-See https://www.lewuathe.com/maven-wrapper-home.html and
-https://github.com/takari/maven-wrapper/issues/17
+See https://github.com/takari/maven-wrapper/issues/17
 
 ## Using a Maven Repository Manager
 
