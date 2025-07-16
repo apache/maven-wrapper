@@ -28,7 +28,6 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
@@ -311,25 +310,7 @@ public class WrapperMojo extends AbstractMojo {
         getLog().info("Configuring .mvn/wrapper/maven-wrapper.properties to use "
                 + buffer().strong("Maven " + mavenVersion) + " and download from " + repoUrl);
 
-        final String license = "# Licensed to the Apache Software Foundation (ASF) under one%n"
-                + "# or more contributor license agreements.  See the NOTICE file%n"
-                + "# distributed with this work for additional information%n"
-                + "# regarding copyright ownership.  The ASF licenses this file%n"
-                + "# to you under the Apache License, Version 2.0 (the%n"
-                + "# \"License\"); you may not use this file except in compliance%n"
-                + "# with the License.  You may obtain a copy of the License at%n"
-                + "#%n"
-                + "#   http://www.apache.org/licenses/LICENSE-2.0%n"
-                + "#%n"
-                + "# Unless required by applicable law or agreed to in writing,%n"
-                + "# software distributed under the License is distributed on an%n"
-                + "# \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY%n"
-                + "# KIND, either express or implied.  See the License for the%n"
-                + "# specific language governing permissions and limitations%n"
-                + "# under the License.%n";
-
         try (BufferedWriter out = Files.newBufferedWriter(wrapperPropertiesFile, StandardCharsets.UTF_8)) {
-            out.append(String.format(Locale.ROOT, license));
             out.append("wrapperVersion=" + wrapperVersion + System.lineSeparator());
             out.append(DISTRIBUTION_TYPE_PROPERTY_NAME + "=" + distributionType + System.lineSeparator());
             out.append("distributionUrl=" + distributionUrl + System.lineSeparator());
