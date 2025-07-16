@@ -653,7 +653,7 @@ public class WrapperMojo extends AbstractMojo {
                         + "), using fallback");
                 ltsVersions = getFallbackLtsVersions();
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             getLog().warn("Failed to fetch LTS versions from Disco API: " + e.getMessage() + ", using fallback");
             ltsVersions = getFallbackLtsVersions();
         }
@@ -673,9 +673,6 @@ public class WrapperMojo extends AbstractMojo {
         fallback.add(11);
         fallback.add(17);
         fallback.add(21);
-        fallback.add(25); // Expected Sept 2025
-        fallback.add(29); // Expected Sept 2027
-        fallback.add(33); // Expected Sept 2029
         return fallback;
     }
 
