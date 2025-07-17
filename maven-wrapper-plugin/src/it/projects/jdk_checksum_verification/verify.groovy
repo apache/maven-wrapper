@@ -45,7 +45,6 @@ assert log.contains('[INFO] Unpacked only-script type wrapper distribution')
 // 3. System JDK usage (if JDK download is skipped)
 boolean checksumFailure = log.contains("checksum") || log.contains("SHA-256") || log.contains("verification")
 boolean networkIssue = log.contains("Failed to fetch") || log.contains("curl:") || log.contains("wget:")
-boolean systemJdkUsed = log.contains("Apache Maven") // Maven version output indicates successful execution
 
 // The test should either fail checksum verification or use system JDK
 assert checksumFailure || networkIssue || systemJdkUsed, "Either checksum verification should occur, network issue encountered, or system JDK should be used"
