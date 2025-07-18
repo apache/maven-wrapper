@@ -152,6 +152,16 @@ public class WrapperMojo extends AbstractMojo {
     @Parameter(defaultValue = "false", property = "alwaysUnpack")
     private boolean alwaysUnpack;
 
+    /**
+     * The URL to download the Maven distribution from.
+     * If not specified, the URL will be constructed based on the Maven version
+     * and repository URL.
+     *
+     * @since 3.3.0
+     */
+    @Parameter(property = "distributionUrl")
+    private String distributionUrl;
+
     // READONLY PARAMETERS
 
     @Component
@@ -294,16 +304,22 @@ public class WrapperMojo extends AbstractMojo {
     private void replaceProperties(String wrapperVersion, Path targetFolder) throws MojoExecutionException {
         String repoUrl = getRepoUrl();
 
-        String distributionUrl = repoUrl + "/org/apache/maven/apache-maven/" + mavenVersion + "/apache-maven-"
-                + mavenVersion + "-bin.zip";
+        String finalDistributionUrl;
+        if (distributionUrl != null && !distributionUrl.trim().isEmpty()) {
+            // Use custom distribution URL if provided
+            finalDistributionUrl = distributionUrl.trim();
+        } else if (mvndVersion != null && mvndVersion.length() > 0) {
+            // Use Maven Daemon distribution URL
+            finalDistributionUrl = "https://archive.apache.org/dist/maven/mvnd/" + mvndVersion + "/maven-mvnd-"
+                    + mvndVersion + "-bin.zip";
+        } else {
+            // Use standard Maven distribution URL
+            finalDistributionUrl = repoUrl + "/org/apache/maven/apache-maven/" + mavenVersion + "/apache-maven-"
+                    + mavenVersion + "-bin.zip";
+        }
+
         String wrapperUrl = repoUrl + "/org/apache/maven/wrapper/maven-wrapper/" + wrapperVersion + "/maven-wrapper-"
                 + wrapperVersion + ".jar";
-
-        if (mvndVersion != null && mvndVersion.length() > 0) {
-            // now maven-mvnd is not published to the central repo.
-            distributionUrl = "https://archive.apache.org/dist/maven/mvnd/" + mvndVersion + "/maven-mvnd-" + mvndVersion
-                    + "-bin.zip";
-        }
 
         Path wrapperPropertiesFile = targetFolder.resolve("maven-wrapper.properties");
 
@@ -313,7 +329,7 @@ public class WrapperMojo extends AbstractMojo {
         try (BufferedWriter out = Files.newBufferedWriter(wrapperPropertiesFile, StandardCharsets.UTF_8)) {
             out.append("wrapperVersion=" + wrapperVersion + System.lineSeparator());
             out.append(DISTRIBUTION_TYPE_PROPERTY_NAME + "=" + distributionType + System.lineSeparator());
-            out.append("distributionUrl=" + distributionUrl + System.lineSeparator());
+            out.append("distributionUrl=" + finalDistributionUrl + System.lineSeparator());
             if (distributionSha256Sum != null) {
                 out.append("distributionSha256Sum=" + distributionSha256Sum + System.lineSeparator());
             }
