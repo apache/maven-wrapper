@@ -55,7 +55,7 @@ import static org.mockito.Mockito.when;
  */
 public class InstallerTest {
     @TempDir
-    public File tempFolder;
+    private File tempFolder;
 
     private Path testDir;
 

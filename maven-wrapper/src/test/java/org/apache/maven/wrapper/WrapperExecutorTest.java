@@ -191,7 +191,7 @@ public class WrapperExecutorTest {
     }
 
     @Test
-    void testEnvironmentVariableOverwrite_simpleCase() throws Exception {
+    void testEnvironmentVariableOverwriteSimpleCase() throws Exception {
         final Map<String, String> environmentVariables = new HashMap<>();
         environmentVariables.put(MVNW_REPOURL, "https://repo/test");
 
@@ -206,7 +206,7 @@ public class WrapperExecutorTest {
     }
 
     @Test
-    void testEnvironmentVariableOverwrite_mvnwRepoUrl_trailingSlash() throws Exception {
+    void testEnvironmentVariableOverwriteMvnwRepoUrlTrailingSlash() throws Exception {
         final Map<String, String> environmentVariables = new HashMap<>();
         environmentVariables.put(MVNW_REPOURL, "https://repo/test/");
         properties = new Properties();
@@ -220,7 +220,7 @@ public class WrapperExecutorTest {
     }
 
     @Test
-    void testEnvironmentVariableOverwrite_packageName() throws Exception {
+    void testEnvironmentVariableOverwritePackageName() throws Exception {
         final Map<String, String> environmentVariables = new HashMap<>();
         environmentVariables.put(MVNW_REPOURL, "https://repo/test");
         properties = new Properties();
@@ -235,7 +235,7 @@ public class WrapperExecutorTest {
     }
 
     @Test
-    void testEnvironmentVariableOverwrite_packageName_trailingSpace() throws Exception {
+    void testEnvironmentVariableOverwritePackageNameTrailingSpace() throws Exception {
         final Map<String, String> environmentVariables = new HashMap<>();
         environmentVariables.put(MVNW_REPOURL, "https://repo/test/");
         properties = new Properties();

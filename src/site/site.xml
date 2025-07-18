@@ -24,7 +24,7 @@ under the License.
 
   <body>
     <breadcrumbs>
-      <item name="Wrapper" href="https://maven.apache.org/wrapper/index.html" />
+      <item name="Wrapper" href="https://maven.apache.org/tools/wrapper/index.html" />
     </breadcrumbs>
 
     <menu name="Overview">
