@@ -19,18 +19,14 @@
 package org.apache.maven.plugins.wrapper;
 
 import org.apache.maven.settings.Settings;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.DisplayNameGeneration;
-import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class WrapperMojoTest {
 
     @Test
-    void user_supplied_repo_url_gets_trailing_slash_trimmed() {
+    void userSuppliedRepoUrlGetsTrailingSlashTrimmed() {
         // given
         Settings settings = new Settings();
         WrapperMojo wrapperMojo = new WrapperMojo();
@@ -39,11 +35,11 @@ class WrapperMojoTest {
         String determinedRepoUrl = wrapperMojo.determineRepoUrl(WrapperMojo.DEFAULT_REPOURL + "/", settings);
 
         // then
-        Assertions.assertEquals(WrapperMojo.DEFAULT_REPOURL, determinedRepoUrl);
+        assertEquals(WrapperMojo.DEFAULT_REPOURL, determinedRepoUrl);
     }
 
     @Test
-    void null_repo_url_not_used() {
+    void nullRepoUrlNotUsed() {
         // given
         Settings settings = new Settings();
         WrapperMojo wrapperMojo = new WrapperMojo();
@@ -52,11 +48,11 @@ class WrapperMojoTest {
         String determinedRepoUrl = wrapperMojo.determineRepoUrl(null, settings);
 
         // then
-        Assertions.assertEquals(WrapperMojo.DEFAULT_REPOURL, determinedRepoUrl);
+        assertEquals(WrapperMojo.DEFAULT_REPOURL, determinedRepoUrl);
     }
 
     @Test
-    void empty_repo_url_not_used() {
+    void emptyRepoUrlNotUsed() {
         // given
         Settings settings = new Settings();
         WrapperMojo wrapperMojo = new WrapperMojo();
@@ -65,11 +61,11 @@ class WrapperMojoTest {
         String determinedRepoUrl = wrapperMojo.determineRepoUrl("", settings);
 
         // then
-        Assertions.assertEquals(WrapperMojo.DEFAULT_REPOURL, determinedRepoUrl);
+        assertEquals(WrapperMojo.DEFAULT_REPOURL, determinedRepoUrl);
     }
 
     @Test
-    void slash_repo_url_not_used() {
+    void slashRepoUrlNotUsed() {
         // given
         Settings settings = new Settings();
         WrapperMojo wrapperMojo = new WrapperMojo();
@@ -78,6 +74,6 @@ class WrapperMojoTest {
         String determinedRepoUrl = wrapperMojo.determineRepoUrl("/", settings);
 
         // then
-        Assertions.assertEquals(WrapperMojo.DEFAULT_REPOURL, determinedRepoUrl);
+        assertEquals(WrapperMojo.DEFAULT_REPOURL, determinedRepoUrl);
     }
 }
