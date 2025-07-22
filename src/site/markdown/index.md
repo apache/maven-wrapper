@@ -137,12 +137,18 @@ using:
 mvn wrapper:wrapper -Dmaven=3.5.4
 ```
 
-which works for any version except snapshots. Once you have a wrapper you can
+which works for any version including snapshots. Once you have a wrapper you can
 change its version by setting the `distributionUrl` in
 `.mvn/wrapper/maven-wrapper.properties`, e.g.
 
 ```bash
 distributionUrl=https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.5.4/apache-maven-3.5.4-bin.zip
+```
+
+For snapshot versions, you can use URLs like:
+
+```bash
+distributionUrl=https://repository.apache.org/content/repositories/snapshots/org/apache/maven/apache-maven/4.1.0-SNAPSHOT/apache-maven-4.1.0-20250710.120440-1-bin.zip
 ```
 
 ## Using Basic Authentication for Distribution Download
