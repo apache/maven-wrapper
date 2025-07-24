@@ -167,10 +167,14 @@ under the License.
               <properties>
                 <maven.compiler.source>${invoker.maven.compiler.source}</maven.compiler.source>
                 <maven.compiler.target>${invoker.maven.compiler.target}</maven.compiler.target>
+                <maven>3.9.9</maven>
               </properties>
               <filterProperties>
                 <mrm.repository.url>${mrm.repository.url}</mrm.repository.url>
               </filterProperties>
+              <environmentVariables>
+                <MVNW_VERBOSE>false</MVNW_VERBOSE>
+              </environmentVariables>
               <extraArtifacts>
                 <artifact>org.apache.maven.wrapper:maven-wrapper-distribution:${project.version}:zip:bin</artifact>
                 <artifact>org.apache.maven.wrapper:maven-wrapper-distribution:${project.version}:zip:only-script</artifact>

@@ -50,6 +50,7 @@ under the License.
               <MVNW_VERBOSE>true</MVNW_VERBOSE>
               <HOME>${project.build.directory}</HOME>
               <USERPROFILE>${project.build.directory}</USERPROFILE>
+              <MAVEN_HOME></MAVEN_HOME>
             </environmentVariables>
           </configuration>
         </plugin>
