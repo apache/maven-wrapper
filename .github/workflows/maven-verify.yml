@@ -27,3 +27,4 @@ jobs:
     uses: apache/maven-gh-actions-shared/.github/workflows/maven-verify.yml@v4
     with:
       verify-fail-fast: false
+      maven4-enabled: true
