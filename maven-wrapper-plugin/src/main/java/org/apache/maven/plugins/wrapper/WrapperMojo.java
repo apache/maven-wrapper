@@ -164,7 +164,7 @@ public class WrapperMojo extends AbstractMojo {
 
     // READONLY PARAMETERS
 
-    @Component
+    @Inject
     private MavenSession session;
 
     // CONSTANTS
