@@ -20,22 +20,21 @@
 The Maven Wrapper is an easy way to ensure a user of your Maven build has
 everything necessary to run your Maven build.
 
-_Why might this be necessary?_ Maven to date has been very stable for users, is
-available on most systems or is easy to procure: but with many of the recent
+_Why might this be necessary?_ Maven has been very stable for users, is
+available on most systems, and is easy to procure. However, with many of the recent
 changes in Maven it will be easier for users to have a fully encapsulated build
-setup provided by the project. With the Maven Wrapper, this is very easy to do
-and it's a great idea and initial implementation borrowed from Gradle.
+setup provided by the project. With the Maven Wrapper, this is very easy to do.
 
-The easiest way to setup the Maven Wrapper for your project is to use the
+The easiest way to set up the Maven Wrapper for a project is to use the
 [Maven Wrapper Plugin][1] with its provided `wrapper` goal. To add or update all
-the necessary Maven Wrapper files to your project execute the following command:
+the necessary Maven Wrapper files to your project, execute the following command:
 
 ```bash
 mvn wrapper:wrapper
 ```
 
-Normally you instruct users to install a specific version of Apache Maven, put
-it on the PATH and then run the `mvn` command like the following:
+Previously you instructed users to install a specific version of Apache Maven, put
+it on the PATH, and then run the `mvn` command like the following:
 
 ```bash
 mvn clean install
@@ -75,8 +74,8 @@ The wrapper should work on various operating systems including
 A POSIX-compatible Bourne shell is required to run the wrapper script.
 
 In terms of Apache Maven versions itself, the wrapper should work with any Maven
-3.x version and it defaults to the release used when setting up the wrapper. We do NOT
-plan to support the deprecated, EOL'ed Maven 2.x.
+3.x version or later. It defaults to the release used when setting up the wrapper. We do NOT
+support the deprecated, EOL'ed Maven 2.x.
 
 By default, the `only-script` type is installed (see below).
 
@@ -85,7 +84,7 @@ By default, the `only-script` type is installed (see below).
 The wrapper supports a verbose mode in which it outputs further information. It
 is activated by setting the `MVNW_VERBOSE` environment variable to `true`.
 
-By default it is off.
+By default, it is off.
 
 ## Usage with or without Binary JAR
 
@@ -169,7 +168,7 @@ options:
 
 <!--- TODO: check this feature -->
 
-This is a feature of Maven itself and the wrapper just happens to take it into
+This is a feature of Maven itself. The wrapper just happens to take it into
 account. Simply set `MAVEN_USER_HOME` to the desired path and the wrapper uses
 it as the base of the Maven distro installation.
 
@@ -179,7 +178,7 @@ See https://github.com/takari/maven-wrapper/issues/17
 
 When using an internal Maven repository manager, you have two options:
 
-1. Just set the correct URL to wrapper jar and Maven distro in
+1. Set the correct URL to wrapper jar and Maven distro in
   `maven-wrapper.properties` in your project
 2. Leave the default URL in the project pointing to Maven Central and set the
   environment variable `MVNW_REPOURL` to your repo manager URL such as
