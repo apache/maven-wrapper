@@ -23,7 +23,7 @@ under the License.
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.apache.maven.plugins.it.wrapper</groupId>
-  <artifactId>extension</artifactId>
+  <artifactId>jdk-toolchain-support</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
@@ -40,16 +40,13 @@ under the License.
           <version>3.0.0</version>
           <configuration>
             <executable>mvnw${cmd}</executable>
-            <successCodes>
-              <successCode>1</successCode>
-            </successCodes>
             <arguments>
               <argument>-v</argument>
             </arguments>
             <environmentVariables>
               <MVNW_VERBOSE>true</MVNW_VERBOSE>
-              <MVNW_SKIP_JDK>true</MVNW_SKIP_JDK>
-              <MAVEN_HOME></MAVEN_HOME>
+              <HOME>${project.build.directory}</HOME>
+              <USERPROFILE>${project.build.directory}</USERPROFILE>
             </environmentVariables>
           </configuration>
         </plugin>
