@@ -25,7 +25,6 @@ assert !(new File(basedir,'mvnwDebug.cmd').exists())
 
 wrapperProperties = new File(basedir,'.mvn/wrapper/maven-wrapper.properties')
 assert wrapperProperties.exists()
-assert !wrapperProperties.text.contains('wrapperUrl')
 
 log = new File(basedir, 'build.log').text
 // check "mvn wrapper:wrapper" output
@@ -39,5 +38,6 @@ Properties props = new Properties()
 new File(basedir,'.mvn/wrapper/maven-wrapper.properties').withInputStream {
     props.load(it)
 }
-assert props.wrapperVersion.equals(wrapperCurrentVersion)
 assert props.distributionType.equals("only-script")
+assert !props.containsKey('wrapperUrl')
+assert !props.containsKey("wrapperVersion")
