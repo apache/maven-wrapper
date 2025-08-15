@@ -43,7 +43,7 @@ under the License.
           <configuration>
             <executable>mvnw${cmd}</executable>
             <successCodes>
-              <successCode>1</successCode>
+              <successCode>0</successCode>
             </successCodes>
             <arguments>
               <argument>-v</argument>

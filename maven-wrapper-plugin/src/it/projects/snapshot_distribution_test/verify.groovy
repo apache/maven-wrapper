@@ -35,8 +35,8 @@ assert props.distributionType.equals("only-script")
 
 // The plugin should have used our custom timestamped snapshot URL
 println "Generated distribution URL: ${props.distributionUrl}"
-assert props.distributionUrl.contains("apache-maven-4.1.0-20250710.120440-1-bin.zip"), "Expected timestamped snapshot distribution URL but got: ${props.distributionUrl}"
-assert props.distributionUrl.contains("/org/apache/maven/apache-maven/4.1.0-SNAPSHOT/"), "Expected Maven repository path but got: ${props.distributionUrl}"
+assert props.distributionUrl.contains("apache-maven-4.9.999-20250710.120440-1-bin.zip"), "Expected timestamped snapshot distribution URL but got: ${props.distributionUrl}"
+assert props.distributionUrl.contains("/org/apache/maven/apache-maven/4.9.999-SNAPSHOT/"), "Expected Maven repository path but got: ${props.distributionUrl}"
 
 println "✓ Plugin correctly used custom distributionUrl parameter"
 println "✓ Distribution URL: ${props.distributionUrl}"
@@ -54,3 +54,7 @@ println "✓ Plugin correctly accepted custom distributionUrl parameter"
 println "✓ Wrapper configured to use timestamped snapshot URL: ${props.distributionUrl}"
 println "✓ This tests the scenario where ZIP filename != directory name inside ZIP"
 println "✓ Our fix should handle: apache-maven-4.1.0-20250710.120440-1-bin.zip -> apache-maven-4.1.0-SNAPSHOT/"
+
+log = new File(basedir, 'build.log').text
+// check "mvnw" output
+assert log.contains('Apache Maven 4.9.999 from SNAPSHOT distribution')
