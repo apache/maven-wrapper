@@ -57,4 +57,4 @@ println "✓ Our fix should handle: apache-maven-4.1.0-20250710.120440-1-bin.zip
 
 log = new File(basedir, 'build.log').text
 // check "mvnw" output
-assert log.contains('Apache Maven 4.9.999 from SNAPSHOT distribution')
+assert log.contains('Apache Maven 4.9.999 from SNAPSHOT distribution'), "Expected 'Apache Maven 4.9.999 from SNAPSHOT distribution' in build.log but not found"
