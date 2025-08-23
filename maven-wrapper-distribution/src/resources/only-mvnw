@@ -268,6 +268,8 @@ fi
 
 # If not found, search for any directory with the Maven executable (for snapshots)
 if [ -z "$actualDistributionDir" ]; then
+  # enable globbing to iterate over items
+  set +f
   for dir in "$TMP_DOWNLOAD_DIR"/*; do
     if [ -d "$dir" ]; then
       if [ -f "$dir/bin/$MVN_CMD" ]; then
@@ -276,9 +278,12 @@ if [ -z "$actualDistributionDir" ]; then
       fi
     fi
   done
+  set -f
 fi
 
 if [ -z "$actualDistributionDir" ]; then
+  verbose "Contents of $TMP_DOWNLOAD_DIR:"
+  verbose "$(ls -la "$TMP_DOWNLOAD_DIR")"
   die "Could not find Maven distribution directory in extracted archive"
 fi
 
