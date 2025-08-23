@@ -274,6 +274,8 @@ if [ -z "$actualDistributionDir" ]; then
         actualDistributionDir="$(basename "$dir")"
         break
       fi
+    else
+      verbose "Skipping non-directory file in $TMP_DOWNLOAD_DIR: $dir"
     fi
   done
 fi
