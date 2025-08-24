@@ -39,7 +39,7 @@ under the License.
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>exec-maven-plugin</artifactId>
-          <version>3.0.0</version>
+          <version>@version.exec-maven-plugin@</version>
           <configuration>
             <executable>mvnw${cmd}</executable>
             <successCodes>
