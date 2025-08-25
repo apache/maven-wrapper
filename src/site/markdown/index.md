@@ -166,11 +166,8 @@ options:
 
 ## Specifying Maven Distribution Base Path
 
-<!--- TODO: check this feature -->
-
-This is a feature of Maven itself. The wrapper just happens to take it into
-account. Simply set `MAVEN_USER_HOME` to the desired path and the wrapper uses
-it as the base of the Maven distro installation.
+Environment variable `MAVEN_USER_HOME` can be set to the path which will be used by the wrapper as the base of the Maven distro installation.
+By default, the wrapper uses the `$HOME/.m2` as the base directory for installation.
 
 See https://github.com/takari/maven-wrapper/issues/17
 
