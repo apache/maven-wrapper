@@ -64,7 +64,7 @@ under the License.
 
   <properties>
     <maven.site.path>tools-archives/wrapper-LATEST</maven.site.path>
-    <mavenVersion>3.9.6</mavenVersion>
+    <mavenVersion>3.9.11</mavenVersion>
     <javaVersion>8</javaVersion>
     <!-- remove later - upgrade to try run tests with Java 23, Doxia 1.x -->
     <version.maven-invoker-plugin>3.7.0</version.maven-invoker-plugin>
