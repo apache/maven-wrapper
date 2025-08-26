@@ -28,7 +28,7 @@ under the License.
 
   <groupId>org.apache.maven.wrapper</groupId>
   <artifactId>maven-wrapper-parent</artifactId>
-  <version>3.3.3</version>
+  <version>3.3.4-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Apache Maven Wrapper</name>
@@ -44,7 +44,7 @@ under the License.
   <scm>
     <connection>scm:git:https://gitbox.apache.org/repos/asf/maven-wrapper.git</connection>
     <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/maven-wrapper.git</developerConnection>
-    <tag>maven-wrapper-3.3.3</tag>
+    <tag>HEAD</tag>
     <url>https://github.com/apache/maven-wrapper/tree/${project.scm.tag}</url>
   </scm>
   <issueManagement>
@@ -67,7 +67,7 @@ under the License.
     <mavenVersion>3.9.11</mavenVersion>
     <javaVersion>8</javaVersion>
     <version.exec-maven-plugin>3.5.1</version.exec-maven-plugin>
-    <project.build.outputTimestamp>2025-08-26T20:00:02Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2025-08-26T20:00:17Z</project.build.outputTimestamp>
   </properties>
 
   <build>
