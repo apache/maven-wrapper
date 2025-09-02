@@ -36,3 +36,4 @@ new File(basedir,'.mvn/wrapper/maven-wrapper.properties').withInputStream {
 }
 assert props.wrapperVersion.equals(wrapperCurrentVersion)
 assert props.distributionType.equals("only-script")
+assert !props.containsKey('wrapperUrl')
