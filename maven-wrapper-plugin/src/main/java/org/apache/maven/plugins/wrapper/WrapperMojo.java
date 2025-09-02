@@ -334,7 +334,6 @@ public class WrapperMojo extends AbstractMojo {
             }
             if (!distributionType.equals(TYPE_ONLY_SCRIPT)) {
                 out.append("wrapperUrl=" + wrapperUrl + System.lineSeparator());
-                out.append("wrapperVersion=" + wrapperVersion + System.lineSeparator());
             }
             if (wrapperSha256Sum != null) {
                 out.append("wrapperSha256Sum=" + wrapperSha256Sum + System.lineSeparator());
