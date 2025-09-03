@@ -326,6 +326,7 @@ public class WrapperMojo extends AbstractMojo {
                 + buffer().strong("Maven " + mavenVersion) + " and download from " + repoUrl);
 
         try (BufferedWriter out = Files.newBufferedWriter(wrapperPropertiesFile, StandardCharsets.UTF_8)) {
+            out.append("wrapperVersion=" + wrapperVersion + System.lineSeparator());
             out.append(DISTRIBUTION_TYPE_PROPERTY_NAME + "=" + distributionType + System.lineSeparator());
             out.append("distributionUrl=" + finalDistributionUrl + System.lineSeparator());
             if (distributionSha256Sum != null) {
@@ -333,7 +334,6 @@ public class WrapperMojo extends AbstractMojo {
             }
             if (!distributionType.equals(TYPE_ONLY_SCRIPT)) {
                 out.append("wrapperUrl=" + wrapperUrl + System.lineSeparator());
-                out.append("wrapperVersion=" + wrapperVersion + System.lineSeparator());
             }
             if (wrapperSha256Sum != null) {
                 out.append("wrapperSha256Sum=" + wrapperSha256Sum + System.lineSeparator());
