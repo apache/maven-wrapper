@@ -51,7 +51,7 @@ at an easier glance.
   - fixes https://github.com/takari/maven-wrapper/issues/109
   - see https://github.com/takari/maven-wrapper/pull/111
   - contributed by  Piotrek Żygieło https://github.com/pzygielo and 
-	Sebastian Peters https://github.com/sepe81,
+    Sebastian Peters https://github.com/sepe81,
 
 Release performed by Manfred Moser - http://www.simpligility.com
 
