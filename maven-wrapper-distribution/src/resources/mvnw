@@ -327,6 +327,7 @@ fi
 MAVEN_CMD_LINE_ARGS="$MAVEN_CONFIG $*"
 export MAVEN_CMD_LINE_ARGS
 
+# Maven main class is here to fix maven 4.0.0-beta-5 through 4.0.0-rc-4
 MAVEN_MAIN_CLASS=org.apache.maven.cling.MavenCling
 WRAPPER_LAUNCHER=org.apache.maven.wrapper.MavenWrapperMain
 
