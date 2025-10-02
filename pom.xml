@@ -67,6 +67,11 @@ under the License.
     <mavenVersion>3.9.11</mavenVersion>
     <javaVersion>8</javaVersion>
     <version.exec-maven-plugin>3.5.1</version.exec-maven-plugin>
+
+    <!-- TODO remove with next parent -->
+    <version.maven-compiler-plugin>3.14.1</version.maven-compiler-plugin>
+    <version.maven-invoker-plugin>3.9.1</version.maven-invoker-plugin>
+
     <project.build.outputTimestamp>2025-09-08T13:21:31Z</project.build.outputTimestamp>
   </properties>
 
