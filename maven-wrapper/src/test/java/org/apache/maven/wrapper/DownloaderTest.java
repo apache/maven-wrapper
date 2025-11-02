@@ -62,7 +62,7 @@ class DownloaderTest {
     }
 
     @Test
-    void testDownload() throws Exception {
+    void download() throws Exception {
         assertTrue(Files.notExists(downloadFile));
         download.download(sourceRoot, downloadFile);
         assertTrue(Files.exists(downloadFile));

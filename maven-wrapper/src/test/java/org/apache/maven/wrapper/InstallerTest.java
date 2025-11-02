@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
@@ -45,6 +44,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
@@ -145,7 +145,7 @@ public class InstallerTest {
     }
 
     @Test
-    void testCreateDistWithExistingDistribution() throws Exception {
+    void createDistWithExistingDistribution() throws Exception {
 
         createTestZip(zipDestination);
         Files.createDirectories(mavenHomeDir);
@@ -165,7 +165,7 @@ public class InstallerTest {
     }
 
     @Test
-    void testCreateDistWithExistingDistAndZipAndAlwaysUnpackTrue() throws Exception {
+    void createDistWithExistingDistAndZipAndAlwaysUnpackTrue() throws Exception {
 
         createTestZip(zipDestination);
         Files.createDirectories(mavenHomeDir);
@@ -186,7 +186,7 @@ public class InstallerTest {
     }
 
     @Test
-    void testCreateDistWithExistingZipAndDistAndAlwaysDownloadTrue() throws Exception {
+    void createDistWithExistingZipAndDistAndAlwaysDownloadTrue() throws Exception {
 
         createTestZip(zipDestination);
         Path garbage = mavenHomeDir.resolve("garbage");
@@ -210,7 +210,7 @@ public class InstallerTest {
     }
 
     @Test
-    void testZipSlip() throws URISyntaxException {
+    void zipSlip() throws Exception {
         URL resource = getClass().getClassLoader().getResource("zip-slip.zip");
         Path zipSlip = Paths.get(resource.toURI());
         when(localDistribution.getZipFile()).thenReturn(zipSlip);
@@ -220,7 +220,7 @@ public class InstallerTest {
             install.createDist(configuration);
             fail("Should fail as it contains a zip slip.");
         } catch (Exception ex) {
-            assertTrue(ex instanceof ZipException);
+            assertInstanceOf(ZipException.class, ex);
         }
     }
 

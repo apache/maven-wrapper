@@ -53,7 +53,7 @@ class SnapshotDistributionTest {
     }
 
     @Test
-    void testSnapshotUrlParsing() throws Exception {
+    void snapshotUrlParsing() throws Exception {
         // Test that PathAssembler can handle snapshot URLs
         String snapshotUrl =
                 "https://repository.apache.org/content/repositories/snapshots/org/apache/maven/apache-maven/4.1.0-SNAPSHOT/apache-maven-4.1.0-20250710.120440-1-bin.zip";
@@ -70,7 +70,7 @@ class SnapshotDistributionTest {
     }
 
     @Test
-    void testWrapperExecutorWithSnapshotUrl() throws Exception {
+    void wrapperExecutorWithSnapshotUrl() throws Exception {
         // Create properties file with snapshot URL
         String snapshotUrl =
                 "https://repository.apache.org/content/repositories/snapshots/org/apache/maven/apache-maven/4.1.0-SNAPSHOT/apache-maven-4.1.0-20250710.120440-1-bin.zip";
@@ -94,7 +94,7 @@ class SnapshotDistributionTest {
     }
 
     @Test
-    void testRegularReleaseUrlStillWorks() throws Exception {
+    void regularReleaseUrlStillWorks() throws Exception {
         // Ensure regular releases still work as before
         String releaseUrl =
                 "https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.9.9/apache-maven-3.9.9-bin.zip";
