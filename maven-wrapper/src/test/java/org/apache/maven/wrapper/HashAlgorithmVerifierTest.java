@@ -31,7 +31,7 @@ import org.junit.jupiter.api.io.TempDir;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
-public class HashAlgorithmVerifierTest {
+class HashAlgorithmVerifierTest {
 
     @TempDir
     private File temporaryFolder;
