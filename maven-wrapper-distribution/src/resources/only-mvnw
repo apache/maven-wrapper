@@ -108,11 +108,12 @@ trim() {
 scriptDir="$(dirname "$0")"
 scriptName="$(basename "$0")"
 
-# parse distributionUrl and optional distributionSha256Sum, requires .mvn/wrapper/maven-wrapper.properties
+# parse distributionUrl and optional distributionSha256Sum or distributionSha512Sum, requires .mvn/wrapper/maven-wrapper.properties
 while IFS="=" read -r key value; do
   case "${key-}" in
   distributionUrl) distributionUrl=$(trim "${value-}") ;;
   distributionSha256Sum) distributionSha256Sum=$(trim "${value-}") ;;
+  distributionSha512Sum) distributionSha512Sum=$(trim "${value-}") ;;
   esac
 done <"$scriptDir/.mvn/wrapper/maven-wrapper.properties"
 [ -n "${distributionUrl-}" ] || die "cannot read distributionUrl property in $scriptDir/.mvn/wrapper/maven-wrapper.properties"
@@ -245,6 +246,33 @@ if [ -n "${distributionSha256Sum-}" ]; then
   if [ $distributionSha256Result = false ]; then
     echo "Error: Failed to validate Maven distribution SHA-256, your Maven distribution might be compromised." >&2
     echo "If you updated your Maven version, you need to update the specified distributionSha256Sum property." >&2
+    exit 1
+  fi
+fi
+
+# If specified, validate the SHA-512 sum of the Maven distribution zip file
+if [ -n "${distributionSha512Sum-}" ]; then
+  distributionSha512Result=false
+  if [ "$MVN_CMD" = mvnd.sh ]; then
+    echo "Checksum validation is not supported for maven-mvnd." >&2
+    echo "Please disable validation by removing 'distributionSha512Sum' from your maven-wrapper.properties." >&2
+    exit 1
+  elif command -v sha512sum >/dev/null; then
+    if echo "$distributionSha512Sum  $TMP_DOWNLOAD_DIR/$distributionUrlName" | sha512sum -c - >/dev/null 2>&1; then
+      distributionSha512Result=true
+    fi
+  elif command -v shasum >/dev/null; then
+    if echo "$distributionSha512Sum  $TMP_DOWNLOAD_DIR/$distributionUrlName" | shasum -a 512 -c >/dev/null 2>&1; then
+      distributionSha512Result=true
+    fi
+  else
+    echo "Checksum validation was requested but neither 'sha512sum' or 'shasum' are available." >&2
+    echo "Please install either command, or disable validation by removing 'distributionSha512Sum' from your maven-wrapper.properties." >&2
+    exit 1
+  fi
+  if [ $distributionSha512Result = false ]; then
+    echo "Error: Failed to validate Maven distribution SHA-512, your Maven distribution might be compromised." >&2
+    echo "If you updated your Maven version, you need to update the specified distributionSha512Sum property." >&2
     exit 1
   fi
 fi
