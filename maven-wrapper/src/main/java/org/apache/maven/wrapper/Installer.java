@@ -67,6 +67,8 @@ public class Installer {
         boolean alwaysUnpack = configuration.isAlwaysUnpack();
         boolean verifyDistributionSha256Sum =
                 !configuration.getDistributionSha256Sum().isEmpty();
+        boolean verifyDistributionSha512Sum =
+                !configuration.getDistributionSha512Sum().isEmpty();
 
         PathAssembler.LocalDistribution localDistribution = pathAssembler.getDistribution(configuration);
         Path localZipFile = localDistribution.getZipFile();
@@ -96,6 +98,13 @@ public class Installer {
                         "distributionSha256Sum",
                         Verifier.SHA_256_ALGORITHM,
                         configuration.getDistributionSha256Sum());
+            }
+            if (verifyDistributionSha512Sum) {
+                verifier.verify(
+                        localZipFile,
+                        "distributionSha512Sum",
+                        Verifier.SHA_512_ALGORITHM,
+                        configuration.getDistributionSha512Sum());
             }
             for (Path dir : dirs) {
                 Logger.info("Deleting directory " + dir.toAbsolutePath());

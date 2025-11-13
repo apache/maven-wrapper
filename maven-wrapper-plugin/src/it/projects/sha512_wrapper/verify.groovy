@@ -1,3 +1,4 @@
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,20 +17,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.maven.wrapper;
 
-import java.nio.file.Path;
+assert new File(basedir,'mvnw').exists()
+assert new File(basedir,'mvnw.cmd').exists()
+assert !(new File(basedir,'mvnwDebug').exists())
+assert !(new File(basedir,'mvnwDebug.cmd').exists())
 
-/**
- * Maven distribution verifier.
- *
- * @author Rafael Winterhalter
- */
-public interface Verifier {
+properties = new File(basedir,'.mvn/wrapper/maven-wrapper.properties')
+assert properties.exists()
+assert properties.text.contains('wrapperSha512Sum=256cdc53261371d6f6fefd92e99d85df5295d1f83ab826106768094a34e6f1b0eb4f7c30e75ada80218ed5bb384bdce334a6697354eef561f50adfc2113c881d')
 
-    String SHA_256_ALGORITHM = "SHA-256";
+log = new File(basedir, 'build.log').text
+// check "mvn wrapper:wrapper" output
+assert log.contains('Error: Failed to validate Maven wrapper SHA-512, your Maven wrapper might be compromised.')
+assert !log.contains('shasum:')
 
-	String SHA_512_ALGORITHM = "SHA-512";
-
-    void verify(Path file, String property, String algorithm, String expectedSum) throws Exception;
-}
+// check "mvnw -v" output
+assert !log.contains('Apache Maven ')

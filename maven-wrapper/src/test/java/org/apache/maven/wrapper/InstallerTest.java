@@ -91,6 +91,7 @@ public class InstallerTest {
         configuration.setAlwaysDownload(false);
         configuration.setAlwaysUnpack(false);
         configuration.setDistributionSha256Sum("");
+        configuration.setDistributionSha512Sum("");
         distributionDir = testDir.resolve("someDistPath");
         mavenHomeDir = distributionDir.resolve("maven-0.9");
         zipStore = testDir.resolve("zips");
@@ -120,7 +121,7 @@ public class InstallerTest {
             writer.write("something");
         }
         try (OutputStream os = Files.newOutputStream(mavenLib);
-                JarOutputStream jar = new JarOutputStream(os, new Manifest())) {
+             JarOutputStream jar = new JarOutputStream(os, new Manifest())) {
             jar.putNextEntry(new ZipEntry("test"));
             jar.closeEntry();
         }
@@ -227,7 +228,7 @@ public class InstallerTest {
     public void zipTo(final Path directoryToZip, final Path zipFile) throws IOException {
         // Creating a ZipOutputStream by wrapping a OutputStream
         try (OutputStream fos = Files.newOutputStream(zipFile);
-                ZipOutputStream zos = new ZipOutputStream(fos)) {
+             ZipOutputStream zos = new ZipOutputStream(fos)) {
             // Walk the tree structure using WalkFileTree method
             Files.walkFileTree(directoryToZip, new SimpleFileVisitor<Path>() {
                 @Override
