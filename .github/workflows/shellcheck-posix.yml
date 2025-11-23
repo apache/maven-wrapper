@@ -31,7 +31,7 @@ jobs:
       # SC2009: Don't consider pgrep, not available everywhere; https://www.shellcheck.net/wiki/SC2009
       SHELLCHECK_OPTS: '-e SC1091 -e SC2009'
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: download
         run: |
           curl --silent --fail --show-error --retry 2 --retry-delay 1 --connect-timeout 5 --location --url "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" -o shellcheck-v${SHELLCHECK_VERSION}.tar.xz
