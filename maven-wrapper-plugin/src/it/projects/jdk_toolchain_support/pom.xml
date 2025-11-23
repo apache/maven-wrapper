@@ -23,7 +23,7 @@ under the License.
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.apache.maven.plugins.it.wrapper</groupId>
-  <artifactId>extension</artifactId>
+  <artifactId>jdk-toolchain-support</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
@@ -37,12 +37,9 @@ under the License.
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>exec-maven-plugin</artifactId>
-          <version>@version.exec-maven-plugin@</version>
+          <version>3.0.0</version>
           <configuration>
             <executable>mvnw${cmd}</executable>
-            <successCodes>
-              <successCode>1</successCode>
-            </successCodes>
             <arguments>
               <argument>-v</argument>
             </arguments>
@@ -50,7 +47,6 @@ under the License.
               <MVNW_VERBOSE>true</MVNW_VERBOSE>
               <HOME>${project.build.directory}</HOME>
               <USERPROFILE>${project.build.directory}</USERPROFILE>
-              <MAVEN_HOME></MAVEN_HOME>
             </environmentVariables>
           </configuration>
         </plugin>
