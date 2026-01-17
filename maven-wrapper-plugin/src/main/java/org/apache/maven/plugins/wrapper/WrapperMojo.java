@@ -123,7 +123,14 @@ public class WrapperMojo extends AbstractMojo {
      */
     @Parameter(property = "wrapperSha256Sum")
     private String wrapperSha256Sum;
-
+    /**
+     * The expected SHA-512 checksum of the <i>maven-wrapper.jar</i> that is
+     * used to load the configured Maven distribution.
+     *
+     * @since 3.4.0
+     */
+    @Parameter(property = "wrapperSha512Sum")
+    private String wrapperSha512Sum;
     /**
      * The expected SHA-256 checksum of the Maven distribution that is
      * executed by the installed wrapper.
@@ -132,7 +139,14 @@ public class WrapperMojo extends AbstractMojo {
      */
     @Parameter(property = "distributionSha256Sum")
     private String distributionSha256Sum;
-
+    /**
+     * The expected SHA-512 checksum of the Maven distribution that is
+     * executed by the installed wrapper.
+     *
+     * @since 3.4.0
+     */
+    @Parameter(property = "distributionSha512Sum")
+    private String distributionSha512Sum;
     /**
      * Determines if the Maven distribution should be downloaded
      * on every execution of the Maven wrapper.
@@ -286,7 +300,7 @@ public class WrapperMojo extends AbstractMojo {
         unarchiver.setSourceFile(artifact.getFile());
         if (!includeDebugScript) {
             unarchiver.setFileSelectors(
-                    new FileSelector[] {fileInfo -> !fileInfo.getName().contains("Debug")});
+                    new FileSelector[]{fileInfo -> !fileInfo.getName().contains("Debug")});
         }
         unarchiver.extract();
         getLog().info("Unpacked " + buffer().strong(distributionType) + " type wrapper distribution " + artifact);
@@ -332,11 +346,17 @@ public class WrapperMojo extends AbstractMojo {
             if (distributionSha256Sum != null) {
                 out.append("distributionSha256Sum=" + distributionSha256Sum + System.lineSeparator());
             }
+            if (distributionSha512Sum != null) {
+                out.append("distributionSha512Sum=" + distributionSha512Sum + System.lineSeparator());
+            }
             if (!distributionType.equals(TYPE_ONLY_SCRIPT)) {
                 out.append("wrapperUrl=" + wrapperUrl + System.lineSeparator());
             }
             if (wrapperSha256Sum != null) {
                 out.append("wrapperSha256Sum=" + wrapperSha256Sum + System.lineSeparator());
+            }
+            if (wrapperSha512Sum != null) {
+                out.append("wrapperSha512Sum=" + wrapperSha512Sum + System.lineSeparator());
             }
             if (alwaysDownload) {
                 out.append("alwaysDownload=" + Boolean.TRUE + System.lineSeparator());
