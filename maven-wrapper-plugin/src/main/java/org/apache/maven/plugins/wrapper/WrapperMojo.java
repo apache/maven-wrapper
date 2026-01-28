@@ -395,8 +395,8 @@ public class WrapperMojo extends AbstractMojo {
         // otherwise mirror from settings
         if (settings.getMirrors() != null && !settings.getMirrors().isEmpty()) {
             for (Mirror current : settings.getMirrors()) {
-                if ("*".equals(current.getMirrorOf())) {
-                    getLog().debug("Using repo URL from * mirror in settings file.");
+                if ("*".equals(current.getMirrorOf()) || "central".equals(current.getMirrorOf())) {
+                    getLog().debug("Using repo URL from " + current.getMirrorOf() + " mirror in settings file.");
                     return current.getUrl();
                 }
             }

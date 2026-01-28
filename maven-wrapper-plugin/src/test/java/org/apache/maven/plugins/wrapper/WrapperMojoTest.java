@@ -18,6 +18,11 @@
  */
 package org.apache.maven.plugins.wrapper;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import org.apache.maven.settings.Mirror;
 import org.apache.maven.settings.Settings;
 import org.junit.jupiter.api.Test;
 
@@ -75,5 +80,51 @@ class WrapperMojoTest {
 
         // then
         assertEquals(WrapperMojo.DEFAULT_REPOURL, determinedRepoUrl);
+    }
+
+    @Test
+    void centralMirrorIsUsed() {
+        // given
+        Settings settings = new Settings();
+        Mirror centralMirror = centralMirror();
+        List<Mirror> mirrors = Collections.singletonList(centralMirror);
+
+        settings.setMirrors(mirrors);
+        WrapperMojo wrapperMojo = new WrapperMojo();
+
+        // when
+        String determinedRepoUrl = wrapperMojo.determineRepoUrl("/", settings);
+
+        // then
+        assertEquals(centralMirror.getUrl(), determinedRepoUrl);
+    }
+
+    @Test
+    void testWildCardMirror() {
+        // given
+        Settings settings = new Settings();
+        Mirror wildcard = new Mirror();
+        wildcard.setId("wild-card-mirror");
+        wildcard.setMirrorOf("*");
+        wildcard.setUrl("https://my.custom-wildcard.repo/maven2/");
+        Mirror centralMirror = centralMirror();
+        List<Mirror> mirrors = Arrays.asList(wildcard, centralMirror);
+        settings.setMirrors(mirrors);
+        WrapperMojo wrapperMojo = new WrapperMojo();
+
+        // when
+        String determinedRepoUrl = wrapperMojo.determineRepoUrl("/", settings);
+
+        // then
+        assertEquals(wildcard.getUrl(), determinedRepoUrl);
+    }
+
+    private static Mirror centralMirror() {
+        Mirror centralMirror = new Mirror();
+        centralMirror.setId("central-mirror");
+        String centralMirrorURL = "https://my.custom.repo/maven2/";
+        centralMirror.setMirrorOf("central");
+        centralMirror.setUrl(centralMirrorURL);
+        return centralMirror;
     }
 }
