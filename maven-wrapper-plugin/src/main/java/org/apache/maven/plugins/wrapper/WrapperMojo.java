@@ -20,16 +20,24 @@ package org.apache.maven.plugins.wrapper;
 
 import javax.inject.Inject;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.maven.Maven;
 import org.apache.maven.execution.MavenSession;
@@ -60,6 +68,9 @@ public class WrapperMojo extends AbstractMojo {
     private static final String MVNW_REPOURL = "MVNW_REPOURL";
 
     protected static final String DEFAULT_REPOURL = "https://repo.maven.apache.org/maven2";
+
+    // Disco API constants
+    private static final String DISCO_API_BASE_URL = "https://api.foojay.io/disco/v3.0";
 
     // CONFIGURATION PARAMETERS
 
@@ -160,6 +171,77 @@ public class WrapperMojo extends AbstractMojo {
      */
     @Parameter(property = "distributionUrl")
     private String distributionUrl;
+
+    /**
+     * The JDK version to use for Maven execution.
+     * Can be any valid JDK release, such as "17", "21", or "17.0.14".
+     */
+    @Parameter(property = "jdk")
+    private String jdkVersion;
+
+    /**
+     * The distribution of JDK to download using native Disco API names.
+     * Supported distributions: temurin, corretto, zulu, liberica, oracle_open_jdk, microsoft, semeru, graalvm_ce11, etc.
+     * Default is temurin.
+     */
+    @Parameter(property = "jdkDistribution", defaultValue = "temurin")
+    private String jdkDistribution;
+
+    /**
+     * Direct URL for main JDK distribution download.
+     * If specified, overrides jdkVersion and jdkDistribution.
+     */
+    @Parameter(property = "jdkUrl")
+    private String jdkDistributionUrl;
+
+    /**
+     * The JDK version to use for toolchains.
+     * Can be any valid JDK release.
+     */
+    @Parameter(property = "toolchainJdk")
+    private String toolchainJdkVersion;
+
+    /**
+     * The distribution of JDK to download for toolchains using native Disco API names.
+     * Supported distributions: temurin, corretto, zulu, liberica, oracle_open_jdk, microsoft, semeru, graalvm_ce11, etc.
+     * Default is temurin.
+     */
+    @Parameter(property = "toolchainJdkDistribution", defaultValue = "temurin")
+    private String toolchainJdkDistribution;
+
+    /**
+     * Direct URL for toolchain JDK distribution download.
+     * If specified, overrides toolchainJdkVersion and toolchainJdkDistribution.
+     */
+    @Parameter(property = "toolchainJdkUrl")
+    private String toolchainJdkDistributionUrl;
+
+    /**
+     * SHA-256 checksum for the main JDK distribution
+     */
+    @Parameter(property = "jdkSha256Sum")
+    private String jdkSha256Sum;
+
+    /**
+     * SHA-256 checksum for the toolchain JDK distribution
+     */
+    @Parameter(property = "toolchainJdkSha256Sum")
+    private String toolchainJdkSha256Sum;
+
+    /**
+     * JDK update policy for major version resolution. Controls how often the latest patch version is checked.
+     * Supported values: never, daily, always, interval:X (where X is minutes).
+     * Default is daily.
+     */
+    @Parameter(property = "jdkUpdatePolicy", defaultValue = "daily")
+    private String jdkUpdatePolicy;
+
+    /**
+     * Skip JDK version stability warnings for non-LTS versions or specific version pinning.
+     * Default is false (warnings are shown).
+     */
+    @Parameter(property = "skipJdkWarnings", defaultValue = "false")
+    private boolean skipJdkWarnings;
 
     // READONLY PARAMETERS
 
@@ -339,10 +421,42 @@ public class WrapperMojo extends AbstractMojo {
                 out.append("wrapperSha256Sum=" + wrapperSha256Sum + System.lineSeparator());
             }
             if (alwaysDownload) {
-                out.append("alwaysDownload=" + Boolean.TRUE + System.lineSeparator());
+                out.append("alwaysDownload=true" + System.lineSeparator());
             }
             if (alwaysUnpack) {
-                out.append("alwaysUnpack=" + Boolean.TRUE + System.lineSeparator());
+                out.append("alwaysUnpack=true" + System.lineSeparator());
+            }
+            if (jdkVersion != null) {
+                out.append("jdkVersion=" + jdkVersion + System.lineSeparator());
+            }
+            if (jdkDistribution != null) {
+                out.append("jdkDistribution=" + jdkDistribution + System.lineSeparator());
+            }
+            if (jdkDistributionUrl != null) {
+                out.append("jdkDistributionUrl=" + jdkDistributionUrl + System.lineSeparator());
+            }
+            if (toolchainJdkVersion != null) {
+                out.append("toolchainJdkVersion=" + toolchainJdkVersion + System.lineSeparator());
+            }
+            if (toolchainJdkDistribution != null) {
+                out.append("toolchainJdkDistribution=" + toolchainJdkDistribution + System.lineSeparator());
+            }
+            if (toolchainJdkDistributionUrl != null) {
+                out.append("toolchainJdkDistributionUrl=" + toolchainJdkDistributionUrl + System.lineSeparator());
+            }
+            if (jdkSha256Sum != null) {
+                out.append("jdkSha256Sum=" + jdkSha256Sum + System.lineSeparator());
+            }
+            if (toolchainJdkSha256Sum != null) {
+                out.append("toolchainJdkSha256Sum=" + toolchainJdkSha256Sum + System.lineSeparator());
+            }
+            if (jdkUpdatePolicy != null) {
+                out.append("jdkUpdatePolicy=" + jdkUpdatePolicy + System.lineSeparator());
+            }
+
+            // Show JDK version stability warnings at installation time
+            if (!skipJdkWarnings) {
+                showJdkVersionWarnings();
             }
         } catch (IOException ioe) {
             throw new MojoExecutionException("Can't create maven-wrapper.properties", ioe);
@@ -403,5 +517,367 @@ public class WrapperMojo extends AbstractMojo {
         }
 
         return DEFAULT_REPOURL;
+    }
+
+    private void showJdkVersionWarnings() {
+        boolean warningsShown = false;
+
+        // Check main JDK version
+        if (jdkVersion != null && jdkDistributionUrl == null) {
+            if (checkJdkVersionStability("Main JDK", jdkVersion, jdkDistribution)) {
+                warningsShown = true;
+            }
+        }
+
+        // Check toolchain JDK version
+        if (toolchainJdkVersion != null && toolchainJdkDistributionUrl == null) {
+            if (checkJdkVersionStability("Toolchain JDK", toolchainJdkVersion, toolchainJdkDistribution)) {
+                warningsShown = true;
+            }
+        }
+
+        // Only show suppression message if warnings were actually displayed
+        if (warningsShown) {
+            getLog().warn("To suppress these warnings, use -DskipJdkWarnings=true");
+            getLog().warn("");
+        }
+    }
+
+    private boolean checkJdkVersionStability(String jdkType, String version, String distribution) {
+        if (version == null) {
+            return false;
+        }
+
+        boolean warningShown = false;
+
+        // Check for non-LTS versions
+        if (isNonLtsVersion(version)) {
+            getLog().warn("");
+            getLog().warn("WARNING: " + jdkType + " " + version + " is not an LTS (Long Term Support) version.");
+            getLog().warn("Non-LTS versions may have shorter support lifecycles and could become");
+            getLog().warn("unavailable from distribution providers when newer versions are released.");
+            getLog().warn("");
+            getLog().warn("For better long-term stability, consider:");
+            Set<Integer> ltsVersions = getLtsVersionsFromDiscoApi();
+            getLog().warn("1. Switch to an LTS version: " + formatLtsVersions(ltsVersions));
+            getLog().warn("2. Use a direct URL with -DjdkDistributionUrl=https://...");
+            getLog().warn("3. Pin to exact version and resolve URL explicitly");
+            getLog().warn("");
+            warningShown = true;
+        }
+
+        // Check for specific minor/micro versions
+        if (isSpecificVersion(version)) {
+            getLog().warn("");
+            getLog().warn("WARNING: " + jdkType + " " + version + " uses a specific minor/micro version.");
+            getLog().warn("SDKMAN may drop specific versions over time, especially older ones.");
+            getLog().warn("");
+            getLog().warn("For better long-term stability, consider:");
+            getLog().warn("1. Use major version only (e.g., '" + getMajorVersion(version) + "') for latest patches");
+            getLog().warn("2. Resolve the exact URL and use -DjdkDistributionUrl=https://...");
+            getLog().warn("3. Use an LTS version for production builds");
+            getLog().warn("");
+            warningShown = true;
+        }
+
+        return warningShown;
+    }
+
+    /**
+     * Check if a JDK version is non-LTS by querying the Disco API.
+     * Uses caching to avoid repeated API calls.
+     */
+    private boolean isNonLtsVersion(String version) {
+        String majorVersion = getMajorVersion(version);
+        try {
+            int major = Integer.parseInt(majorVersion);
+            Set<Integer> ltsVersions = getLtsVersionsFromDiscoApi();
+            boolean isNonLts = !ltsVersions.contains(major);
+
+            // Special debug logging for known LTS versions that are incorrectly detected as non-LTS
+            if (isNonLts && (major == 8 || major == 11 || major == 17 || major == 21)) {
+                getLog().warn("DEBUG: Known LTS version " + major + " detected as non-LTS!");
+                getLog().warn("DEBUG: This indicates a Disco API issue. Re-fetching with debug logging...");
+
+                // Clear cache and re-fetch with debug logging
+                ltsVersionsCache = null;
+                Set<Integer> debugLtsVersions = getLtsVersionsFromDiscoApi(true);
+                boolean isStillNonLts = !debugLtsVersions.contains(major);
+
+                if (isStillNonLts) {
+                    getLog().warn("DEBUG: LTS version " + major + " still not found after debug re-fetch!");
+                    getLog().warn("DEBUG: This is a confirmed Disco API issue. Using fallback LTS detection.");
+                    return false; // Override the incorrect API result for known LTS versions
+                } else {
+                    getLog().warn("DEBUG: LTS version " + major + " found after debug re-fetch. Cache issue resolved.");
+                    return false;
+                }
+            }
+
+            return isNonLts;
+        } catch (NumberFormatException e) {
+            return false; // If we can't parse, don't warn
+        }
+    }
+
+    /**
+     * Cache for LTS versions to avoid repeated API calls
+     */
+    private static Set<Integer> ltsVersionsCache = null;
+
+    /**
+     * Fetch data from Disco API with retry logic for 5xx errors.
+     * Returns null if all attempts fail.
+     */
+    private String fetchFromDiscoApiWithRetry(String apiUrl, int maxAttempts, int baseDelayMs) {
+        return fetchFromDiscoApiWithRetry(apiUrl, maxAttempts, baseDelayMs, false);
+    }
+
+    /**
+     * Fetch data from Disco API with retry logic for 5xx errors.
+     * Returns null if all attempts fail.
+     *
+     * @param apiUrl The API URL to fetch
+     * @param maxAttempts Maximum number of retry attempts
+     * @param baseDelayMs Base delay in milliseconds for exponential backoff
+     * @param debugMode If true, logs detailed request/response information for debugging
+     */
+    private String fetchFromDiscoApiWithRetry(String apiUrl, int maxAttempts, int baseDelayMs, boolean debugMode) {
+        if (debugMode) {
+            getLog().warn("DEBUG: Disco API request details:");
+            getLog().warn("  URL: " + apiUrl);
+            getLog().warn("  Max attempts: " + maxAttempts);
+            getLog().warn("  Base delay: " + baseDelayMs + "ms");
+        }
+
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                URL url = new URL(apiUrl);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(5000); // 5 second timeout
+                connection.setReadTimeout(10000); // 10 second timeout
+
+                int responseCode = connection.getResponseCode();
+
+                if (debugMode) {
+                    getLog().warn("  Attempt " + attempt + "/" + maxAttempts + ": HTTP " + responseCode);
+                }
+
+                if (responseCode == 200) {
+                    // Success - read and return response
+                    try (BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8))) {
+
+                        String line;
+                        StringBuilder response = new StringBuilder();
+                        while ((line = reader.readLine()) != null) {
+                            response.append(line);
+                        }
+                        String responseBody = response.toString();
+
+                        if (debugMode) {
+                            getLog().warn("  Response length: " + responseBody.length() + " characters");
+                            if (responseBody.length() < 1000) {
+                                getLog().warn("  Response body: " + responseBody);
+                            } else {
+                                getLog().warn("  Response body (first 500 chars): " + responseBody.substring(0, 500)
+                                        + "...");
+                            }
+                        }
+
+                        return responseBody;
+                    }
+                } else if (responseCode >= 500 && responseCode < 600 && attempt < maxAttempts) {
+                    // 5xx server error - retry with exponential backoff and jitter
+                    int baseDelay = baseDelayMs * (1 << (attempt - 1)); // Exponential backoff: 2s, 4s, 8s
+                    // Add random jitter of 0-20% to avoid thundering herd problem
+                    int jitter = (int) (baseDelay * Math.random() * 0.2);
+                    int delay = baseDelay + jitter;
+
+                    String logMessage = "Disco API returned HTTP " + responseCode + ", retrying in " + delay
+                            + "ms (attempt " + attempt + "/" + maxAttempts + ")";
+                    if (debugMode) {
+                        getLog().warn("  " + logMessage);
+                    } else {
+                        getLog().debug(logMessage);
+                    }
+                    Thread.sleep(delay);
+                } else {
+                    // Non-retryable error (4xx) or max attempts reached
+                    String logMessage = "Disco API returned HTTP " + responseCode + " (attempt " + attempt + "/"
+                            + maxAttempts + ")";
+                    if (debugMode) {
+                        getLog().warn("  " + logMessage);
+                        // Try to read error response body
+                        try (BufferedReader reader = new BufferedReader(
+                                new InputStreamReader(connection.getErrorStream(), StandardCharsets.UTF_8))) {
+                            String line;
+                            StringBuilder errorResponse = new StringBuilder();
+                            while ((line = reader.readLine()) != null) {
+                                errorResponse.append(line);
+                            }
+                            if (errorResponse.length() > 0) {
+                                getLog().warn("  Error response: " + errorResponse.toString());
+                            }
+                        } catch (Exception e) {
+                            getLog().warn("  Could not read error response: " + e.getMessage());
+                        }
+                    } else {
+                        getLog().debug(logMessage);
+                    }
+                    return null;
+                }
+
+            } catch (Exception e) {
+                if (attempt < maxAttempts) {
+                    int baseDelay = baseDelayMs * (1 << (attempt - 1));
+                    // Add random jitter of 0-20% to avoid thundering herd problem
+                    int jitter = (int) (baseDelay * Math.random() * 0.2);
+                    int delay = baseDelay + jitter;
+
+                    String logMessage = "Disco API request failed: " + e.getMessage() + ", retrying in " + delay
+                            + "ms (attempt " + attempt + "/" + maxAttempts + ")";
+                    if (debugMode) {
+                        getLog().warn("  " + logMessage);
+                    } else {
+                        getLog().debug(logMessage);
+                    }
+                    try {
+                        Thread.sleep(delay);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        return null;
+                    }
+                } else {
+                    String logMessage =
+                            "Disco API request failed after " + maxAttempts + " attempts: " + e.getMessage();
+                    if (debugMode) {
+                        getLog().warn("  " + logMessage);
+                    } else {
+                        getLog().debug(logMessage);
+                    }
+                    return null;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get LTS versions from Disco API with caching and retry logic.
+     * Falls back to hardcoded list if API is unavailable.
+     */
+    private Set<Integer> getLtsVersionsFromDiscoApi() {
+        return getLtsVersionsFromDiscoApi(false);
+    }
+
+    /**
+     * Get LTS versions from Disco API with caching and retry logic.
+     * Falls back to hardcoded list if API is unavailable.
+     *
+     * @param debugMode If true, enables detailed logging for debugging API issues
+     */
+    private Set<Integer> getLtsVersionsFromDiscoApi(boolean debugMode) {
+        if (ltsVersionsCache != null) {
+            return ltsVersionsCache;
+        }
+
+        Set<Integer> ltsVersions = new HashSet<>();
+
+        // Try to get LTS versions from Disco API with retry logic
+        // Use optimized query parameters to minimize response size and API load:
+        // - ea=false: exclude early access versions
+        // - ga=false: exclude general availability versions (we only want LTS)
+        // - maintained=true: only include currently maintained versions
+        // - include_build=false: exclude build information
+        // - include_versions=false: exclude detailed version information
+        String apiUrl = DISCO_API_BASE_URL
+                + "/major_versions?ea=false&ga=false&maintained=true&include_build=false&include_versions=false";
+
+        if (debugMode) {
+            getLog().warn("DEBUG: Fetching LTS versions from Disco API due to incorrect LTS detection");
+        }
+
+        String apiResponse = fetchFromDiscoApiWithRetry(apiUrl, 3, 2000, debugMode);
+
+        if (apiResponse != null) {
+            try {
+                // Parse JSON response to extract LTS versions
+                // Look for "major_version": X, "term_of_support": "LTS"
+                Pattern pattern = Pattern.compile("\"major_version\":\\s*(\\d+)[^}]*\"term_of_support\":\\s*\"LTS\"");
+                Matcher matcher = pattern.matcher(apiResponse);
+
+                while (matcher.find()) {
+                    int majorVersion = Integer.parseInt(matcher.group(1));
+                    ltsVersions.add(majorVersion);
+                }
+
+                if (debugMode) {
+                    getLog().warn("DEBUG: Parsed LTS versions from API response: " + ltsVersions);
+                    getLog().warn("DEBUG: Fallback LTS versions: " + getFallbackLtsVersions());
+                } else {
+                    getLog().debug("Retrieved LTS versions from Disco API: " + ltsVersions);
+                }
+            } catch (Exception e) {
+                if (debugMode) {
+                    getLog().warn("DEBUG: Failed to parse LTS versions from Disco API response: " + e.getMessage());
+                } else {
+                    getLog().debug("Failed to parse LTS versions from Disco API response", e);
+                }
+                ltsVersions = getFallbackLtsVersions();
+            }
+        } else {
+            if (debugMode) {
+                getLog().warn("DEBUG: Failed to fetch LTS versions from Disco API after retries");
+            } else {
+                getLog().debug("Failed to fetch LTS versions from Disco API after retries");
+            }
+            ltsVersions = getFallbackLtsVersions();
+        }
+
+        // Cache the result
+        ltsVersionsCache = ltsVersions;
+        return ltsVersions;
+    }
+
+    /**
+     * Fallback LTS versions if Disco API is unavailable.
+     * Based on Oracle's LTS schedule: 8, 11, 17, 21, 25, 29, 33...
+     */
+    private Set<Integer> getFallbackLtsVersions() {
+        Set<Integer> fallback = new HashSet<>();
+        fallback.add(8);
+        fallback.add(11);
+        fallback.add(17);
+        fallback.add(21);
+        fallback.add(25); // Expected Sept 2025
+        fallback.add(29); // Expected Sept 2027
+        fallback.add(33); // Expected Sept 2029
+        return fallback;
+    }
+
+    /**
+     * Format LTS versions for display in warning messages.
+     */
+    private String formatLtsVersions(Set<Integer> ltsVersions) {
+        return ltsVersions.stream()
+                .sorted()
+                .map(String::valueOf)
+                .reduce((a, b) -> a + ", " + b)
+                .orElse("8, 11, 17, 21");
+    }
+
+    private boolean isSpecificVersion(String version) {
+        // Check if version contains dots (e.g., "17.0.14" vs "17")
+        return version != null && version.contains(".");
+    }
+
+    private String getMajorVersion(String version) {
+        if (version == null) {
+            return "";
+        }
+        int dotIndex = version.indexOf('.');
+        return dotIndex > 0 ? version.substring(0, dotIndex) : version;
     }
 }

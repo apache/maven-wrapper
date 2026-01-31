@@ -48,6 +48,8 @@ under the License.
             </arguments>
             <environmentVariables>
               <MVNW_VERBOSE>true</MVNW_VERBOSE>
+              <MVNW_SKIP_JDK>true</MVNW_SKIP_JDK>
+              <MAVEN_HOME></MAVEN_HOME>
             </environmentVariables>
           </configuration>
         </plugin>
