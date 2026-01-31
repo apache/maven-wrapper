@@ -18,62 +18,70 @@
  */
 package org.apache.maven.plugins.wrapper;
 
-import org.apache.maven.settings.Settings;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class WrapperMojoTest {
+    private final RepositorySystem mockRepositorySystem = mock(RepositorySystem.class);
+    private final RepositorySystemSession mockSession = mock(RepositorySystemSession.class);
+
+    WrapperMojoTest() {
+        when(mockRepositorySystem.newResolutionRepositories(any(RepositorySystemSession.class), anyList()))
+                .then(i -> i.getArguments()[1]);
+    }
 
     @Test
     void userSuppliedRepoUrlGetsTrailingSlashTrimmed() {
         // given
-        Settings settings = new Settings();
-        WrapperMojo wrapperMojo = new WrapperMojo();
+        WrapperMojo wrapperMojo = new WrapperMojo(mockRepositorySystem, mockSession);
 
         // when
-        String determinedRepoUrl = wrapperMojo.determineRepoUrl(WrapperMojo.DEFAULT_REPOURL + "/", settings);
+        String determinedRepoUrl = wrapperMojo.determineRepoUrl(WrapperMojo.DEFAULT_REPO_URL + "/");
 
         // then
-        assertEquals(WrapperMojo.DEFAULT_REPOURL, determinedRepoUrl);
+        assertEquals(WrapperMojo.DEFAULT_REPO_URL, determinedRepoUrl);
     }
 
     @Test
     void nullRepoUrlNotUsed() {
         // given
-        Settings settings = new Settings();
-        WrapperMojo wrapperMojo = new WrapperMojo();
+        WrapperMojo wrapperMojo = new WrapperMojo(mockRepositorySystem, mockSession);
 
         // when
-        String determinedRepoUrl = wrapperMojo.determineRepoUrl(null, settings);
+        String determinedRepoUrl = wrapperMojo.determineRepoUrl(null);
 
         // then
-        assertEquals(WrapperMojo.DEFAULT_REPOURL, determinedRepoUrl);
+        assertEquals(WrapperMojo.DEFAULT_REPO_URL, determinedRepoUrl);
     }
 
     @Test
     void emptyRepoUrlNotUsed() {
         // given
-        Settings settings = new Settings();
-        WrapperMojo wrapperMojo = new WrapperMojo();
+        WrapperMojo wrapperMojo = new WrapperMojo(mockRepositorySystem, mockSession);
 
         // when
-        String determinedRepoUrl = wrapperMojo.determineRepoUrl("", settings);
+        String determinedRepoUrl = wrapperMojo.determineRepoUrl("");
 
         // then
-        assertEquals(WrapperMojo.DEFAULT_REPOURL, determinedRepoUrl);
+        assertEquals(WrapperMojo.DEFAULT_REPO_URL, determinedRepoUrl);
     }
 
     @Test
     void slashRepoUrlNotUsed() {
         // given
-        Settings settings = new Settings();
-        WrapperMojo wrapperMojo = new WrapperMojo();
+        WrapperMojo wrapperMojo = new WrapperMojo(mockRepositorySystem, mockSession);
 
         // when
-        String determinedRepoUrl = wrapperMojo.determineRepoUrl("/", settings);
+        String determinedRepoUrl = wrapperMojo.determineRepoUrl("/");
 
         // then
-        assertEquals(WrapperMojo.DEFAULT_REPOURL, determinedRepoUrl);
+        assertEquals(WrapperMojo.DEFAULT_REPO_URL, determinedRepoUrl);
     }
 }

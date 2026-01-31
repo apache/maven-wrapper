@@ -28,6 +28,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 
@@ -37,13 +38,13 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.settings.Mirror;
-import org.apache.maven.settings.Settings;
 import org.codehaus.plexus.archiver.UnArchiver;
 import org.codehaus.plexus.components.io.fileselectors.FileSelector;
 import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
@@ -59,7 +60,8 @@ import static org.apache.maven.shared.utils.logging.MessageUtils.buffer;
 public class WrapperMojo extends AbstractMojo {
     private static final String MVNW_REPOURL = "MVNW_REPOURL";
 
-    protected static final String DEFAULT_REPOURL = "https://repo.maven.apache.org/maven2";
+    protected static final String DEFAULT_REPO_ID = "central";
+    protected static final String DEFAULT_REPO_URL = "https://repo.maven.apache.org/maven2";
 
     // CONFIGURATION PARAMETERS
 
@@ -161,11 +163,6 @@ public class WrapperMojo extends AbstractMojo {
     @Parameter(property = "distributionUrl")
     private String distributionUrl;
 
-    // READONLY PARAMETERS
-
-    @Inject
-    private MavenSession session;
-
     // CONSTANTS
 
     private static final String WRAPPER_DISTRIBUTION_GROUP_ID = "org.apache.maven.wrapper";
@@ -186,11 +183,27 @@ public class WrapperMojo extends AbstractMojo {
 
     // COMPONENTS
 
+    @Parameter(readonly = true, defaultValue = "${repositorySystemSession}")
+    private RepositorySystemSession repositorySystemSession;
+
+    @Inject
+    private MavenSession session;
+
     @Inject
     private RepositorySystem repositorySystem;
 
     @Inject
     private Map<String, UnArchiver> unarchivers;
+
+    public WrapperMojo() {}
+
+    /**
+     * Ctor for UT.
+     */
+    public WrapperMojo(RepositorySystem system, RepositorySystemSession session) {
+        this.repositorySystem = system;
+        this.repositorySystemSession = session;
+    }
 
     @Override
     public void execute() throws MojoExecutionException {
@@ -371,37 +384,27 @@ public class WrapperMojo extends AbstractMojo {
     private String getRepoUrl() {
         // adapt to also support MVNW_REPOURL as supported by mvnw scripts from maven-wrapper
         String envRepoUrl = System.getenv(MVNW_REPOURL);
-        final String repoUrl = determineRepoUrl(envRepoUrl, session.getSettings());
-
+        final String repoUrl = determineRepoUrl(envRepoUrl);
         getLog().debug("Determined repo URL to use as " + repoUrl);
-
         return repoUrl;
     }
 
-    protected String determineRepoUrl(String envRepoUrl, Settings settings) {
-
+    protected String determineRepoUrl(String envRepoUrl) {
         if (envRepoUrl != null && !envRepoUrl.trim().isEmpty() && envRepoUrl.length() > 4) {
             String repoUrl = envRepoUrl.trim();
-
             if (repoUrl.endsWith("/")) {
                 repoUrl = repoUrl.substring(0, repoUrl.length() - 1);
             }
-
             getLog().debug("Using repo URL from " + MVNW_REPOURL + " environment variable.");
-
             return repoUrl;
         }
 
-        // otherwise mirror from settings
-        if (settings.getMirrors() != null && !settings.getMirrors().isEmpty()) {
-            for (Mirror current : settings.getMirrors()) {
-                if ("*".equals(current.getMirrorOf())) {
-                    getLog().debug("Using repo URL from * mirror in settings file.");
-                    return current.getUrl();
-                }
-            }
-        }
-
-        return DEFAULT_REPOURL;
+        return repositorySystem
+                .newResolutionRepositories(
+                        repositorySystemSession,
+                        Collections.singletonList(
+                                new RemoteRepository.Builder(DEFAULT_REPO_ID, "default", DEFAULT_REPO_URL).build()))
+                .get(0)
+                .getUrl();
     }
 }
