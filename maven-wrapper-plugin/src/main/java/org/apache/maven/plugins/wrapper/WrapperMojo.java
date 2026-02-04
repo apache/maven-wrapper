@@ -60,7 +60,9 @@ import static org.apache.maven.shared.utils.logging.MessageUtils.buffer;
 public class WrapperMojo extends AbstractMojo {
     private static final String MVNW_REPOURL = "MVNW_REPOURL";
 
+    // Repo ID is constant: maven distro always come from maven central
     protected static final String DEFAULT_REPO_ID = "central";
+    // Repo URL may be altered (by env var or by user mirror settings)
     protected static final String DEFAULT_REPO_URL = "https://repo.maven.apache.org/maven2";
 
     // CONFIGURATION PARAMETERS
@@ -195,16 +197,6 @@ public class WrapperMojo extends AbstractMojo {
     @Inject
     private Map<String, UnArchiver> unarchivers;
 
-    public WrapperMojo() {}
-
-    /**
-     * Ctor for UT.
-     */
-    public WrapperMojo(RepositorySystem system, RepositorySystemSession session) {
-        this.repositorySystem = system;
-        this.repositorySystemSession = session;
-    }
-
     @Override
     public void execute() throws MojoExecutionException {
         final Path baseDir = Paths.get(session.getRequest().getBaseDirectory());
@@ -214,7 +206,7 @@ public class WrapperMojo extends AbstractMojo {
             distributionType = determineDistributionType(wrapperDir);
         }
 
-        if (mvndVersion != null && mvndVersion.length() > 0 && !TYPE_ONLY_SCRIPT.equals(distributionType)) {
+        if (mvndVersion != null && !mvndVersion.isEmpty() && !TYPE_ONLY_SCRIPT.equals(distributionType)) {
             throw new MojoExecutionException("maven-wrapper with type=" + distributionType
                     + " cannot work with mvnd, please set type to '" + TYPE_ONLY_SCRIPT + "'.");
         }
@@ -320,7 +312,7 @@ public class WrapperMojo extends AbstractMojo {
         if (distributionUrl != null && !distributionUrl.trim().isEmpty()) {
             // Use custom distribution URL if provided
             finalDistributionUrl = distributionUrl.trim();
-        } else if (mvndVersion != null && mvndVersion.length() > 0) {
+        } else if (mvndVersion != null && !mvndVersion.isEmpty()) {
             // Use Maven Daemon distribution URL
             finalDistributionUrl = "https://archive.apache.org/dist/maven/mvnd/" + mvndVersion + "/maven-mvnd-"
                     + mvndVersion + "-bin.zip";
@@ -339,23 +331,29 @@ public class WrapperMojo extends AbstractMojo {
                 + buffer().strong("Maven " + mavenVersion) + " and download from " + repoUrl);
 
         try (BufferedWriter out = Files.newBufferedWriter(wrapperPropertiesFile, StandardCharsets.UTF_8)) {
-            out.append("wrapperVersion=" + wrapperVersion + System.lineSeparator());
-            out.append(DISTRIBUTION_TYPE_PROPERTY_NAME + "=" + distributionType + System.lineSeparator());
-            out.append("distributionUrl=" + finalDistributionUrl + System.lineSeparator());
+            out.append("wrapperVersion=").append(wrapperVersion).append(System.lineSeparator());
+            out.append(DISTRIBUTION_TYPE_PROPERTY_NAME + "=")
+                    .append(distributionType)
+                    .append(System.lineSeparator());
+            out.append("distributionUrl=").append(finalDistributionUrl).append(System.lineSeparator());
             if (distributionSha256Sum != null) {
-                out.append("distributionSha256Sum=" + distributionSha256Sum + System.lineSeparator());
+                out.append("distributionSha256Sum=")
+                        .append(distributionSha256Sum)
+                        .append(System.lineSeparator());
             }
             if (!distributionType.equals(TYPE_ONLY_SCRIPT)) {
-                out.append("wrapperUrl=" + wrapperUrl + System.lineSeparator());
+                out.append("wrapperUrl=").append(wrapperUrl).append(System.lineSeparator());
             }
             if (wrapperSha256Sum != null) {
-                out.append("wrapperSha256Sum=" + wrapperSha256Sum + System.lineSeparator());
+                out.append("wrapperSha256Sum=").append(wrapperSha256Sum).append(System.lineSeparator());
             }
             if (alwaysDownload) {
-                out.append("alwaysDownload=" + Boolean.TRUE + System.lineSeparator());
+                out.append("alwaysDownload=")
+                        .append(String.valueOf(Boolean.TRUE))
+                        .append(System.lineSeparator());
             }
             if (alwaysUnpack) {
-                out.append("alwaysUnpack=" + Boolean.TRUE + System.lineSeparator());
+                out.append("alwaysUnpack=").append(String.valueOf(Boolean.TRUE)).append(System.lineSeparator());
             }
         } catch (IOException ioe) {
             throw new MojoExecutionException("Can't create maven-wrapper.properties", ioe);
@@ -364,7 +362,7 @@ public class WrapperMojo extends AbstractMojo {
 
     private String getVersion(String defaultVersion, Class<?> clazz, String path) {
         String version = defaultVersion;
-        if (version == null || version.trim().length() == 0 || "true".equals(version)) {
+        if (version == null || version.trim().isEmpty() || "true".equals(version)) {
             Properties props = new Properties();
             try (InputStream is = clazz.getResourceAsStream("/META-INF/maven/" + path + "/pom.properties")) {
                 if (is != null) {

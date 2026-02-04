@@ -18,6 +18,8 @@
  */
 package org.apache.maven.plugins.wrapper;
 
+import java.lang.reflect.Field;
+
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.junit.jupiter.api.Test;
@@ -30,17 +32,34 @@ import static org.mockito.Mockito.when;
 
 class WrapperMojoTest {
     private final RepositorySystem mockRepositorySystem = mock(RepositorySystem.class);
-    private final RepositorySystemSession mockSession = mock(RepositorySystemSession.class);
+    private final RepositorySystemSession mockRepositorySystemSession = mock(RepositorySystemSession.class);
 
     WrapperMojoTest() {
         when(mockRepositorySystem.newResolutionRepositories(any(RepositorySystemSession.class), anyList()))
                 .then(i -> i.getArguments()[1]);
     }
 
+    private void setField(Object subject, String fieldName, Object value) {
+        try {
+            Field field = subject.getClass().getDeclaredField(fieldName);
+            field.setAccessible(true);
+            field.set(subject, value);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private WrapperMojo createWrapperMojo() {
+        WrapperMojo wrapperMojo = new WrapperMojo();
+        setField(wrapperMojo, "repositorySystem", mockRepositorySystem);
+        setField(wrapperMojo, "repositorySystemSession", mockRepositorySystemSession);
+        return wrapperMojo;
+    }
+
     @Test
     void userSuppliedRepoUrlGetsTrailingSlashTrimmed() {
         // given
-        WrapperMojo wrapperMojo = new WrapperMojo(mockRepositorySystem, mockSession);
+        WrapperMojo wrapperMojo = createWrapperMojo();
 
         // when
         String determinedRepoUrl = wrapperMojo.determineRepoUrl(WrapperMojo.DEFAULT_REPO_URL + "/");
@@ -52,7 +71,7 @@ class WrapperMojoTest {
     @Test
     void nullRepoUrlNotUsed() {
         // given
-        WrapperMojo wrapperMojo = new WrapperMojo(mockRepositorySystem, mockSession);
+        WrapperMojo wrapperMojo = createWrapperMojo();
 
         // when
         String determinedRepoUrl = wrapperMojo.determineRepoUrl(null);
@@ -64,7 +83,7 @@ class WrapperMojoTest {
     @Test
     void emptyRepoUrlNotUsed() {
         // given
-        WrapperMojo wrapperMojo = new WrapperMojo(mockRepositorySystem, mockSession);
+        WrapperMojo wrapperMojo = createWrapperMojo();
 
         // when
         String determinedRepoUrl = wrapperMojo.determineRepoUrl("");
@@ -76,7 +95,7 @@ class WrapperMojoTest {
     @Test
     void slashRepoUrlNotUsed() {
         // given
-        WrapperMojo wrapperMojo = new WrapperMojo(mockRepositorySystem, mockSession);
+        WrapperMojo wrapperMojo = createWrapperMojo();
 
         // when
         String determinedRepoUrl = wrapperMojo.determineRepoUrl("/");
