@@ -28,8 +28,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,7 +45,7 @@ class WrapperMojoTest {
 
     @BeforeEach
     void setupMocks() {
-        when(repositorySystem.newResolutionRepositories(any(RepositorySystemSession.class), anyList()))
+        when(repositorySystem.newResolutionRepositories(same(repositorySystemSession), anyList()))
                 .then(i -> i.getArguments()[1]);
     }
 
