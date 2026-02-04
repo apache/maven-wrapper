@@ -18,11 +18,12 @@
  */
 package org.apache.maven.plugins.wrapper;
 
-import java.lang.reflect.Field;
-
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -30,37 +31,24 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class WrapperMojoTest {
-    private final RepositorySystem mockRepositorySystem = mock(RepositorySystem.class);
-    private final RepositorySystemSession mockRepositorySystemSession = mock(RepositorySystemSession.class);
+    private final RepositorySystem repositorySystem;
+
+    private final RepositorySystemSession repositorySystemSession;
+
+    @InjectMocks
+    private WrapperMojo wrapperMojo = new WrapperMojo();
 
     WrapperMojoTest() {
-        when(mockRepositorySystem.newResolutionRepositories(any(RepositorySystemSession.class), anyList()))
+        this.repositorySystem = mock(RepositorySystem.class);
+        when(repositorySystem.newResolutionRepositories(any(RepositorySystemSession.class), anyList()))
                 .then(i -> i.getArguments()[1]);
-    }
-
-    private void setField(Object subject, String fieldName, Object value) {
-        try {
-            Field field = subject.getClass().getDeclaredField(fieldName);
-            field.setAccessible(true);
-            field.set(subject, value);
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    private WrapperMojo createWrapperMojo() {
-        WrapperMojo wrapperMojo = new WrapperMojo();
-        setField(wrapperMojo, "repositorySystem", mockRepositorySystem);
-        setField(wrapperMojo, "repositorySystemSession", mockRepositorySystemSession);
-        return wrapperMojo;
+        this.repositorySystemSession = mock(RepositorySystemSession.class);
     }
 
     @Test
     void userSuppliedRepoUrlGetsTrailingSlashTrimmed() {
-        // given
-        WrapperMojo wrapperMojo = createWrapperMojo();
-
         // when
         String determinedRepoUrl = wrapperMojo.determineRepoUrl(WrapperMojo.DEFAULT_REPO_URL + "/");
 
@@ -70,9 +58,6 @@ class WrapperMojoTest {
 
     @Test
     void nullRepoUrlNotUsed() {
-        // given
-        WrapperMojo wrapperMojo = createWrapperMojo();
-
         // when
         String determinedRepoUrl = wrapperMojo.determineRepoUrl(null);
 
@@ -82,9 +67,6 @@ class WrapperMojoTest {
 
     @Test
     void emptyRepoUrlNotUsed() {
-        // given
-        WrapperMojo wrapperMojo = createWrapperMojo();
-
         // when
         String determinedRepoUrl = wrapperMojo.determineRepoUrl("");
 
@@ -94,9 +76,6 @@ class WrapperMojoTest {
 
     @Test
     void slashRepoUrlNotUsed() {
-        // given
-        WrapperMojo wrapperMojo = createWrapperMojo();
-
         // when
         String determinedRepoUrl = wrapperMojo.determineRepoUrl("/");
 

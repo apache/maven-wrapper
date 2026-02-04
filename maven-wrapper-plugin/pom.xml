@@ -37,6 +37,10 @@ under the License.
     <maven>3.6.3</maven>
   </prerequisites>
 
+  <properties>
+    <version.mockito>4.11.0</version.mockito>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.maven</groupId>
@@ -112,7 +116,13 @@ under the License.
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <version>4.11.0</version>
+      <version>${version.mockito}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-junit-jupiter</artifactId>
+      <version>${version.mockito}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
