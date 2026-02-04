@@ -20,31 +20,33 @@ package org.apache.maven.plugins.wrapper;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class WrapperMojoTest {
-    private final RepositorySystem repositorySystem;
+    @Mock(strictness = Mock.Strictness.LENIENT)
+    private RepositorySystem repositorySystem;
 
-    private final RepositorySystemSession repositorySystemSession;
+    @Mock
+    private RepositorySystemSession repositorySystemSession;
 
     @InjectMocks
-    private WrapperMojo wrapperMojo = new WrapperMojo();
+    private WrapperMojo wrapperMojo;
 
-    WrapperMojoTest() {
-        this.repositorySystem = mock(RepositorySystem.class);
+    @BeforeEach
+    void setupMocks() {
         when(repositorySystem.newResolutionRepositories(any(RepositorySystemSession.class), anyList()))
                 .then(i -> i.getArguments()[1]);
-        this.repositorySystemSession = mock(RepositorySystemSession.class);
     }
 
     @Test
