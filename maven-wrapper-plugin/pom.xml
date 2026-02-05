@@ -38,7 +38,7 @@ under the License.
   </prerequisites>
 
   <properties>
-    <version.mockito>4.11.0</version.mockito>
+    <version.mockito>5.0.0</version.mockito>
   </properties>
 
   <dependencies>
