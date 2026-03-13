@@ -91,6 +91,7 @@ public class InstallerTest {
         configuration.setAlwaysDownload(false);
         configuration.setAlwaysUnpack(false);
         configuration.setDistributionSha256Sum("");
+        configuration.setDistributionSha512Sum("");
         distributionDir = testDir.resolve("someDistPath");
         mavenHomeDir = distributionDir.resolve("maven-0.9");
         zipStore = testDir.resolve("zips");
