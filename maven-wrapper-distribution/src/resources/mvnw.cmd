@@ -147,6 +147,7 @@ if exist %WRAPPER_JAR% (
         "}"^
         "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $webclient.DownloadFile('%WRAPPER_URL%', '%WRAPPER_JAR%')"^
         "}"
+    ping 127.0.0.1 -n 2 > nul
     if "%MVNW_VERBOSE%" == "true" (
         echo Finished downloading %WRAPPER_JAR%
     )
