@@ -121,6 +121,20 @@ set WRAPPER_LAUNCHER=org.apache.maven.wrapper.MavenWrapperMain
 
 set WRAPPER_URL="https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper/@@project.version@@/maven-wrapper-@@project.version@@.jar"
 
+REM --- BEGIN: Parse userinfo from WRAPPER_URL (for basic auth) ---
+set WRAPPER_URL_STR=%WRAPPER_URL%
+for /f "tokens=1,2 delims=@" %%U in ("%WRAPPER_URL_STR:@= @%") do set WRAPPER_URL_USERINFO=%%U& set WRAPPER_URL_NOUSER=%%V
+REM If userinfo is present, it will be in WRAPPER_URL_USERINFO as protocol://username:password
+set MVNW_USERNAME=
+set MVNW_PASSWORD=
+set WRAPPER_URL_CLEAN=%WRAPPER_URL%
+for /f "tokens=1,2 delims=//" %%A in ("%WRAPPER_URL_USERINFO%") do set WRAPPER_URL_PROTO=%%A& set WRAPPER_URL_AUTH=%%B
+REM WRAPPER_URL_AUTH will be username:password if present
+for /f "tokens=1,2 delims=:" %%A in ("%WRAPPER_URL_AUTH%") do set MVNW_USERNAME=%%A& set MVNW_PASSWORD=%%B
+REM If both username and password are set, reconstruct WRAPPER_URL without userinfo
+if not "%MVNW_USERNAME%"=="" if not "%MVNW_PASSWORD%"=="" set WRAPPER_URL=%WRAPPER_URL_PROTO://%%WRAPPER_URL_NOUSER%
+REM --- END: Parse userinfo ---
+
 FOR /F "usebackq tokens=1,2 delims==" %%A IN ("%MAVEN_PROJECTBASEDIR%\.mvn\wrapper\maven-wrapper.properties") DO (
     IF "%%A"=="wrapperUrl" SET WRAPPER_URL=%%B
 )
