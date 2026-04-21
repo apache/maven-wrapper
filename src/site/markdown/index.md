@@ -54,9 +54,9 @@ mvnw.cmd clean install
 ```
 
 A normal Maven build will be executed, with the one important change that if the
-user doesn't have the necessary version of Maven specified in
+user doesn't have the version of Maven specified in
 `.mvn/wrapper/maven-wrapper.properties` it will be downloaded for the user
-first, installed and then used.
+first, installed, and then used.
 
 Subsequent uses of `mvnw`/`mvnw.cmd` use the previously downloaded, specific
 version as needed.
@@ -109,14 +109,14 @@ mvn wrapper:wrapper -Dtype=script
 Another type is the lite implementation of `mvnw`/`mvnw.cmd` scripts which download the maven directly 
 via wget or curl on *nix, or PowerShell on Windows, then call the original `mvn`/`mvn.cmd` 
 scripts of the downloaded maven distribution. 
-This type does not use `maven-wrapper.jar` nor `MavenWrapperDownloader.java`, only the wrapper scripts are required.
-This is the default type being installed, when no type parameter is specified.
+This type does not use `maven-wrapper.jar` nor `MavenWrapperDownloader.java`. Only the wrapper scripts are required.
+This is the default type being installed when no type parameter is specified.
 
 ```shell
 mvn wrapper:wrapper -Dtype=only-script
 ```
 
-If the JAR is not found to be available by the scripts they will attempt to
+If the JAR is not found to be available by the scripts, they will attempt to
 download the file from the URL specified in
 `.mvn/wrapper/maven-wrapper.properties` under `wrapperUrl` and put it in place.
 The download is attempted via curl, wget and, as last resort, by compiling the
@@ -136,7 +136,7 @@ using:
 mvn wrapper:wrapper -Dmaven=3.5.4
 ```
 
-which works for any version including snapshots. Once you have a wrapper you can
+which works for any version including snapshots. Once you have a wrapper, you can
 change its version by setting the `distributionUrl` in
 `.mvn/wrapper/maven-wrapper.properties`, e.g.
 
@@ -166,7 +166,7 @@ options:
 
 ## Specifying Maven Distribution Base Path
 
-Environment variable `MAVEN_USER_HOME` can be set to the path which will be used by the wrapper as the base of the Maven distro installation.
+The environment variable `MAVEN_USER_HOME` can be set to the path which will be used by the wrapper as the base of the Maven distro installation.
 By default, the wrapper uses the `$HOME/.m2` as the base directory for installation.
 
 See https://github.com/takari/maven-wrapper/issues/17
