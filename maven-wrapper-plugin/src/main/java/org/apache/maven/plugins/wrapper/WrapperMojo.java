@@ -23,16 +23,24 @@ import javax.inject.Inject;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import org.apache.maven.Maven;
+import org.apache.maven.artifact.repository.metadata.Metadata;
+import org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader;
+import org.apache.maven.artifact.versioning.ArtifactVersion;
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
+import org.apache.maven.artifact.versioning.InvalidVersionSpecificationException;
+import org.apache.maven.artifact.versioning.VersionRange;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -40,6 +48,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.archiver.UnArchiver;
 import org.codehaus.plexus.components.io.fileselectors.FileSelector;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -49,6 +58,7 @@ import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
 
+import static java.util.stream.Collectors.toList;
 import static org.apache.maven.shared.utils.logging.MessageUtils.buffer;
 
 /**
@@ -69,9 +79,11 @@ public class WrapperMojo extends AbstractMojo {
 
     /**
      * The version of Maven to require, default value is the Runtime version of Maven.
-     * Can be any valid release above 2.0.9
+     * Can be any valid release above 2.0.9.
+     * Automatic version resolution is supported via {@link VersionRange} such as {@code [3.0,4.0-alpha)}.
      *
      * @since 3.0.0
+     * @see <a href="https://maven.apache.org/pom.html#Dependency_Version_Requirement_Specification">Dependency Version Requirement Specification</a>
      */
     @Parameter(property = "maven")
     private String mavenVersion;
@@ -211,7 +223,9 @@ public class WrapperMojo extends AbstractMojo {
                     + " cannot work with mvnd, please set type to '" + TYPE_ONLY_SCRIPT + "'.");
         }
 
-        mavenVersion = getVersion(mavenVersion, Maven.class, "org.apache.maven/maven-core");
+        String repoUrl = getRepoUrl();
+        mavenVersion =
+                resolveVersionRange(getVersion(mavenVersion, Maven.class, "org.apache.maven/maven-core"), repoUrl);
         String wrapperVersion = getVersion(null, this.getClass(), "org.apache.maven.plugins/maven-wrapper-plugin");
 
         final Artifact artifact = downloadWrapperDistribution(wrapperVersion);
@@ -219,7 +233,7 @@ public class WrapperMojo extends AbstractMojo {
         createDirectories(wrapperDir);
         cleanup(wrapperDir);
         unpack(artifact, baseDir);
-        replaceProperties(wrapperVersion, wrapperDir);
+        replaceProperties(wrapperVersion, wrapperDir, repoUrl);
     }
 
     private String determineDistributionType(final Path wrapperDir) {
@@ -303,11 +317,11 @@ public class WrapperMojo extends AbstractMojo {
      *
      * @param wrapperVersion the wrapper version
      * @param targetFolder   the folder containing the wrapper.properties
+     * @param repoUrl        the repository url
      * @throws MojoExecutionException if writing fails
      */
-    private void replaceProperties(String wrapperVersion, Path targetFolder) throws MojoExecutionException {
-        String repoUrl = getRepoUrl();
-
+    private void replaceProperties(String wrapperVersion, Path targetFolder, String repoUrl)
+            throws MojoExecutionException {
         String finalDistributionUrl;
         if (distributionUrl != null && !distributionUrl.trim().isEmpty()) {
             // Use custom distribution URL if provided
@@ -374,6 +388,39 @@ public class WrapperMojo extends AbstractMojo {
             }
         }
         return version;
+    }
+
+    /**
+     * Resolves the actual Maven version to download, resolving the range
+     * provided in {@link WrapperMojo#mavenVersion}
+     *
+     * @param version the provided Maven version range
+     * @param repoUrl the repository url
+     *
+     * @return the highest available version according to the provided range
+     * @throws MojoExecutionException if the provided version range is invalid
+     *
+     * @see <a href="https://maven.apache.org/pom.html#Dependency_Version_Requirement_Specification">Dependency Version Requirement Specification</a>
+     */
+    String resolveVersionRange(String version, String repoUrl) throws MojoExecutionException {
+        try {
+            VersionRange range = VersionRange.createFromVersionSpec(version);
+            if (range.getRecommendedVersion() != null) {
+                return version;
+            }
+
+            URI uri = URI.create(repoUrl + "/org/apache/maven/apache-maven/maven-metadata.xml");
+            Metadata metadata = new MetadataXpp3Reader().read(uri.toURL().openStream());
+            List<ArtifactVersion> versions = metadata.getVersioning().getVersions().stream()
+                    .map(DefaultArtifactVersion::new)
+                    .collect(toList());
+
+            return range.matchVersion(versions).toString();
+        } catch (IOException | XmlPullParserException e) {
+            return version;
+        } catch (InvalidVersionSpecificationException e) {
+            throw new MojoExecutionException("Invalid version specification: " + version, e);
+        }
     }
 
     /**
