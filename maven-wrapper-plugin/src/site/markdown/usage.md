@@ -55,8 +55,12 @@ You can still use `-Dtype={type}` to change the distribution type for an existin
 Maven Version
 -------------
 By default the plugin will assume the same version as the Maven runtime (calling `mvn -v`). But you can pick a different version.
-You can call `mvn wrapper:wrapper -Dmaven=x`, where `x` is any valid Apache Maven Release (see [Maven Central](https://central.sonatype.com/artifact/org.apache.maven/apache-maven/versions)).
-Another option is to adjust the `distributionUrl` in `.mvn/wrapper/maven-wrapper.properties`.
+You can call `mvn wrapper:wrapper -Dmaven=x`, where `x` is any valid Apache Maven Release (see [Maven Central](https://central.sonatype.com/artifact/org.apache.maven/apache-maven/versions))
+or a version range (see [Dependency Version Requirement Specification](https://maven.apache.org/pom.html#Dependency_Version_Requirement_Specification)).
+In the latter case, mind that round brackets must be escaped with a backslash, as in `-Dmaven=[3.0,4.0\)`,
+or the whole argument must be quoted: `-Dmaven="[3.0,4.0)"`.
+
+Another option is to adjust the `distributionUrl` in `.mvn/wrapper/maven-wrapper.properties` with the specific version.
 
 Debugging
 ---------
