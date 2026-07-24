@@ -38,7 +38,7 @@ under the License.
   </prerequisites>
 
   <properties>
-    <version.mockito>4.11.0</version.mockito>
+    <version.mockito>5.23.0</version.mockito>
   </properties>
 
   <dependencies>
@@ -76,6 +76,12 @@ under the License.
       <version>3.6.0</version>
     </dependency>
     <dependency>
+      <groupId>org.codehaus.plexus</groupId>
+      <artifactId>plexus-utils</artifactId>
+      <version>3.6.1</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-api</artifactId>
       <version>1.9.27</version>
@@ -111,6 +117,11 @@ under the License.
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-params</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
