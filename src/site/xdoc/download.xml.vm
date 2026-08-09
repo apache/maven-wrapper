@@ -51,9 +51,9 @@ under the License.
           <tbody>
             <tr>
               <td>${project.name} ${project.version} (Source zip)</td>
-              <td><a href="https://dlcdn.apache.org/maven/wrapper/maven-wrapper-${project.version}-source-release.zip">maven-wrapper--${project.version}-source-release.zip</a></td>
-              <td><a href="https://downloads.apache.org/maven/wrapper/maven-wrapper-${project.version}-source-release.zip.sha512">maven-wrapper--${project.version}-source-release.zip.sha512</a></td>
-              <td><a href="https://downloads.apache.org/maven/wrapper/maven-wrapper-${project.version}-source-release.zip.asc">maven-wrapper--${project.version}-source-release.zip.asc</a></td>
+              <td><a href="https://dlcdn.apache.org/maven/wrapper/maven-wrapper-${project.version}-source-release.zip">maven-wrapper-${project.version}-source-release.zip</a></td>
+              <td><a href="https://downloads.apache.org/maven/wrapper/maven-wrapper-${project.version}-source-release.zip.sha512">maven-wrapper-${project.version}-source-release.zip.sha512</a></td>
+              <td><a href="https://downloads.apache.org/maven/wrapper/maven-wrapper-${project.version}-source-release.zip.asc">maven-wrapper-${project.version}-source-release.zip.asc</a></td>
             </tr>
           </tbody>
         </table>
