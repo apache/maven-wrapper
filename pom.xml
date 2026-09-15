@@ -66,7 +66,7 @@ under the License.
     <maven.site.path>tools-archives/wrapper-LATEST</maven.site.path>
     <mavenVersion>3.9.16</mavenVersion>
     <javaVersion>8</javaVersion>
-    <version.exec-maven-plugin>3.6.3</version.exec-maven-plugin>
+    <version.exec-maven-plugin>3.6.4</version.exec-maven-plugin>
 
     <project.build.outputTimestamp>2025-09-08T13:21:31Z</project.build.outputTimestamp>
   </properties>
