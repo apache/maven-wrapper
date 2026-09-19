@@ -23,15 +23,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.regex.Pattern;
 
-import org.hamcrest.BaseMatcher;
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -57,8 +53,8 @@ public class PathAssemblerTest {
         configuration.setDistribution(new URI("http://server/dist/maven-0.9-bin.zip"));
 
         Path distributionDir = pathAssembler.getDistribution(configuration).getDistributionDir();
-        assertThat(distributionDir.getFileName().toString(), matchesRegexp("[a-z0-9]+"));
-        assertThat(distributionDir.getParent(), equalTo(file(TEST_MAVEN_USER_HOME + "/somePath/maven-0.9-bin")));
+        assertMatchesRegexp("[a-z0-9]+", distributionDir.getFileName().toString());
+        assertEquals(file(TEST_MAVEN_USER_HOME + "/somePath/maven-0.9-bin"), distributionDir.getParent());
     }
 
     @Test
@@ -67,8 +63,8 @@ public class PathAssemblerTest {
         configuration.setDistribution(new URI("http://server/dist/maven-0.9-bin.zip"));
 
         Path distributionDir = pathAssembler.getDistribution(configuration).getDistributionDir();
-        assertThat(distributionDir.getFileName().toString(), matchesRegexp("[a-z0-9]+"));
-        assertThat(distributionDir.getParent(), equalTo(file(currentDirPath() + "/somePath/maven-0.9-bin")));
+        assertMatchesRegexp("[a-z0-9]+", distributionDir.getFileName().toString());
+        assertEquals(file(currentDirPath() + "/somePath/maven-0.9-bin"), distributionDir.getParent());
     }
 
     @Test
@@ -89,9 +85,11 @@ public class PathAssemblerTest {
         configuration.setDistribution(new URI("http://server/dist/maven-1.0.zip"));
 
         Path dist = pathAssembler.getDistribution(configuration).getZipFile();
-        assertThat(dist.getFileName().toString(), equalTo("maven-1.0.zip"));
-        assertThat(dist.getParent().getFileName().toString(), matchesRegexp("[a-z0-9]+"));
-        assertThat(dist.getParent().getParent(), equalTo(file(TEST_MAVEN_USER_HOME + "/somePath/maven-1.0")));
+        assertEquals("maven-1.0.zip", dist.getFileName().toString());
+        assertMatchesRegexp("[a-z0-9]+", dist.getParent().getFileName().toString());
+        assertEquals(
+                file(TEST_MAVEN_USER_HOME + "/somePath/maven-1.0"),
+                dist.getParent().getParent());
     }
 
     @Test
@@ -100,9 +98,10 @@ public class PathAssemblerTest {
         configuration.setDistribution(new URI("http://server/dist/maven-1.0.zip"));
 
         Path dist = pathAssembler.getDistribution(configuration).getZipFile();
-        assertThat(dist.getFileName().toString(), equalTo("maven-1.0.zip"));
-        assertThat(dist.getParent().getFileName().toString(), matchesRegexp("[a-z0-9]+"));
-        assertThat(dist.getParent().getParent(), equalTo(file(currentDirPath() + "/somePath/maven-1.0")));
+        assertEquals("maven-1.0.zip", dist.getFileName().toString());
+        assertMatchesRegexp("[a-z0-9]+", dist.getParent().getFileName().toString());
+        assertEquals(
+                file(currentDirPath() + "/somePath/maven-1.0"), dist.getParent().getParent());
     }
 
     @Test
@@ -111,9 +110,10 @@ public class PathAssemblerTest {
         configuration.setDistribution(new URI("file:///C:/maven-1.0.zip"));
 
         Path dist = pathAssembler.getDistribution(configuration).getZipFile();
-        assertThat(dist.getFileName().toString(), equalTo("maven-1.0.zip"));
-        assertThat(dist.getParent().getFileName().toString(), matchesRegexp("[a-z0-9]+"));
-        assertThat(dist.getParent().getParent(), equalTo(file(currentDirPath() + "/somePath/maven-1.0")));
+        assertEquals("maven-1.0.zip", dist.getFileName().toString());
+        assertMatchesRegexp("[a-z0-9]+", dist.getParent().getFileName().toString());
+        assertEquals(
+                file(currentDirPath() + "/somePath/maven-1.0"), dist.getParent().getParent());
     }
 
     private Path file(String path) {
@@ -124,17 +124,9 @@ public class PathAssemblerTest {
         return System.getProperty("user.dir");
     }
 
-    public static <T extends CharSequence> Matcher<T> matchesRegexp(final String pattern) {
-        return new BaseMatcher<T>() {
-            @Override
-            public boolean matches(Object o) {
-                return Pattern.compile(pattern).matcher((CharSequence) o).matches();
-            }
-
-            @Override
-            public void describeTo(Description description) {
-                description.appendText("a CharSequence that matches regexp ").appendValue(pattern);
-            }
-        };
+    private static void assertMatchesRegexp(String pattern, CharSequence input) {
+        assertTrue(
+                Pattern.compile(pattern).matcher(input).matches(),
+                () -> "expected <" + input + "> to match regexp " + pattern);
     }
 }

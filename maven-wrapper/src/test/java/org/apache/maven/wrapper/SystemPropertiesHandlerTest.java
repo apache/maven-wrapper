@@ -30,8 +30,7 @@ import java.util.Properties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class SystemPropertiesHandlerTest {
 
@@ -57,12 +56,12 @@ class SystemPropertiesHandlerTest {
         Map<String, String> expected = new HashMap<>();
         expected.put("c", "d");
 
-        assertThat(SystemPropertiesHandler.getSystemProperties(propFile), equalTo(expected));
+        assertEquals(expected, SystemPropertiesHandler.getSystemProperties(propFile));
     }
 
     @Test
     void ifNoPropertyFileExistShouldReturnEmptyMap() {
         Map<String, String> expected = new HashMap<>();
-        assertThat(SystemPropertiesHandler.getSystemProperties(tmpDir.resolve("unknown")), equalTo(expected));
+        assertEquals(expected, SystemPropertiesHandler.getSystemProperties(tmpDir.resolve("unknown")));
     }
 }
