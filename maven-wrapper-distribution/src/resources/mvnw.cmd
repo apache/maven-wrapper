@@ -87,7 +87,9 @@ goto error
 set MAVEN_PROJECTBASEDIR=%MAVEN_BASEDIR%
 IF NOT "%MAVEN_PROJECTBASEDIR%"=="" goto endDetectBaseDir
 
+pushd "%~dp0" >nul 2>&1
 set EXEC_DIR=%CD%
+popd >nul 2>&1
 set WDIR=%EXEC_DIR%
 :findBaseDir
 IF EXIST "%WDIR%"\.mvn goto baseDirFound
