@@ -29,6 +29,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -48,6 +50,12 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
+import org.eclipse.aether.resolution.VersionRangeRequest;
+import org.eclipse.aether.resolution.VersionRangeResolutionException;
+import org.eclipse.aether.util.version.GenericVersionScheme;
+import org.eclipse.aether.version.InvalidVersionSpecificationException;
+import org.eclipse.aether.version.Version;
+import org.eclipse.aether.version.VersionConstraint;
 
 import static org.apache.maven.shared.utils.logging.MessageUtils.buffer;
 
@@ -211,7 +219,7 @@ public class WrapperMojo extends AbstractMojo {
                     + " cannot work with mvnd, please set type to '" + TYPE_ONLY_SCRIPT + "'.");
         }
 
-        mavenVersion = getVersion(mavenVersion, Maven.class, "org.apache.maven/maven-core");
+        mavenVersion = resolveMavenVersion(getVersion(mavenVersion, Maven.class, "org.apache.maven/maven-core"));
         String wrapperVersion = getVersion(null, this.getClass(), "org.apache.maven.plugins/maven-wrapper-plugin");
 
         final Artifact artifact = downloadWrapperDistribution(wrapperVersion);
@@ -374,6 +382,38 @@ public class WrapperMojo extends AbstractMojo {
             }
         }
         return version;
+    }
+
+    private String resolveMavenVersion(String version) {
+        try {
+            VersionConstraint constraint = new GenericVersionScheme().parseVersionConstraint(version);
+            if (constraint.getVersion() != null) {
+                return constraint.getVersion().toString();
+            } else {
+                Artifact artifact = new DefaultArtifact("org.apache.maven:apache-maven:bin:zip:" + version);
+                VersionRangeRequest request = new VersionRangeRequest(
+                        artifact,
+                        Collections.singletonList(
+                                new RemoteRepository.Builder(DEFAULT_REPO_ID, "default", DEFAULT_REPO_URL).build()),
+                        "wrapper");
+                List<Version> versions = repositorySystem
+                        .resolveVersionRange(repositorySystemSession, request)
+                        .getVersions();
+                if (!versions.isEmpty()) {
+                    versions.sort(Comparator.reverseOrder());
+                    for (Version ver : versions) {
+                        String v = ver.toString();
+                        artifact = artifact.setVersion(v);
+                        if (!artifact.isSnapshot()) {
+                            return v;
+                        }
+                    }
+                }
+                return version;
+            }
+        } catch (InvalidVersionSpecificationException | VersionRangeResolutionException e) {
+            return version;
+        }
     }
 
     /**
