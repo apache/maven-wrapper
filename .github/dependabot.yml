@@ -25,6 +25,9 @@ updates:
       # mrm-maven-plugin 2.x requires Java 17
       - dependency-name: "org.codehaus.mojo:mrm-maven-plugin"
         versions: [">= 2.0.0"]
+      # Mockito 5 requires Java 11; the build still runs on JDK 8
+      - dependency-name: "org.mockito:*"
+        versions: [">= 5.0.0"]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
