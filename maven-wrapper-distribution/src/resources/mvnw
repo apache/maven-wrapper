@@ -225,6 +225,7 @@ else
     wrapperUrl="https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper/@@project.version@@/maven-wrapper-@@project.version@@.jar"
   fi
   while IFS="=" read -r key value; do
+    key=$(trim "${key-}")
     case "$key" in wrapperUrl)
       wrapperUrl=$(trim "${value-}")
       break
@@ -281,6 +282,7 @@ fi
 # If specified, validate the SHA-256 sum of the Maven wrapper jar file
 wrapperSha256Sum=""
 while IFS="=" read -r key value; do
+  key=$(trim "${key-}")
   case "$key" in wrapperSha256Sum)
     wrapperSha256Sum=$(trim "${value-}")
     break
