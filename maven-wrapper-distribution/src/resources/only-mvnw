@@ -172,6 +172,12 @@ mkdir -p -- "${MAVEN_HOME%/*}"
 
 # select .zip or .tar.gz
 if ! command -v unzip >/dev/null; then
+  if [ -n "${distributionSha256Sum-}" ]; then
+    die "Cannot validate the pinned distributionSha256Sum: it is computed for the .zip
+distribution, but 'unzip' is not available so mvnw would fall back to the .tar.gz.
+Install 'unzip', or remove 'distributionSha256Sum' from
+.mvn/wrapper/maven-wrapper.properties to allow the .tar.gz fallback."
+  fi
   distributionUrl="${distributionUrl%.zip}.tar.gz"
   distributionUrlName="${distributionUrl##*/}"
 fi
