@@ -29,10 +29,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import org.apache.maven.Maven;
+import org.apache.maven.artifact.versioning.VersionRange;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -48,7 +50,11 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
+import org.eclipse.aether.resolution.VersionRangeRequest;
+import org.eclipse.aether.resolution.VersionRangeResolutionException;
+import org.eclipse.aether.version.Version;
 
+import static java.util.Comparator.reverseOrder;
 import static org.apache.maven.shared.utils.logging.MessageUtils.buffer;
 
 /**
@@ -69,9 +75,11 @@ public class WrapperMojo extends AbstractMojo {
 
     /**
      * The version of Maven to require, default value is the Runtime version of Maven.
-     * Can be any valid release above 2.0.9
+     * Can be any valid release above 2.0.9.
+     * Automatic version resolution is supported via {@link VersionRange} such as {@code [3.0,4.0-alpha)}.
      *
      * @since 3.0.0
+     * @see <a href="https://maven.apache.org/pom.html#Dependency_Version_Requirement_Specification">Dependency Version Requirement Specification</a>
      */
     @Parameter(property = "maven")
     private String mavenVersion;
@@ -211,7 +219,7 @@ public class WrapperMojo extends AbstractMojo {
                     + " cannot work with mvnd, please set type to '" + TYPE_ONLY_SCRIPT + "'.");
         }
 
-        mavenVersion = getVersion(mavenVersion, Maven.class, "org.apache.maven/maven-core");
+        mavenVersion = resolveMavenVersion(getVersion(mavenVersion, Maven.class, "org.apache.maven/maven-core"));
         String wrapperVersion = getVersion(null, this.getClass(), "org.apache.maven.plugins/maven-wrapper-plugin");
 
         final Artifact artifact = downloadWrapperDistribution(wrapperVersion);
@@ -374,6 +382,36 @@ public class WrapperMojo extends AbstractMojo {
             }
         }
         return version;
+    }
+
+    /**
+     * Resolves the actual Maven version to download, given the range in {@link WrapperMojo#mavenVersion}.
+     * If the requested range could not be parsed, the version provided as input is returned.
+     *
+     * @param version the Maven version range
+     *
+     * @return the highest release version according to the provided range
+     * @see <a href="https://maven.apache.org/pom.html#Dependency_Version_Requirement_Specification">Dependency Version Requirement Specification</a>
+     */
+    String resolveMavenVersion(String version) {
+        try {
+            Artifact artifact = new DefaultArtifact("org.apache.maven:apache-maven:" + version);
+            VersionRangeRequest request = new VersionRangeRequest(
+                    artifact, session.getCurrentProject().getRemotePluginRepositories(), "wrapper");
+
+            List<Version> versions = repositorySystem
+                    .resolveVersionRange(repositorySystemSession, request)
+                    .getVersions();
+            versions.sort(reverseOrder());
+
+            return versions.stream()
+                    .map(Version::toString)
+                    .filter(v -> !artifact.setVersion(v).isSnapshot())
+                    .findFirst()
+                    .orElse(version);
+        } catch (VersionRangeResolutionException e) {
+            return version;
+        }
     }
 
     /**
