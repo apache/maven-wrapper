@@ -146,6 +146,18 @@ if ($distributionSha256Sum) {
   }
 }
 
+# If specified, validate the SHA-512 sum of the Maven distribution zip file
+$distributionSha512Sum = (Get-Content -Raw "$scriptDir/.mvn/wrapper/maven-wrapper.properties" | ConvertFrom-StringData).distributionSha512Sum
+if ($distributionSha512Sum) {
+  if ($USE_MVND) {
+    Write-Error "Checksum validation is not supported for maven-mvnd. `nPlease disable validation by removing 'distributionSha512Sum' from your maven-wrapper.properties."
+  }
+  Import-Module $PSHOME\Modules\Microsoft.PowerShell.Utility -Function Get-FileHash
+  if ((Get-FileHash "$TMP_DOWNLOAD_DIR/$distributionUrlName" -Algorithm SHA512).Hash.ToLower() -ne $distributionSha512Sum) {
+    Write-Error "Error: Failed to validate Maven distribution SHA-512, your Maven distribution might be compromised. If you updated your Maven version, you need to update the specified distributionSha512Sum property."
+  }
+}
+
 # unzip and move
 Expand-Archive "$TMP_DOWNLOAD_DIR/$distributionUrlName" -DestinationPath "$TMP_DOWNLOAD_DIR" | Out-Null
 
