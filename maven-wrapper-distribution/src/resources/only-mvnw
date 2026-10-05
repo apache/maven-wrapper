@@ -109,10 +109,16 @@ scriptDir="$(dirname "$0")"
 scriptName="$(basename "$0")"
 
 # parse distributionUrl and optional distributionSha256Sum, requires .mvn/wrapper/maven-wrapper.properties
+# retryCount: number of download retries (default 0, i.e. no retry)
+# retryDelay: seconds to wait between retries (default 3)
+retryCount=0
+retryDelay=3
 while IFS="=" read -r key value; do
   case "${key-}" in
   distributionUrl) distributionUrl=$(trim "${value-}") ;;
   distributionSha256Sum) distributionSha256Sum=$(trim "${value-}") ;;
+  retryCount) retryCount=$(trim "${value-}") ;;
+  retryDelay) retryDelay=$(trim "${value-}") ;;
   esac
 done <"$scriptDir/.mvn/wrapper/maven-wrapper.properties"
 [ -n "${distributionUrl-}" ] || die "cannot read distributionUrl property in $scriptDir/.mvn/wrapper/maven-wrapper.properties"
@@ -193,10 +199,10 @@ esac
 
 if [ -z "${MVNW_USERNAME-}" ] && command -v wget >/dev/null; then
   verbose "Found wget ... using wget"
-  wget ${__MVNW_QUIET_WGET:+"$__MVNW_QUIET_WGET"} "$distributionUrl" -O "$TMP_DOWNLOAD_DIR/$distributionUrlName" || die "wget: Failed to fetch $distributionUrl"
+  wget ${__MVNW_QUIET_WGET:+"$__MVNW_QUIET_WGET"} --tries="$((retryCount + 1))" --waitretry="$retryDelay" "$distributionUrl" -O "$TMP_DOWNLOAD_DIR/$distributionUrlName" || die "wget: Failed to fetch $distributionUrl"
 elif [ -z "${MVNW_USERNAME-}" ] && command -v curl >/dev/null; then
   verbose "Found curl ... using curl"
-  curl ${__MVNW_QUIET_CURL:+"$__MVNW_QUIET_CURL"} -f -L -o "$TMP_DOWNLOAD_DIR/$distributionUrlName" "$distributionUrl" || die "curl: Failed to fetch $distributionUrl"
+  curl ${__MVNW_QUIET_CURL:+"$__MVNW_QUIET_CURL"} --retry "$retryCount" --retry-delay "$retryDelay" -f -L -o "$TMP_DOWNLOAD_DIR/$distributionUrlName" "$distributionUrl" || die "curl: Failed to fetch $distributionUrl"
 elif set_java_home; then
   verbose "Falling back to use Java to download"
   javaSource="$TMP_DOWNLOAD_DIR/Downloader.java"
