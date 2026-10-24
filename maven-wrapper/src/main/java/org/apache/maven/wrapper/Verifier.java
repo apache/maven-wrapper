@@ -29,5 +29,7 @@ public interface Verifier {
 
     String SHA_256_ALGORITHM = "SHA-256";
 
+    String SHA_512_ALGORITHM = "SHA-512";
+
     void verify(Path file, String property, String algorithm, String expectedSum) throws Exception;
 }

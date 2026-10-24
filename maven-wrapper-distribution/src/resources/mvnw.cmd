@@ -172,6 +172,25 @@ IF NOT %WRAPPER_SHA_256_SUM%=="" (
     if ERRORLEVEL 1 goto error
 )
 
+@REM If specified, validate the SHA-512 sum of the Maven wrapper jar file
+SET WRAPPER_SHA_512_SUM=""
+FOR /F "usebackq tokens=1,2 delims==" %%A IN ("%MAVEN_PROJECTBASEDIR%\.mvn\wrapper\maven-wrapper.properties") DO (
+    IF "%%A"=="wrapperSha512Sum" SET WRAPPER_SHA_512_SUM=%%B
+)
+IF NOT %WRAPPER_SHA_512_SUM%=="" (
+    powershell -Command "&{"^
+       "Import-Module $PSHOME\Modules\Microsoft.PowerShell.Utility -Function Get-FileHash;"^
+       "$hash = (Get-FileHash \"%WRAPPER_JAR%\" -Algorithm SHA512).Hash.ToLower();"^
+       "If('%WRAPPER_SHA_512_SUM%' -ne $hash){"^
+       "  Write-Error 'Error: Failed to validate Maven wrapper SHA-512, your Maven wrapper might be compromised.';"^
+       "  Write-Error 'Investigate or delete %WRAPPER_JAR% to attempt a clean download.';"^
+       "  Write-Error 'If you updated your Maven version, you need to update the specified wrapperSha512Sum property.';"^
+       "  exit 1;"^
+       "}"^
+       "}"
+    if ERRORLEVEL 1 goto error
+)
+
 @REM Provide a "standardized" way to retrieve the CLI args that will
 @REM work with both Windows and non-Windows executions.
 set MAVEN_CMD_LINE_ARGS=%*
