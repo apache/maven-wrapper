@@ -160,8 +160,10 @@ case "${distributionUrl-}" in
 *) die "distributionUrl is not valid, must match *-bin.zip or maven-mvnd-*.zip, but found '${distributionUrl-}'" ;;
 esac
 
-# prepare tmp dir
-if TMP_DOWNLOAD_DIR="$(mktemp -d)" && [ -d "$TMP_DOWNLOAD_DIR" ]; then
+# prepare tmp dir (POSIX-compatible: avoid mktemp which is not available in all shells)
+_tmp_base="${TMPDIR:-/tmp}"
+TMP_DOWNLOAD_DIR="$_tmp_base/maven_wrapper.$$_$(date +%s)"
+if mkdir -p -- "$TMP_DOWNLOAD_DIR" && [ -d "$TMP_DOWNLOAD_DIR" ]; then
   clean() { rm -rf -- "$TMP_DOWNLOAD_DIR"; }
   trap clean HUP INT TERM EXIT
 else
