@@ -116,6 +116,14 @@ under the License.
           <artifactId>exec-maven-plugin</artifactId>
           <version>${version.exec-maven-plugin}</version>
         </plugin>
+        <plugin>
+          <groupId>org.apache.tooling</groupId>
+          <artifactId>atr-maven-plugin</artifactId>
+          <configuration>
+            <!-- override - the default is project.artifactId -->
+            <project>maven-wrapper</project>
+          </configuration>
+        </plugin>
       </plugins>
     </pluginManagement>
 
