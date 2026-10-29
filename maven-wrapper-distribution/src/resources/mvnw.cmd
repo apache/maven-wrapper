@@ -176,12 +176,22 @@ IF NOT %WRAPPER_SHA_256_SUM%=="" (
 @REM work with both Windows and non-Windows executions.
 set MAVEN_CMD_LINE_ARGS=%*
 
+@REM When the project sits at a drive root (e.g. after "subst Z: <dir>"), MAVEN_PROJECTBASEDIR is
+@REM "Z:\" with a trailing backslash. Left as-is, that backslash would sit right before the closing
+@REM quote of the -D argument below, i.e. ...PROJECTBASEDIR=Z:\" - which the next process' C runtime
+@REM command-line parser reads as an escaped, literal quote rather than the argument's closing quote,
+@REM corrupting the rest of the command line. Doubling the trailing backslash keeps the same path
+@REM (a doubled trailing backslash in a Windows path is equivalent to a single one) while making the
+@REM parser treat it as two literal backslashes instead of an escape for the quote that follows.
+set "MAVEN_PROJECTBASEDIR_ARG=%MAVEN_PROJECTBASEDIR%"
+IF "%MAVEN_PROJECTBASEDIR_ARG:~-1%"=="\" set "MAVEN_PROJECTBASEDIR_ARG=%MAVEN_PROJECTBASEDIR_ARG%\"
+
 %MAVEN_JAVA_EXE% ^
   %JVM_CONFIG_MAVEN_PROPS% ^
   %MAVEN_OPTS% ^
   %MAVEN_DEBUG_OPTS% ^
   -classpath %WRAPPER_JAR% ^
-  "-Dmaven.multiModuleProjectDirectory=%MAVEN_PROJECTBASEDIR%" ^
+  "-Dmaven.multiModuleProjectDirectory=%MAVEN_PROJECTBASEDIR_ARG%" ^
   %WRAPPER_LAUNCHER% %MAVEN_CONFIG% %*
 if ERRORLEVEL 1 goto error
 goto end
