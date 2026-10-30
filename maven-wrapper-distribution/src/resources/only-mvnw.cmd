@@ -159,12 +159,15 @@ if ((Test-Path -Path $expectedPath -PathType Container) -and (Test-Path -Path $e
   $actualDistributionDir = $distributionUrlNameMain
 }
 
-# If not found, search for any directory with the Maven executable (for snapshots)
+# If not found, search for any directory with the Maven executable (for snapshots).
+# Sorted and stopped at the first match so the outcome does not depend on filesystem
+# enumeration order, matching the first-match semantics of the "only-mvnw" shell script.
 if (!$actualDistributionDir) {
-  Get-ChildItem -Path "$TMP_DOWNLOAD_DIR" -Directory | ForEach-Object {
-    $testPath = Join-Path $_.FullName "bin/$MVN_CMD"
+  foreach ($candidate in (Get-ChildItem -Path "$TMP_DOWNLOAD_DIR" -Directory | Sort-Object Name)) {
+    $testPath = Join-Path $candidate.FullName "bin/$MVN_CMD"
     if (Test-Path -Path $testPath -PathType Leaf) {
-      $actualDistributionDir = $_.Name
+      $actualDistributionDir = $candidate.Name
+      break
     }
   }
 }
