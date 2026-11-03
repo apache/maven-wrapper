@@ -312,6 +312,13 @@ fi
 
 MAVEN_OPTS="$(concat_lines "$MAVEN_PROJECTBASEDIR/.mvn/jvm.config") $MAVEN_OPTS"
 
+# Silence the JDK 22+ native-access warning that Jansi (bundled in the Maven distribution
+# the wrapper boots in this same JVM) triggers on platforms where it loads a native library.
+# Probe first: older JDKs reject this flag as unrecognized, so only add it when understood.
+if "$JAVACMD" --enable-native-access=ALL-UNNAMED -version >/dev/null 2>&1; then
+  MAVEN_OPTS="--enable-native-access=ALL-UNNAMED $MAVEN_OPTS"
+fi
+
 # For Cygwin, switch paths to Windows format before running java
 if $cygwin; then
   [ -n "$JAVA_HOME" ] \
