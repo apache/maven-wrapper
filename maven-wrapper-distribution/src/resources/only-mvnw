@@ -220,7 +220,11 @@ END
   "$(native_path "$JAVACCMD")" "$(native_path "$javaSource")" || die "Failed to compile Downloader.java"
   verbose " - Running Downloader.java ..."
   "$(native_path "$JAVACMD")" -cp "$(native_path "$TMP_DOWNLOAD_DIR")" Downloader "$distributionUrl" "$(native_path "$targetZip")"
+else
+  die "No download mechanism available: install wget or curl, or make a JDK available on PATH / via JAVA_HOME"
 fi
+
+[ -f "$TMP_DOWNLOAD_DIR/$distributionUrlName" ] || die "Distribution was not downloaded: $distributionUrl"
 
 # If specified, validate the SHA-256 sum of the Maven distribution zip file
 if [ -n "${distributionSha256Sum-}" ]; then
