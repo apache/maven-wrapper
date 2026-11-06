@@ -57,6 +57,8 @@ public class MavenWrapperMain {
     public static final String MVNW_REPOURL = "MVNW_REPOURL";
 
     public static void main(String[] args) throws Exception {
+        Logger.setQuiet(isQuiet(args));
+
         Path wrapperJar = wrapperJar();
         Path propertiesFile = wrapperProperties(wrapperJar);
         Path rootDir = rootDir(wrapperJar);
@@ -77,6 +79,20 @@ public class MavenWrapperMain {
                         new HashAlgorithmVerifier(),
                         new PathAssembler(mavenUserHome())),
                 new BootstrapMainStarter());
+    }
+
+    /**
+     * Mirrors Maven's own {@code -q}/{@code --quiet} option, which restricts output to errors only. The wrapper
+     * prints diagnostics of its own (e.g. an insecure-download warning) before Maven itself ever parses the
+     * forwarded arguments, so it must recognize this option independently to honor it.
+     */
+    static boolean isQuiet(String[] args) {
+        for (String arg : args) {
+            if ("-q".equals(arg) || "--quiet".equals(arg)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static Map<String, String> parseSystemPropertiesFromArgs(String[] args) {
