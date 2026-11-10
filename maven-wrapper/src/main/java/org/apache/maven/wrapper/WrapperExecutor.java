@@ -49,6 +49,8 @@ public class WrapperExecutor {
 
     public static final String DISTRIBUTION_SHA_256_SUM = "distributionSha256Sum";
 
+    public static final String DISTRIBUTION_SHA_512_SUM = "distributionSha512Sum";
+
     public static final String ALWAYS_DOWNLOAD = "alwaysDownload";
 
     public static final String ALWAYS_UNPACK = "alwaysUnpack";
@@ -85,6 +87,7 @@ public class WrapperExecutor {
                 config.setZipPath(Paths.get(
                         getProperty(ZIP_STORE_PATH_PROPERTY, config.getZipPath().toString())));
                 config.setDistributionSha256Sum(getProperty(DISTRIBUTION_SHA_256_SUM, ""));
+                config.setDistributionSha512Sum(getProperty(DISTRIBUTION_SHA_512_SUM, ""));
                 config.setAlwaysUnpack(Boolean.parseBoolean(getProperty(ALWAYS_UNPACK, Boolean.FALSE.toString())));
                 config.setAlwaysDownload(Boolean.parseBoolean(getProperty(ALWAYS_DOWNLOAD, Boolean.FALSE.toString())));
             } catch (Exception e) {

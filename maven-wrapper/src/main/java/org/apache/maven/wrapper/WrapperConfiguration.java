@@ -45,6 +45,8 @@ public class WrapperConfiguration {
 
     private String distributionSha256Sum;
 
+    private String distributionSha512Sum;
+
     public boolean isAlwaysDownload() {
         return alwaysDownload;
     }
@@ -105,7 +107,15 @@ public class WrapperConfiguration {
         return distributionSha256Sum;
     }
 
+    public String getDistributionSha512Sum() {
+        return distributionSha512Sum;
+    }
+
     public void setDistributionSha256Sum(String distributionSha256Sum) {
         this.distributionSha256Sum = distributionSha256Sum;
+    }
+
+    public void setDistributionSha512Sum(String distributionSha512Sum) {
+        this.distributionSha512Sum = distributionSha512Sum;
     }
 }
