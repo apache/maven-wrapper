@@ -41,7 +41,7 @@ CYGWIN* | MINGW*)
   ;;
 esac
 
-# set JAVACMD and JAVACCMD
+# set JAVACMD, JAVACCMD and JARCMD
 set_java_home() {
   # For Cygwin and MinGW, ensure paths are in Unix format before anything is touched
   if [ -n "${JAVA_HOME-}" ]; then
@@ -52,12 +52,16 @@ set_java_home() {
     else
       JAVACMD="$JAVA_HOME/bin/java"
       JAVACCMD="$JAVA_HOME/bin/javac"
+    fi
+    JARCMD="$JAVA_HOME/bin/jar"
+    if [ ! -x "$JARCMD" ]; then
+      JARCMD="$JAVA_HOME/jre/bin/jar"
+    fi
 
-      if [ ! -x "$JAVACMD" ] || [ ! -x "$JAVACCMD" ]; then
-        echo "The JAVA_HOME environment variable is not defined correctly, so mvnw cannot run." >&2
-        echo "JAVA_HOME is set to \"$JAVA_HOME\", but \"\$JAVA_HOME/bin/java\" or \"\$JAVA_HOME/bin/javac\" does not exist." >&2
-        return 1
-      fi
+    if [ ! -x "$JAVACMD" ] || [ ! -x "$JAVACCMD" ] || [ ! -x "$JARCMD" ]; then
+      echo "The JAVA_HOME environment variable is not defined correctly, so mvnw cannot run." >&2
+      echo "JAVA_HOME is set to \"$JAVA_HOME\", but \"\$JAVA_HOME/bin/java\", \"\$JAVA_HOME/bin/javac\" or \"\$JAVA_HOME/bin/jar\" does not exist." >&2
+      return 1
     fi
   else
     JAVACMD="$(
@@ -70,9 +74,14 @@ set_java_home() {
       'unset' -f command 2>/dev/null
       'command' -v javac
     )" || :
+    JARCMD="$(
+      'set' +e
+      'unset' -f command 2>/dev/null
+      'command' -v jar
+    )" || :
 
-    if [ ! -x "${JAVACMD-}" ] || [ ! -x "${JAVACCMD-}" ]; then
-      echo "The java/javac command does not exist in PATH nor is JAVA_HOME set, so mvnw cannot run." >&2
+    if [ ! -x "${JAVACMD-}" ] || [ ! -x "${JAVACCMD-}" ] || [ ! -x "${JARCMD-}" ]; then
+      echo "The java/javac/jar command does not exist in PATH nor is JAVA_HOME set, so mvnw cannot run." >&2
       return 1
     fi
   fi
@@ -170,11 +179,9 @@ fi
 
 mkdir -p -- "${MAVEN_HOME%/*}"
 
-# select .zip or .tar.gz
-if ! command -v unzip >/dev/null; then
-  distributionUrl="${distributionUrl%.zip}.tar.gz"
-  distributionUrlName="${distributionUrl##*/}"
-fi
+# jar from the JDK is required to extract the distribution; resolve the JDK
+# tools here so they are guaranteed even when wget/curl are used for download
+set_java_home || die "java/javac/jar are required to download and install Maven"
 
 # Download and Install Apache Maven
 verbose "Couldn't find MAVEN_HOME, downloading and installing it ..."
@@ -182,8 +189,8 @@ verbose "Downloading from: $distributionUrl"
 verbose "Downloading to: $TMP_DOWNLOAD_DIR/$distributionUrlName"
 
 # verbose opt
-__MVNW_QUIET_WGET=--quiet __MVNW_QUIET_CURL=--silent __MVNW_QUIET_UNZIP=-q __MVNW_QUIET_TAR=''
-[ "${MVNW_VERBOSE-}" != true ] || __MVNW_QUIET_WGET='' __MVNW_QUIET_CURL='' __MVNW_QUIET_UNZIP='' __MVNW_QUIET_TAR=v
+__MVNW_QUIET_WGET=--quiet __MVNW_QUIET_CURL=--silent
+[ "${MVNW_VERBOSE-}" != true ] || __MVNW_QUIET_WGET='' __MVNW_QUIET_CURL=''
 
 # normalize http auth
 case "${MVNW_PASSWORD:+has-password}" in
@@ -256,12 +263,10 @@ if [ -n "${distributionSha256Sum-}" ]; then
   fi
 fi
 
-# unzip and move
-if command -v unzip >/dev/null; then
-  unzip ${__MVNW_QUIET_UNZIP:+"$__MVNW_QUIET_UNZIP"} "$TMP_DOWNLOAD_DIR/$distributionUrlName" -d "$TMP_DOWNLOAD_DIR" || die "failed to unzip"
-else
-  tar xzf${__MVNW_QUIET_TAR:+"$__MVNW_QUIET_TAR"} "$TMP_DOWNLOAD_DIR/$distributionUrlName" -C "$TMP_DOWNLOAD_DIR" || die "failed to untar"
-fi
+# extract with jar (no dependency on unzip/tar)
+jar_verbose=''
+[ "${MVNW_VERBOSE-}" = true ] && jar_verbose=v
+(cd "$TMP_DOWNLOAD_DIR" && "$JARCMD" x"$jar_verbose"f "$distributionUrlName") || die "failed to extract"
 
 # Find the actual extracted directory name (handles snapshots where filename != directory name)
 actualDistributionDir=""
@@ -295,6 +300,19 @@ if [ -z "$actualDistributionDir" ]; then
 fi
 
 verbose "Found extracted Maven distribution directory: $actualDistributionDir"
+
+# jar does not preserve the unix executable bit; re-apply it. The distribution
+# entry point ($MVN_CMD, i.e. mvn or mvnd.sh) is required; the sibling
+# launchers are optional and only touched when present. Also needed on
+# Cygwin/MinGW where the maven launchers are shell scripts.
+_mvnw_bin_dir="$TMP_DOWNLOAD_DIR/$actualDistributionDir/bin"
+chmod +x "$_mvnw_bin_dir/$MVN_CMD" || die "failed to chmod $MVN_CMD"
+for _mvnw_launcher in mvnDebug mvnenc mvnsh mvnup mvnyjp; do
+  if [ -e "$_mvnw_bin_dir/$_mvnw_launcher" ]; then
+    chmod +x "$_mvnw_bin_dir/$_mvnw_launcher"
+  fi
+done
+
 printf %s\\n "$distributionUrl" >"$TMP_DOWNLOAD_DIR/$actualDistributionDir/mvnw.url"
 mv -- "$TMP_DOWNLOAD_DIR/$actualDistributionDir" "$MAVEN_HOME" || [ -d "$MAVEN_HOME" ] || die "fail to move MAVEN_HOME"
 
