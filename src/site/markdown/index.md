@@ -150,6 +150,20 @@ For snapshot versions, you can use URLs like:
 distributionUrl=https://repository.apache.org/content/repositories/snapshots/org/apache/maven/apache-maven/4.1.0-SNAPSHOT/apache-maven-4.1.0-20250710.120440-1-bin.zip
 ```
 
+## Using the Maven Daemon (mvnd)
+
+The wrapper plugin can configure the wrapper to use a specific version of the
+Maven Daemon (`mvnd`). Generate an `only-script` wrapper and select the mvnd
+version with the `mvnd` property:
+
+```bash
+mvn wrapper:wrapper -Dtype=only-script -Dmvnd=1.0.3
+```
+
+Replace `1.0.3` with the mvnd version you want. The `mvnd` property requires
+the `only-script` distribution type; other wrapper distribution types are not
+supported for mvnd.
+
 ## Using Basic Authentication for Distribution Download
 
 To download Maven from a location that requires Basic Authentication you have 2
