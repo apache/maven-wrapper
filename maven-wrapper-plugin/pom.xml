@@ -202,7 +202,7 @@ under the License.
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>mrm-maven-plugin</artifactId>
-            <version>1.7.1</version>
+            <version>1.8.0</version>
             <configuration>
               <repositories>
                 <mockRepo>
