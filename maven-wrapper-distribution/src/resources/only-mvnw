@@ -307,7 +307,7 @@ verbose "Found extracted Maven distribution directory: $actualDistributionDir"
 # Cygwin/MinGW where the maven launchers are shell scripts.
 _mvnw_bin_dir="$TMP_DOWNLOAD_DIR/$actualDistributionDir/bin"
 chmod +x "$_mvnw_bin_dir/$MVN_CMD" || die "failed to chmod $MVN_CMD"
-for _mvnw_launcher in mvnDebug mvnenc mvnsh mvnup mvnyjp; do
+for _mvnw_launcher in mvnDebug mvnenc mvnsh mvnup mvnyjp mvnd; do
   if [ -e "$_mvnw_bin_dir/$_mvnw_launcher" ]; then
     chmod +x "$_mvnw_bin_dir/$_mvnw_launcher"
   fi
