@@ -41,7 +41,7 @@ CYGWIN* | MINGW*)
   ;;
 esac
 
-# set JAVACMD, JAVACCMD and JARCMD
+# set JAVACMD, JAVACCMD, and JARCMD
 set_java_home() {
   # For Cygwin and MinGW, ensure paths are in Unix format before anything is touched
   if [ -n "${JAVA_HOME-}" ]; then
@@ -58,11 +58,13 @@ set_java_home() {
       JARCMD="$JAVA_HOME/jre/bin/jar"
     fi
 
-    if [ ! -x "$JAVACMD" ] || [ ! -x "$JAVACCMD" ] || [ ! -x "$JARCMD" ]; then
-      echo "The JAVA_HOME environment variable is not defined correctly, so mvnw cannot run." >&2
-      echo "JAVA_HOME is set to \"$JAVA_HOME\", but \"\$JAVA_HOME/bin/java\", \"\$JAVA_HOME/bin/javac\" or \"\$JAVA_HOME/bin/jar\" does not exist." >&2
-      return 1
-    fi
+    for cmd in "$JAVACMD" "$JAVACCMD" "$JARCMD"; do
+      if [ ! -x "$cmd" ]; then
+        echo "The JAVA_HOME environment variable is not defined correctly, so mvnw cannot run." >&2
+        echo "JAVA_HOME is set to \"$JAVA_HOME\", but \"$cmd\" does not exist or is not executable." >&2
+        return 1
+      fi
+    done
   else
     JAVACMD="$(
       'set' +e
@@ -80,10 +82,12 @@ set_java_home() {
       'command' -v jar
     )" || :
 
-    if [ ! -x "${JAVACMD-}" ] || [ ! -x "${JAVACCMD-}" ] || [ ! -x "${JARCMD-}" ]; then
-      echo "The java/javac/jar command does not exist in PATH nor is JAVA_HOME set, so mvnw cannot run." >&2
-      return 1
-    fi
+    for cmd in "${JAVACMD:-java}" "${JAVACCMD:-javac}" "${JARCMD:-jar}"; do
+      if [ ! -x "$cmd" ]; then
+        echo "The $cmd command does not exist or is not executable in PATH nor is JAVA_HOME set, so mvnw cannot run." >&2
+        return 1
+      fi
+    done
   fi
 }
 
@@ -179,8 +183,7 @@ fi
 
 mkdir -p -- "${MAVEN_HOME%/*}"
 
-# jar from the JDK is required to extract the distribution; resolve the JDK
-# tools here so they are guaranteed even when wget/curl are used for download
+# Resolve the JDK tools required to extract the Maven distribution.
 set_java_home || die "java/javac/jar are required to download and install Maven"
 
 # Download and Install Apache Maven
