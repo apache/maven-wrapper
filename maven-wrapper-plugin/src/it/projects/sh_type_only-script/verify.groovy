@@ -41,9 +41,9 @@ assert !props.containsKey('wrapperUrl')
 
 // Check diagnostics without downloading a distribution or using the host JDK.
 ['home', 'aix', 'path'].each { layout ->
-    ['java', 'javac', 'jar'].each { missingTool ->
+    ['java', 'javac', 'jar', 'all'].each { missingTool ->
         // AIX layout selection requires an executable jre/sh/java.
-        if (layout == 'aix' && missingTool == 'java') {
+        if (layout == 'aix' && missingTool in ['java', 'all']) {
             return
         }
         [false, true].each { nonExecutable ->
@@ -65,31 +65,57 @@ assert !props.containsKey('wrapperUrl')
                 String location = layout == 'aix' ? (tool == 'jar' ? 'jre/bin' : 'jre/sh') : 'bin'
                 File executable = layout == 'path' ? new File(binDir, tool) : new File(javaHome, "${location}/${tool}")
                 tools[tool] = executable
-                if (tool != missingTool || nonExecutable) {
+                boolean broken = tool == missingTool || missingTool == 'all'
+                if (!broken || nonExecutable) {
                     executable.parentFile.mkdirs()
                     executable.text = '#!/bin/sh\nexit 99\n'
-                    assert executable.setExecutable(tool != missingTool)
+                    assert executable.setExecutable(!broken)
                 }
             }
             ProcessBuilder builder = new ProcessBuilder('/bin/sh', new File(basedir, 'mvnw').absolutePath, '-v')
-            builder.directory(basedir)
+            builder.directory(testDir)
             builder.redirectErrorStream(true)
             builder.environment().put('PATH', binDir.absolutePath)
             builder.environment().put('MAVEN_USER_HOME', new File(testDir, 'maven-user-home').absolutePath)
             builder.environment().put('MVNW_VERBOSE', 'false')
+            builder.environment().remove('MVNW_USERNAME')
+            builder.environment().remove('MVNW_PASSWORD')
             if (layout == 'path') {
                 builder.environment().remove('JAVA_HOME')
+                // A command outside PATH must not satisfy a failed lookup.
+                File localJava = new File(testDir, 'java')
+                localJava.text = '#!/bin/sh\nexit 99\n'
+                assert localJava.setExecutable(true)
             } else {
                 builder.environment().put('JAVA_HOME', javaHome.absolutePath)
             }
             Process process = builder.start()
             String output = process.inputStream.text
             assert process.waitFor() == 1 : output
+            String firstTool = missingTool == 'all' ? 'java' : missingTool
             if (layout == 'path') {
-                assert output.contains("The ${missingTool} command does not exist or is not executable in PATH nor is JAVA_HOME set") : output
+                assert output.trim() == "No executable ${firstTool} command was found in PATH. JAVA_HOME is not set." : output
             } else {
-                File expected = missingTool == 'jar' && layout == 'home' ? new File(javaHome, 'jre/bin/jar') : tools[missingTool]
-                assert output.contains("JAVA_HOME is set to \"${javaHome.absolutePath}\", but \"${expected.absolutePath}\" does not exist or is not executable.") : output
+                // A fallback that is not executable must not replace the primary path.
+                boolean primaryJarMissing = layout == 'aix' && missingTool == 'jar'
+                File expected = primaryJarMissing ? new File(javaHome, 'bin/jar') : tools[firstTool]
+                String problem = nonExecutable && !primaryJarMissing ? 'is not executable' : 'does not exist'
+                assert output.trim() == "JAVA_HOME is set to \"${javaHome.absolutePath}\", but \"${expected.absolutePath}\" ${problem}." : output
+            }
+
+            if (layout == 'home' && missingTool == 'jar') {
+                // An executable fallback is accepted with a missing or non-executable primary jar.
+                File fallback = new File(javaHome, 'jre/bin/jar')
+                assert fallback.parentFile.mkdirs()
+                fallback.text = '#!/bin/sh\necho "fallback jar invoked"\nexit 99\n'
+                assert fallback.setExecutable(true)
+                File wget = new File(binDir, 'wget')
+                wget.text = '#!/bin/sh\nexit 0\n'
+                assert wget.setExecutable(true)
+                process = builder.start()
+                output = process.inputStream.text
+                assert process.waitFor() == 1 : output
+                assert output.trim() == 'fallback jar invoked\nfailed to extract' : output
             }
         }
     }

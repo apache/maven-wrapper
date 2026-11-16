@@ -54,14 +54,16 @@ set_java_home() {
       JAVACCMD="$JAVA_HOME/bin/javac"
     fi
     JARCMD="$JAVA_HOME/bin/jar"
-    if [ ! -x "$JARCMD" ]; then
+    if [ ! -x "$JARCMD" ] && [ -x "$JAVA_HOME/jre/bin/jar" ]; then
       JARCMD="$JAVA_HOME/jre/bin/jar"
     fi
 
     for cmd in "$JAVACMD" "$JAVACCMD" "$JARCMD"; do
-      if [ ! -x "$cmd" ]; then
-        echo "The JAVA_HOME environment variable is not defined correctly, so mvnw cannot run." >&2
-        echo "JAVA_HOME is set to \"$JAVA_HOME\", but \"$cmd\" does not exist or is not executable." >&2
+      if [ ! -e "$cmd" ]; then
+        echo "JAVA_HOME is set to \"$JAVA_HOME\", but \"$cmd\" does not exist." >&2
+        return 1
+      elif [ ! -x "$cmd" ]; then
+        echo "JAVA_HOME is set to \"$JAVA_HOME\", but \"$cmd\" is not executable." >&2
         return 1
       fi
     done
@@ -82,9 +84,14 @@ set_java_home() {
       'command' -v jar
     )" || :
 
-    for cmd in "${JAVACMD:-java}" "${JAVACCMD:-javac}" "${JARCMD:-jar}"; do
+    for tool in java javac jar; do
+      case "$tool" in
+      java) cmd="$JAVACMD" ;;
+      javac) cmd="$JAVACCMD" ;;
+      jar) cmd="$JARCMD" ;;
+      esac
       if [ ! -x "$cmd" ]; then
-        echo "The $cmd command does not exist or is not executable in PATH nor is JAVA_HOME set, so mvnw cannot run." >&2
+        echo "No executable $tool command was found in PATH. JAVA_HOME is not set." >&2
         return 1
       fi
     done
@@ -184,7 +191,7 @@ fi
 mkdir -p -- "${MAVEN_HOME%/*}"
 
 # Resolve the JDK tools required to extract the Maven distribution.
-set_java_home || die "java/javac/jar are required to download and install Maven"
+set_java_home || exit 1
 
 # Download and Install Apache Maven
 verbose "Couldn't find MAVEN_HOME, downloading and installing it ..."
