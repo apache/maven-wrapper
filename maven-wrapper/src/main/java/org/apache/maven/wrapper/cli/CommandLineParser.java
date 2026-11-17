@@ -511,6 +511,7 @@ public class CommandLineParser {
     }
 
     private static final class OptionComparator implements Comparator<CommandLineOption> {
+        @Override
         public int compare(CommandLineOption option1, CommandLineOption option2) {
             String min1 = Collections.min(option1.getOptions(), new OptionStringComparator());
             String min2 = Collections.min(option2.getOptions(), new OptionStringComparator());
@@ -519,6 +520,7 @@ public class CommandLineParser {
     }
 
     private static final class CaseInsensitiveStringComparator implements Comparator<String> {
+        @Override
         public int compare(String option1, String option2) {
             int diff = option1.compareToIgnoreCase(option2);
             if (diff != 0) {
@@ -529,6 +531,7 @@ public class CommandLineParser {
     }
 
     private static final class OptionStringComparator implements Comparator<String> {
+        @Override
         public int compare(String option1, String option2) {
             boolean short1 = option1.length() == 1;
             boolean short2 = option2.length() == 1;

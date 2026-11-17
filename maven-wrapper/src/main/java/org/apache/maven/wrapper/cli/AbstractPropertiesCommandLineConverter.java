@@ -31,12 +31,14 @@ public abstract class AbstractPropertiesCommandLineConverter extends AbstractCom
 
     protected abstract String getPropertyOptionDescription();
 
+    @Override
     public void configure(CommandLineParser parser) {
         CommandLineOption option = parser.option(getPropertyOption(), getPropertyOptionDetailed());
         option = option.hasArguments();
         option.hasDescription(getPropertyOptionDescription());
     }
 
+    @Override
     protected Map<String, String> newInstance() {
         return new HashMap<>();
     }
