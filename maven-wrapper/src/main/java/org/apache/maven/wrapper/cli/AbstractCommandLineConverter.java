@@ -24,16 +24,19 @@ package org.apache.maven.wrapper.cli;
  * @param <T> type
  */
 public abstract class AbstractCommandLineConverter<T> implements CommandLineConverter<T> {
+    @Override
     public T convert(Iterable<String> args) throws CommandLineArgumentException {
         CommandLineParser parser = new CommandLineParser();
         configure(parser);
         return convert(parser.parse(args));
     }
 
+    @Override
     public T convert(ParsedCommandLine args) throws CommandLineArgumentException {
         return convert(args, newInstance());
     }
 
+    @Override
     public T convert(Iterable<String> args, T target) throws CommandLineArgumentException {
         CommandLineParser parser = new CommandLineParser();
         configure(parser);
