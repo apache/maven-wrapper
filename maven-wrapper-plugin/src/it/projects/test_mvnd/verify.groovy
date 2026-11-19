@@ -38,6 +38,14 @@ log = new File(basedir, 'build.log').text
 // works only on 'only-script' type
 assert log.contains('[INFO] Unpacked only-script type wrapper distribution org.apache.maven.wrapper:maven-wrapper-distribution:zip:only-script:')
 
+// jar extraction must restore the native client's executable bit, otherwise
+// mvnd.sh silently falls back to the Java client (which requires JDK 11+).
+new File(basedir, 'target/.m2/wrapper/dists').eachFileRecurse { file ->
+    if (file.name == 'mvnd') {
+        assert file.canExecute(): "Native mvnd client is not executable: $file"
+    }
+}
+
 // check "mvnw --status" output
 assert log.contains("Status")
 assert log.contains("RSS")
