@@ -18,6 +18,8 @@
  */
 package org.apache.maven.plugins.wrapper;
 
+import java.util.Properties;
+
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +30,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.when;
@@ -83,5 +86,52 @@ class WrapperMojoTest {
 
         // then
         assertEquals(WrapperMojo.DEFAULT_REPO_URL, determinedRepoUrl);
+    }
+
+    @Test
+    void explicitDistributionSha256SumIsUsedAsIs() {
+        // when
+        String determined =
+                wrapperMojo.determineDistributionSha256Sum("explicit-sum", "https://example/dist.zip", null);
+
+        // then
+        assertEquals("explicit-sum", determined);
+    }
+
+    @Test
+    void noExplicitSumAndNoExistingPropertiesYieldsNull() {
+        // when
+        String determined = wrapperMojo.determineDistributionSha256Sum(null, "https://example/dist.zip", null);
+
+        // then
+        assertNull(determined);
+    }
+
+    @Test
+    void existingSumIsRetainedWhenDistributionUrlUnchanged() {
+        // given
+        Properties existing = new Properties();
+        existing.setProperty("distributionUrl", "https://example/dist.zip");
+        existing.setProperty("distributionSha256Sum", "existing-sum");
+
+        // when
+        String determined = wrapperMojo.determineDistributionSha256Sum(null, "https://example/dist.zip", existing);
+
+        // then
+        assertEquals("existing-sum", determined);
+    }
+
+    @Test
+    void existingSumIsDroppedWhenDistributionUrlChanged() {
+        // given
+        Properties existing = new Properties();
+        existing.setProperty("distributionUrl", "https://example/dist-old.zip");
+        existing.setProperty("distributionSha256Sum", "existing-sum");
+
+        // when
+        String determined = wrapperMojo.determineDistributionSha256Sum(null, "https://example/dist-new.zip", existing);
+
+        // then
+        assertNull(determined);
     }
 }
