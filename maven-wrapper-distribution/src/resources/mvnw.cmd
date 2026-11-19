@@ -119,6 +119,13 @@ SET MAVEN_JAVA_EXE="%JAVA_HOME%\bin\java.exe"
 set WRAPPER_JAR="%MAVEN_PROJECTBASEDIR%\.mvn\wrapper\maven-wrapper.jar"
 set WRAPPER_LAUNCHER=org.apache.maven.wrapper.MavenWrapperMain
 
+@REM Silence the JDK 22+ native-access warning that Jansi (bundled in the Maven distribution
+@REM the wrapper boots in this same JVM) triggers on platforms where it loads a native library.
+@REM Probe first: older JDKs reject this flag as unrecognized, so only add it when understood.
+set NATIVE_ACCESS_OPTS=
+%MAVEN_JAVA_EXE% --enable-native-access=ALL-UNNAMED -version >nul 2>&1
+if not ERRORLEVEL 1 set NATIVE_ACCESS_OPTS=--enable-native-access=ALL-UNNAMED
+
 set WRAPPER_URL="https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper/@@project.version@@/maven-wrapper-@@project.version@@.jar"
 
 FOR /F "usebackq tokens=1,2 delims==" %%A IN ("%MAVEN_PROJECTBASEDIR%\.mvn\wrapper\maven-wrapper.properties") DO (
@@ -180,6 +187,7 @@ set MAVEN_CMD_LINE_ARGS=%*
   %JVM_CONFIG_MAVEN_PROPS% ^
   %MAVEN_OPTS% ^
   %MAVEN_DEBUG_OPTS% ^
+  %NATIVE_ACCESS_OPTS% ^
   -classpath %WRAPPER_JAR% ^
   "-Dmaven.multiModuleProjectDirectory=%MAVEN_PROJECTBASEDIR%" ^
   %WRAPPER_LAUNCHER% %MAVEN_CONFIG% %*
