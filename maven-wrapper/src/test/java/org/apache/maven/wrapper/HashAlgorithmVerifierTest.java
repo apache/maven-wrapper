@@ -58,6 +58,15 @@ public class HashAlgorithmVerifierTest {
     }
 
     @Test
+    void sha512SumsMatch() throws Exception {
+        verifier.verify(
+                file,
+                "property",
+                Verifier.SHA_512_ALGORITHM,
+                "256cdc53261371d6f6fefd92e99d85df5295d1f83ab826106768094a34e6f1b0eb4f7c30e75ada80218ed5bb384bdce334a6697354eef561f50adfc2113c881d");
+    }
+
+    @Test
     void sha256SumsDoNotMatch() throws Exception {
         try {
             verifier.verify(
@@ -69,6 +78,24 @@ public class HashAlgorithmVerifierTest {
         } catch (RuntimeException e) {
             assertEquals(
                     "Failed to validate Maven distribution SHA-256, your Maven "
+                            + "distribution might be compromised. If you updated your Maven version, "
+                            + "you need to update the specified prop property.",
+                    e.getMessage());
+        }
+    }
+
+    @Test
+    void sha512SumsDoNotMatch() throws Exception {
+        try {
+            verifier.verify(
+                    file,
+                    "prop",
+                    Verifier.SHA_512_ALGORITHM,
+                    "03e2d65d4483a3396980629f260e25cac0d8b6f7f2791e4dc20bc83f9514db8d0f05b0479e699a5f34679250c49c8e52e961262ded468a20de0be254d8207076");
+            fail("Expected RuntimeException");
+        } catch (RuntimeException e) {
+            assertEquals(
+                    "Failed to validate Maven distribution SHA-512, your Maven "
                             + "distribution might be compromised. If you updated your Maven version, "
                             + "you need to update the specified prop property.",
                     e.getMessage());
