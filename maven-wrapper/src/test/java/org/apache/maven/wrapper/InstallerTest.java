@@ -129,22 +129,6 @@ public class InstallerTest {
         zipTo(explodedZipDir, zipDestination);
     }
 
-    public void testCreateDist() throws Exception {
-        Path homeDir = install.createDist(configuration);
-
-        assertEquals(mavenHomeDir, homeDir);
-        assertTrue(Files.isDirectory(homeDir));
-        assertTrue(Files.exists(homeDir.resolve("bin/mvn")));
-        assertTrue(Files.exists(zipDestination));
-
-        assertEquals(localDistribution, pathAssembler.getDistribution(configuration));
-        assertEquals(distributionDir, localDistribution.getDistributionDir());
-        assertEquals(zipDestination, localDistribution.getZipFile());
-
-        // download.download(new URI("http://some/test"), distributionDir);
-        // verify(download).download(new URI("http://some/test"), distributionDir);
-    }
-
     @Test
     void testCreateDistWithExistingDistribution() throws Exception {
 
