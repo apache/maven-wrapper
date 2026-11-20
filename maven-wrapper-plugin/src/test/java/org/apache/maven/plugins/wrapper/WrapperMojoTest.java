@@ -25,6 +25,9 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -52,37 +55,12 @@ class WrapperMojoTest {
                 .then(i -> i.getArguments()[1]);
     }
 
-    @Test
-    void userSuppliedRepoUrlGetsTrailingSlashTrimmed() {
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"/", WrapperMojo.DEFAULT_REPO_URL + "/"})
+    void repoUrlFallsBackToDefault(String repoUrl) {
         // when
-        String determinedRepoUrl = wrapperMojo.determineRepoUrl(WrapperMojo.DEFAULT_REPO_URL + "/");
-
-        // then
-        assertEquals(WrapperMojo.DEFAULT_REPO_URL, determinedRepoUrl);
-    }
-
-    @Test
-    void nullRepoUrlNotUsed() {
-        // when
-        String determinedRepoUrl = wrapperMojo.determineRepoUrl(null);
-
-        // then
-        assertEquals(WrapperMojo.DEFAULT_REPO_URL, determinedRepoUrl);
-    }
-
-    @Test
-    void emptyRepoUrlNotUsed() {
-        // when
-        String determinedRepoUrl = wrapperMojo.determineRepoUrl("");
-
-        // then
-        assertEquals(WrapperMojo.DEFAULT_REPO_URL, determinedRepoUrl);
-    }
-
-    @Test
-    void slashRepoUrlNotUsed() {
-        // when
-        String determinedRepoUrl = wrapperMojo.determineRepoUrl("/");
+        String determinedRepoUrl = wrapperMojo.determineRepoUrl(repoUrl);
 
         // then
         assertEquals(WrapperMojo.DEFAULT_REPO_URL, determinedRepoUrl);
