@@ -48,6 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -207,6 +208,17 @@ public class InstallerTest {
 
         // download.download(new URI("http://some/test"), distributionDir);
         // verify(download).download(new URI("http://some/test"), distributionDir);
+    }
+
+    @Test
+    void testCreateDistVerifiesDistributionSha512Sum() throws Exception {
+        createTestZip(zipDestination);
+        configuration.setDistributionSha512Sum("expectedSha512Sum");
+
+        install.createDist(configuration);
+
+        verify(verifier)
+                .verify(zipDestination, "distributionSha512Sum", Verifier.SHA_512_ALGORITHM, "expectedSha512Sum");
     }
 
     @Test

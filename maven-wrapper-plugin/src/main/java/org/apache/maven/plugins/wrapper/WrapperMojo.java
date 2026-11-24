@@ -138,6 +138,24 @@ public class WrapperMojo extends AbstractMojo {
     private String distributionSha256Sum;
 
     /**
+     * The expected SHA-512 checksum of the <i>maven-wrapper.jar</i> that is
+     * used to load the configured Maven distribution.
+     *
+     * @since 3.3.5
+     */
+    @Parameter(property = "wrapperSha512Sum")
+    private String wrapperSha512Sum;
+
+    /**
+     * The expected SHA-512 checksum of the Maven distribution that is
+     * executed by the installed wrapper.
+     *
+     * @since 3.3.5
+     */
+    @Parameter(property = "distributionSha512Sum")
+    private String distributionSha512Sum;
+
+    /**
      * Determines if the Maven distribution should be downloaded
      * on every execution of the Maven wrapper.
      *
@@ -341,11 +359,19 @@ public class WrapperMojo extends AbstractMojo {
                         .append(distributionSha256Sum)
                         .append(System.lineSeparator());
             }
+            if (distributionSha512Sum != null) {
+                out.append("distributionSha512Sum=")
+                        .append(distributionSha512Sum)
+                        .append(System.lineSeparator());
+            }
             if (!distributionType.equals(TYPE_ONLY_SCRIPT)) {
                 out.append("wrapperUrl=").append(wrapperUrl).append(System.lineSeparator());
             }
             if (wrapperSha256Sum != null) {
                 out.append("wrapperSha256Sum=").append(wrapperSha256Sum).append(System.lineSeparator());
+            }
+            if (wrapperSha512Sum != null) {
+                out.append("wrapperSha512Sum=").append(wrapperSha512Sum).append(System.lineSeparator());
             }
             if (alwaysDownload) {
                 out.append("alwaysDownload=")
