@@ -66,6 +66,7 @@ public class WrapperExecutorTest {
         properties.put("distributionPath", "testDistPath");
         properties.put("zipStoreBase", "testZipBase");
         properties.put("zipStorePath", "testZipPath");
+        properties.put("distributionSha512Sum", "testSha512Sum");
 
         writePropertiesFile(properties, propertiesFile, "header");
     }
@@ -83,6 +84,7 @@ public class WrapperExecutorTest {
                 "testDistPath", wrapper.getConfiguration().getDistributionPath().toString());
         assertEquals("testZipBase", wrapper.getConfiguration().getZipBase());
         assertEquals("testZipPath", wrapper.getConfiguration().getZipPath().toString());
+        assertEquals("testSha512Sum", wrapper.getConfiguration().getDistributionSha512Sum());
     }
 
     @Test

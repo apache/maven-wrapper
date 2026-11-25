@@ -58,6 +58,16 @@ public class HashAlgorithmVerifierTest {
     }
 
     @Test
+    void sha512SumsMatch() throws Exception {
+        verifier.verify(
+                file,
+                "property",
+                Verifier.SHA_512_ALGORITHM,
+                "256cdc53261371d6f6fefd92e99d85df5295d1f83ab826106768094a34e6f1b0"
+                        + "eb4f7c30e75ada80218ed5bb384bdce334a6697354eef561f50adfc2113c881d");
+    }
+
+    @Test
     void sha256SumsDoNotMatch() throws Exception {
         try {
             verifier.verify(
