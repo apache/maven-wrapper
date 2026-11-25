@@ -17,12 +17,12 @@
  * under the License.
  */
 
-assert !new File( basedir, 'mvnw' ).exists()
-assert !new File( basedir, 'mvnw.cmd' ).exists()
-assert !new File( basedir, 'mvnwDebug' ).exists()
-assert !new File( basedir, 'mvnwDebug.cmd' ).exists()
-assert !new File( basedir, '.mvn/wrapper' ).exists()
+assert !new File(basedir, 'mvnw').exists()
+assert !new File(basedir, 'mvnw.cmd').exists()
+assert !new File(basedir, 'mvnwDebug').exists()
+assert !new File(basedir, 'mvnwDebug.cmd').exists()
+assert !new File(basedir, '.mvn/wrapper').exists()
 
-def buildLog = new File( basedir, "build.log").text;
+def buildLog = new File(basedir, "build.log").text
 
 assert buildLog.matches('(?ms).*artifact: org.apache.maven.wrapper:maven-wrapper-distribution:zip:unknown-type:.* not resolved.*')
