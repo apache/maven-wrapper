@@ -57,10 +57,19 @@ class WrapperMojoTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ValueSource(strings = {"/", WrapperMojo.DEFAULT_REPO_URL + "/"})
+    @ValueSource(strings = "/")
     void repoUrlFallsBackToDefault(String repoUrl) {
         // when
         String determinedRepoUrl = wrapperMojo.determineRepoUrl(repoUrl);
+
+        // then
+        assertEquals(WrapperMojo.DEFAULT_REPO_URL, determinedRepoUrl);
+    }
+
+    @Test
+    void userSuppliedRepoUrlGetsTrailingSlashTrimmed() {
+        // when
+        String determinedRepoUrl = wrapperMojo.determineRepoUrl(WrapperMojo.DEFAULT_REPO_URL + "/");
 
         // then
         assertEquals(WrapperMojo.DEFAULT_REPO_URL, determinedRepoUrl);
