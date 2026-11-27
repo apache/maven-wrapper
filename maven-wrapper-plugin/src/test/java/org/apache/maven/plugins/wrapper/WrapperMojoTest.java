@@ -18,16 +18,22 @@
  */
 package org.apache.maven.plugins.wrapper;
 
+import java.util.Properties;
+
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.when;
@@ -49,6 +55,17 @@ class WrapperMojoTest {
                 .then(i -> i.getArguments()[1]);
     }
 
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = "/")
+    void repoUrlFallsBackToDefault(String repoUrl) {
+        // when
+        String determinedRepoUrl = wrapperMojo.determineRepoUrl(repoUrl);
+
+        // then
+        assertEquals(WrapperMojo.DEFAULT_REPO_URL, determinedRepoUrl);
+    }
+
     @Test
     void userSuppliedRepoUrlGetsTrailingSlashTrimmed() {
         // when
@@ -59,29 +76,49 @@ class WrapperMojoTest {
     }
 
     @Test
-    void nullRepoUrlNotUsed() {
+    void explicitDistributionSha256SumIsUsedAsIs() {
         // when
-        String determinedRepoUrl = wrapperMojo.determineRepoUrl(null);
+        String determined =
+                wrapperMojo.determineDistributionSha256Sum("explicit-sum", "https://example/dist.zip", null);
 
         // then
-        assertEquals(WrapperMojo.DEFAULT_REPO_URL, determinedRepoUrl);
+        assertEquals("explicit-sum", determined);
     }
 
     @Test
-    void emptyRepoUrlNotUsed() {
+    void noExplicitSumAndNoExistingPropertiesYieldsNull() {
         // when
-        String determinedRepoUrl = wrapperMojo.determineRepoUrl("");
+        String determined = wrapperMojo.determineDistributionSha256Sum(null, "https://example/dist.zip", null);
 
         // then
-        assertEquals(WrapperMojo.DEFAULT_REPO_URL, determinedRepoUrl);
+        assertNull(determined);
     }
 
     @Test
-    void slashRepoUrlNotUsed() {
+    void existingSumIsRetainedWhenDistributionUrlUnchanged() {
+        // given
+        Properties existing = new Properties();
+        existing.setProperty("distributionUrl", "https://example/dist.zip");
+        existing.setProperty("distributionSha256Sum", "existing-sum");
+
         // when
-        String determinedRepoUrl = wrapperMojo.determineRepoUrl("/");
+        String determined = wrapperMojo.determineDistributionSha256Sum(null, "https://example/dist.zip", existing);
 
         // then
-        assertEquals(WrapperMojo.DEFAULT_REPO_URL, determinedRepoUrl);
+        assertEquals("existing-sum", determined);
+    }
+
+    @Test
+    void existingSumIsDroppedWhenDistributionUrlChanged() {
+        // given
+        Properties existing = new Properties();
+        existing.setProperty("distributionUrl", "https://example/dist-old.zip");
+        existing.setProperty("distributionSha256Sum", "existing-sum");
+
+        // when
+        String determined = wrapperMojo.determineDistributionSha256Sum(null, "https://example/dist-new.zip", existing);
+
+        // then
+        assertNull(determined);
     }
 }

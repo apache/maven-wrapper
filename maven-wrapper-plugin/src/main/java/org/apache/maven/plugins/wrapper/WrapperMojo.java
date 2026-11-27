@@ -232,14 +232,59 @@ public class WrapperMojo extends AbstractMojo {
     }
 
     private String distributionTypeFromExistingMavenWrapperProperties(final Path wrapperDir) {
-        final Path mavenWrapperProperties = wrapperDir.resolve(WRAPPER_PROPERTIES_FILENAME);
-        try (InputStream inputStream = Files.newInputStream(mavenWrapperProperties)) {
+        final Properties properties = loadExistingProperties(wrapperDir.resolve(WRAPPER_PROPERTIES_FILENAME));
+        return properties == null ? null : properties.getProperty(DISTRIBUTION_TYPE_PROPERTY_NAME);
+    }
+
+    /**
+     * Loads an existing maven-wrapper.properties file, if present and readable.
+     *
+     * @param propertiesFile the properties file to load
+     * @return the properties, or {@code null} if the file does not exist or cannot be read
+     */
+    private Properties loadExistingProperties(final Path propertiesFile) {
+        try (InputStream inputStream = Files.newInputStream(propertiesFile)) {
             Properties properties = new Properties();
             properties.load(inputStream);
-            return properties.getProperty(DISTRIBUTION_TYPE_PROPERTY_NAME);
+            return properties;
         } catch (IOException e) {
             return null;
         }
+    }
+
+    /**
+     * Determines the {@code distributionSha256Sum} to write. When this mojo execution did not explicitly set one,
+     * the value from an existing maven-wrapper.properties file is carried over, but only as long as the
+     * distribution being configured did not change; a stale checksum for a different distribution would otherwise
+     * make Maven Wrapper fail the integrity check (or silently skip it, if the distribution changed but the
+     * checksum happens to match some other content).
+     *
+     * @param explicitDistributionSha256Sum the value set for this execution, may be {@code null}
+     * @param finalDistributionUrl          the distribution URL being configured for this execution
+     * @param existingProperties            the properties loaded from an existing maven-wrapper.properties file,
+     *                                       may be {@code null} if there is none
+     * @return the checksum to write, or {@code null} if none applies
+     */
+    protected String determineDistributionSha256Sum(
+            final String explicitDistributionSha256Sum,
+            final String finalDistributionUrl,
+            final Properties existingProperties) {
+        if (explicitDistributionSha256Sum != null || existingProperties == null) {
+            return explicitDistributionSha256Sum;
+        }
+
+        String existingDistributionSha256Sum = existingProperties.getProperty("distributionSha256Sum");
+        if (existingDistributionSha256Sum == null) {
+            return null;
+        }
+
+        if (finalDistributionUrl.equals(existingProperties.getProperty("distributionUrl"))) {
+            return existingDistributionSha256Sum;
+        }
+
+        getLog().warn("Not retaining the existing distributionSha256Sum because distributionUrl changed; "
+                + "set -DdistributionSha256Sum again to re-enable Maven distribution integrity checking.");
+        return null;
     }
 
     private void createDirectories(Path dir) throws MojoExecutionException {
@@ -299,7 +344,9 @@ public class WrapperMojo extends AbstractMojo {
 
     /**
      * As long as the content only contains the license and the distributionUrl, we can simply replace it.
-     * No need to look for other properties, restore them, respecting comments, etc.
+     * No need to look for other properties, restore them, respecting comments, etc. The one exception is
+     * {@code distributionSha256Sum}, which is carried over from an existing file when not explicitly set for this
+     * execution; see {@link #determineDistributionSha256Sum(String, String, Properties)}.
      *
      * @param wrapperVersion the wrapper version
      * @param targetFolder   the folder containing the wrapper.properties
@@ -327,6 +374,9 @@ public class WrapperMojo extends AbstractMojo {
 
         Path wrapperPropertiesFile = targetFolder.resolve("maven-wrapper.properties");
 
+        String effectiveDistributionSha256Sum = determineDistributionSha256Sum(
+                distributionSha256Sum, finalDistributionUrl, loadExistingProperties(wrapperPropertiesFile));
+
         getLog().info("Configuring .mvn/wrapper/maven-wrapper.properties to use "
                 + buffer().strong("Maven " + mavenVersion) + " and download from " + repoUrl);
 
@@ -336,9 +386,9 @@ public class WrapperMojo extends AbstractMojo {
                     .append(distributionType)
                     .append(System.lineSeparator());
             out.append("distributionUrl=").append(finalDistributionUrl).append(System.lineSeparator());
-            if (distributionSha256Sum != null) {
+            if (effectiveDistributionSha256Sum != null) {
                 out.append("distributionSha256Sum=")
-                        .append(distributionSha256Sum)
+                        .append(effectiveDistributionSha256Sum)
                         .append(System.lineSeparator());
             }
             if (!distributionType.equals(TYPE_ONLY_SCRIPT)) {
