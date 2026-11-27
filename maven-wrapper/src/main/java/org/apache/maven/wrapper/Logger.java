@@ -24,6 +24,19 @@ package org.apache.maven.wrapper;
 public final class Logger {
     private static final boolean VERBOSE = Boolean.parseBoolean(System.getenv(MavenWrapperMain.MVNW_VERBOSE));
 
+    private static volatile boolean quiet;
+
+    private Logger() {}
+
+    /**
+     * Sets whether {@link #warn(String)} should be suppressed, matching the {@code -q}/{@code --quiet} option
+     * Maven itself uses to show only errors. The wrapper prints its own diagnostics (e.g. the insecure-download
+     * warning) before Maven starts, so it must detect that option in the forwarded arguments itself.
+     */
+    public static void setQuiet(boolean quiet) {
+        Logger.quiet = quiet;
+    }
+
     public static void info(String msg) {
         if (VERBOSE) {
             System.out.printf("[INFO] %s%n", msg);
@@ -31,6 +44,8 @@ public final class Logger {
     }
 
     public static void warn(String msg) {
-        System.err.printf("[WARNING] %s%n", msg);
+        if (!quiet) {
+            System.err.printf("[WARNING] %s%n", msg);
+        }
     }
 }
